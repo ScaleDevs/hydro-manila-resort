@@ -1,16 +1,17 @@
 import React from 'react';
-import Header from '@/layouts/Header';
-import SideNav from './SideNav';
+import { Box, Stack, Text, Container } from '@chakra-ui/react';
 
 export default function Layout({ children }: any) {
   return (
-    <div className='w-full h-screen bg-zinc-800 flex flex-row overflow-y-auto scrollbar'>
-      <SideNav />
-      <div className='flex flex-col h-full w-full overflow-y-auto scrollbar'>
-        <Header />
-        <div className='w-[90%] mx-auto'>{children}</div>
-        <br />
-      </div>
-    </div>
+    <Box bg='primary.3' height='100vh'>
+      <Box w='100%' py='15px' bg='primary.1'>
+        <Stack maxW='container.xl' direction='row' w='100%' justifyContent='flex-end' gap='10' textColor='whiteAlpha.800'>
+          <Text>Head1</Text>
+          <Text>Head2</Text>
+          <Text>Head3</Text>
+        </Stack>
+      </Box>
+      <Container maxW='container.xl'>{children}</Container>
+    </Box>
   );
 }

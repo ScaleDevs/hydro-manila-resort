@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { createRouter } from '../createRouter';
-import { authMiddleware } from '../util';
 import { ProductService } from '@/svc/product.service';
 
 export const productRouter = createRouter()
-  .middleware(authMiddleware)
   .query('list', {
     input: z.object({
       category: z.string().optional(),

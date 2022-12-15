@@ -1,20 +1,21 @@
 import type { AppType } from 'next/app';
+import { ChakraProvider } from '@chakra-ui/react';
 import { withTRPC } from '@trpc/next';
 import { loggerLink } from '@trpc/client/links/loggerLink';
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink';
 import superjson from 'superjson';
 
+import { theme } from '@/theme';
 import { AppRouter } from '@/server/routers/_app';
-import AuthGuard from '@/components/AuthGuard';
 import { useAuthStore } from '@/store/auth.store';
 
 import '../styles/globals.css';
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <AuthGuard>
+    <ChakraProvider theme={theme}>
       <Component {...pageProps} />
-    </AuthGuard>
+    </ChakraProvider>
   );
 };
 

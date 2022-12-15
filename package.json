@@ -9,11 +9,13 @@
     "prisma-generate": "npx prisma generate",
     "lint": "next lint",
     "prettier": "prettier \"**/*.{js,jsx,ts,tsx}\" --check",
-    "prettier:fix": "npm run prettier -- --write",
-    "prepare": "husky install"
+    "prettier:fix": "npm run prettier -- --write"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "3.194.0",
+    "@chakra-ui/react": "2.4.3",
+    "@emotion/react": "11.10.5",
+    "@emotion/styled": "11.10.5",
     "@hookform/resolvers": "2.9.10",
     "@prisma/client": "4.4.0",
     "@trpc/client": "9.27.4",
@@ -26,8 +28,9 @@
     "cookies-next": "2.1.1",
     "crypto": "1.0.1",
     "dayjs": "1.11.6",
-    "lodash": "^4.17.21",
-    "next": "12.3.1",
+    "framer-motion": "6.5.1",
+    "lodash": "4.17.21",
+    "next": "13.0.6",
     "node-fetch": "3.2.10",
     "randomstring": "1.2.3",
     "react": "18.2.0",
@@ -38,7 +41,6 @@
     "react-tracked": "1.7.10",
     "reflect-metadata": "0.1.13",
     "superjson": "1.10.1",
-    "tailwindcss-animation": "0.1.2",
     "trpc-playground": "0.4.3",
     "ws": "8.9.0",
     "zod": "3.19.1",
@@ -46,7 +48,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "5.0.0",
-    "@types/lodash": "^4.14.186",
+    "@types/lodash": "4.14.186",
     "@types/node": "18.8.3",
     "@types/randomstring": "1.1.8",
     "@types/react": "18.0.21",
@@ -59,17 +61,9 @@
     "eslint-config-next": "12.3.1",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
-    "husky": "8.0.1",
-    "lint-staged": "13.0.3",
     "postcss": "8.4.17",
     "prettier": "2.7.1",
     "prisma": "4.4.0",
-    "tailwindcss": "3.1.8",
     "typescript": "4.8.4"
-  },
-  "lint-staged": {
-    "**/*.{ts,tsx,jsx,js}": [
-      "npm run prettier"
-    ]
   }
 }

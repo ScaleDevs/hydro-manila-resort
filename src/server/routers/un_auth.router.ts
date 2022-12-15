@@ -1,8 +1,10 @@
+// unused module but retained code incse for future use
+
 import { z } from 'zod';
 import { deleteCookie, getCookie } from 'cookies-next';
 
 import { createRouter } from '../createRouter';
-import { AuthService } from '@/svc/auth.service';
+import { AuthService } from '@/server/services/un_auth.service';
 
 export const authRouter = createRouter()
   .mutation('createUser', {
