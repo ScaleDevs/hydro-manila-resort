@@ -12,7 +12,7 @@ export function useLogout() {
   const { logoutAllTabs } = useSyncTabs();
   const [errMessage, setErrMessage] = useState<string | null>(null);
 
-  const { mutate } = trpc.useMutation('auth.signOut', {
+  const { mutate } = trpc.auth.signOut.useMutation({
     onSuccess() {
       logoutAllTabs();
       clearRefreshTokenJob();

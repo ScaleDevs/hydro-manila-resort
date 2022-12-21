@@ -11,7 +11,7 @@ export default function useRefreshToken() {
   const { setAuthState, resetAuthState, authLoader } = useAuthStoreTrack();
   const { logoutAllTabs } = useSyncTabs();
   const [errMessage, setErrMessage] = useState<string | null>(null);
-  const { mutate, isSuccess, isError, data } = trpc.useMutation('auth.refreshToken', {
+  const { mutate, isSuccess, isError, data } = trpc.auth.refreshToken.useMutation({
     onSuccess(data) {
       setErrMessage(null);
       if (data) updateAuthStates(data);

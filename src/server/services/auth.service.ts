@@ -7,11 +7,11 @@ import {
   refreshTokens,
   respondToNewPasswordAuthChallenge,
   revokeToken,
-} from '@/server/repository/un_cognito.repo';
+} from '@/server/repository/cognito.repo';
 import { getCookie, setCookie } from 'cookies-next';
 import { TRPCError } from '@trpc/server';
 
-import { sendUserInvite } from '@/server/repository/un_mailersend.repo';
+import { sendUserInvite } from '@/server/repository/mailersend.repo';
 import { createTempPassword } from '@/utils/helper';
 import { decodeToken } from '../util';
 

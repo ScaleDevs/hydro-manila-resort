@@ -1,5 +1,5 @@
-import superjson from 'superjson';
-import { createRouter } from '../createRouter';
+import { procedure, router } from '../trpc';
+import { authRouter } from './auth.router';
 import { productRouter } from './product.router';
 
 /**
@@ -8,16 +8,15 @@ import { productRouter } from './product.router';
  * @link https://trpc.io/docs/ssg
  * @link https://trpc.io/docs/router
  */
-export const appRouter = createRouter()
-  .transformer(superjson)
-  .query('health', {
-    resolve() {
-      return {
-        code: 200,
-        status: 'healthy',
-      };
-    },
-  })
-  .merge('product.', productRouter);
+export const appRouter = router({
+  health: procedure.query(() => {
+    return {
+      code: 200,
+      status: 'healthy',
+    };
+  }),
+  auth: authRouter,
+  product: productRouter,
+});
 
 export type AppRouter = typeof appRouter;

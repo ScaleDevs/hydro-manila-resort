@@ -17,7 +17,7 @@ export default function useLogin() {
   const router = useRouter();
   const { setAuthState } = useAuthStoreTrack();
   const [errMessage, setErrMessage] = useState<string | null>(null);
-  const { mutate, isLoading: isSignInLoading } = trpc.useMutation('auth.signIn');
+  const { mutate, isLoading: isSignInLoading } = trpc.auth.signIn.useMutation();
   const { loginAllTabs } = useSyncTabs();
 
   const { register, handleSubmit } = useForm({
