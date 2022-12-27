@@ -2,19 +2,71 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider             = "mysql"
-  url                  = env("DATABASE_URL")
-  referentialIntegrity = "prisma"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+type ProductDetails {
+  price          Float
+  minHeadCount   Int
+  maxHeadCount   Int
+  scheduleStart  String
+  scheduleEnd    String
+  scheduleEndDay Int
+  withRooms      Boolean
+}
+
+type ProductExtraDetails {
+  description String
+  price       Float
+}
+
+type Receipt {
+  productPrice         Float
+  roomPrice            Float
+  additionalHeadsPrice Float
+  total                Float
+}
+
+enum ProductExtraType {
+  ROOM
+  PERSON
 }
 
 model Product {
-  id              Int    @id @default(autoincrement())
-  productName     String
-  productPrice    Int
-  productCategory String
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  activeVersion Int
+  details       ProductDetails[]
+  Booking       Booking[]
+}
+
+model ProductExtra {
+  id            String                @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  type          ProductExtraType
+  activeVersion Int
+  details       ProductExtraDetails[]
+  Booking       Booking[]
+}
+
+model Booking {
+  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
+  name                String
+  email               String
+  phoneNumber         String
+  startSession        DateTime
+  endSession          DateTime
+  guests              Int
+  room                ProductExtra @relation(fields: [productExtraId], references: [id])
+  productExtraId      String       @db.ObjectId
+  productExtraVersion Int
+  product             Product      @relation(fields: [productId], references: [id])
+  productId           String       @db.ObjectId
+  productVersion      Int
+  receipt             Receipt
 }
