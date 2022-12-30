@@ -40,7 +40,7 @@ enum ProductExtraType {
 model Product {
   id            String           @id @default(auto()) @map("_id") @db.ObjectId
   name          String
-  activeVersion Int
+  activeVersion Int?             @default(1)
   details       ProductDetails[]
   Booking       Booking[]
 }
