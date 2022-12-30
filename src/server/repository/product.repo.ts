@@ -2,7 +2,7 @@ import prisma from './prisma.client';
 import { IPaginationInputs, IProduct } from '@/utils/types';
 
 export type IFindProductsInput = {
-  productName?: string;
+  name?: string;
 } & IPaginationInputs;
 
 class Respository {
@@ -16,10 +16,10 @@ class Respository {
     return product;
   }
 
-  public async findProducts({ page, limit, productName }: IFindProductsInput) {
+  public async findProducts({ page, limit, name }: IFindProductsInput) {
     const whereFilter = {
       name: {
-        startsWith: productName,
+        startsWith: name,
       },
     };
 

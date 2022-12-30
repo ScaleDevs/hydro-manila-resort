@@ -49,7 +49,7 @@ model ProductExtra {
   id            String                @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   type          ProductExtraType
-  activeVersion Int
+  activeVersion Int?                  @default(1)
   details       ProductExtraDetails[]
   Booking       Booking[]
 }

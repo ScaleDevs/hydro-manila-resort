@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { procedure, router } from '../trpc';
 import { ProductService } from '@/svc/product.service';
@@ -94,39 +95,39 @@ export const productRouter = router({
       const { id, details } = input;
       const currentProduct = await ProductService.findProductById(id);
 
-      if (currentProduct) {
-        const { scheduleStartHour, scheduleStartMin, scheduleStartPost, scheduleEndHour, scheduleEndMin, scheduleEndPost } =
-          details;
-        const currentProductDetailsLength = currentProduct.details.length;
-        const scheduleStart =
-          scheduleStartHour && scheduleStartMin && scheduleStartPost
-            ? `${scheduleStartHour}:${scheduleStartMin}:00 ${scheduleStartPost}`
-            : undefined;
-        const scheduleEnd =
-          scheduleEndHour && scheduleEndMin && scheduleEndPost
-            ? `${scheduleEndHour}:${scheduleEndMin}:00 ${scheduleEndPost}`
-            : undefined;
+      if (!currentProduct) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product Extra does not exist' });
 
-        const newProductDetails = {
-          ...currentProduct.details[currentProductDetailsLength - 1],
-          ...details,
-        };
+      const { scheduleStartHour, scheduleStartMin, scheduleStartPost, scheduleEndHour, scheduleEndMin, scheduleEndPost } =
+        details;
+      const currentProductDetailsLength = currentProduct.details.length;
+      const scheduleStart =
+        scheduleStartHour && scheduleStartMin && scheduleStartPost
+          ? `${scheduleStartHour}:${scheduleStartMin}:00 ${scheduleStartPost}`
+          : undefined;
+      const scheduleEnd =
+        scheduleEndHour && scheduleEndMin && scheduleEndPost
+          ? `${scheduleEndHour}:${scheduleEndMin}:00 ${scheduleEndPost}`
+          : undefined;
 
-        delete newProductDetails.scheduleStartHour;
-        delete newProductDetails.scheduleStartMin;
-        delete newProductDetails.scheduleStartPost;
-        delete newProductDetails.scheduleEndHour;
-        delete newProductDetails.scheduleEndMin;
-        delete newProductDetails.scheduleEndPost;
+      const newProductDetails = {
+        ...currentProduct.details[currentProductDetailsLength - 1],
+        ...details,
+      };
 
-        if (!!scheduleStart) newProductDetails['scheduleStart'] = scheduleStart;
-        if (!!scheduleEnd) newProductDetails['scheduleEnd'] = scheduleEnd;
+      delete newProductDetails.scheduleStartHour;
+      delete newProductDetails.scheduleStartMin;
+      delete newProductDetails.scheduleStartPost;
+      delete newProductDetails.scheduleEndHour;
+      delete newProductDetails.scheduleEndMin;
+      delete newProductDetails.scheduleEndPost;
 
-        return ProductService.updateProduct(id, {
-          activeVersion: currentProductDetailsLength + 1,
-          details: [...currentProduct.details, newProductDetails],
-        });
-      }
+      if (!!scheduleStart) newProductDetails['scheduleStart'] = scheduleStart;
+      if (!!scheduleEnd) newProductDetails['scheduleEnd'] = scheduleEnd;
+
+      return ProductService.updateProduct(id, {
+        activeVersion: currentProductDetailsLength + 1,
+        details: [...currentProduct.details, newProductDetails],
+      });
     }),
   deleteProduct: procedure.input(z.string()).mutation(({ input }) => {
     return ProductService.deleteProduct(input);
