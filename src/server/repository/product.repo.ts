@@ -7,13 +7,11 @@ export type IFindProductsInput = {
 
 class Respository {
   public async createProduct(productData: Omit<IProduct, 'id' | 'activeVersion'>) {
-    const product = await prisma.product.create({ data: { ...productData } });
-    return product;
+    return prisma.product.create({ data: { ...productData } });
   }
 
   public async findProductById(id: string) {
-    const product = await prisma.product.findFirst({ where: { id } });
-    return product;
+    return prisma.product.findFirst({ where: { id } });
   }
 
   public async findProducts({ page, limit, name }: IFindProductsInput) {
@@ -48,8 +46,7 @@ class Respository {
   }
 
   public async deleteProduct(id: string) {
-    const product = await prisma.product.delete({ where: { id } });
-    return product;
+    return prisma.product.delete({ where: { id } });
   }
 }
 
