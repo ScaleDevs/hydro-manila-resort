@@ -15,7 +15,7 @@ export default function Layout({ children }: any) {
           gap='10'
           textColor='whiteAlpha.800'
         >
-          <Image src='/logo_white.png' alt='Hydro Resort Logo' />
+          <Image src='/logo_white.png' alt='Hydro Resort Logo' h={{ base: '150px', xl: '200px' }} marginTop={{ base: '-30px', xl: '-60px' }} />
         </Stack>
       </Box>
       <Container maxW='container.xl'>{children}</Container>
