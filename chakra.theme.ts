@@ -1,4 +1,7 @@
 import { extendTheme } from '@chakra-ui/react';
+import Input from './theme/input.comp';
+import Button from './theme/button.comp';
+import Heading from './theme/heading.comp';
 
 export const theme = extendTheme({
   colors: {
@@ -13,6 +16,11 @@ export const theme = extendTheme({
     },
   },
   fonts: {
-    asd: 'Poppins, sans-serif',
+    primary: 'Poppins, sans-serif',
+  },
+  components: {
+    Heading,
+    Button,
+    Input,
   },
 });

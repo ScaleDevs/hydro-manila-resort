@@ -32,7 +32,7 @@
       "@/store/*": ["src/store/*"],
       "@/types": ["src/utils/types.ts"],
       "@/styles/*": [ "styles/*"],
-      "@/theme": [ "chakra.theme.js"],
+      "@/theme": [ "chakra.theme.ts"],
       "@/repo/*": [ "src/server/repository/*"],
       "@/svc/*": [ "src/server/services/*"],
     }
