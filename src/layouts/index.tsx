@@ -4,7 +4,7 @@ import { Box, Stack, Image, Container } from '@chakra-ui/react';
 export default function Layout({ children }: any) {
   return (
     <Box bg='primary.2' height='100vh'>
-      <Box w='100%' py='0' bg='primary.1'>
+      <Box w='100%' py='0' bg='primary.1' pos='relative'>
         <Stack
           maxW='container.xl'
           direction='row'
