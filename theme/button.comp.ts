@@ -28,6 +28,9 @@ const Button = defineStyleConfig({
     solid: {
       bg: 'primary.1',
       color: 'white',
+      _hover: {
+        bg: 'secondary.2',
+      },
     },
   },
   defaultProps: {

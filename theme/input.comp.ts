@@ -9,6 +9,7 @@ const Input = defineMultiStyleConfig({
       field: {
         border: '1px solid',
         borderColor: 'secondary.2',
+        borderRadius: 'sm',
       },
     },
   },
