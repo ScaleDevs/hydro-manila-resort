@@ -7,11 +7,15 @@ const Input = defineMultiStyleConfig({
   variants: {
     outline: {
       field: {
+        display: 'block',
         border: '1px solid',
-        borderColor: 'secondary.2',
+        borderColor: 'primary.1',
         borderRadius: 'sm',
         _hover: {
-          borderColor: 'primary.1',
+          border: '2px solid teal',
+        },
+        _placeholder: {
+          color: 'primary.1',
         },
       },
     },

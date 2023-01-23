@@ -29,7 +29,7 @@ const Button = defineStyleConfig({
       bg: 'primary.1',
       color: 'white',
       _hover: {
-        bg: 'secondary.2',
+        bg: 'teal',
       },
     },
   },
