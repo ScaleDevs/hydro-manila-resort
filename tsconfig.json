@@ -25,18 +25,18 @@
       "@/layouts/*": ["src/layouts/*"],
       "@/components/*": ["src/components/*"],
       "@/modules/*": ["src/modules/*"],
-      "@/hooks/*": ["src/modules/un_hooks/*"],
+      "@/hooks/*": ["src/modules/hooks/*"],
       "@/utils/*": ["src/utils/*"],
       "@/server/*": ["src/server/*"],
       "@/functions/*": ["modules/*"],
       "@/store/*": ["src/store/*"],
       "@/types": ["src/utils/types.ts"],
-      "@/styles/*": [ "styles/*"],
-      "@/theme": [ "chakra.theme.ts"],
-      "@/repo/*": [ "src/server/repository/*"],
-      "@/svc/*": [ "src/server/services/*"],
+      "@/styles/*": ["styles/*"],
+      "@/theme": ["chakra.theme.ts"],
+      "@/repo/*": ["src/server/repository/*"],
+      "@/svc/*": ["src/server/services/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts","**/*.tsx"],
-  "exclude": ["node_modules",]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }
