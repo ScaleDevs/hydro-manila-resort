@@ -34,7 +34,7 @@ export default function CalenderInput({}: ICalenderInputProps) {
           {month} {year}
         </Heading>
 
-        <HStack w='100%' borderY='2px' justifyContent='center' spacing='2'>
+        <HStack w='100%' borderY='2px' borderColor='black' justifyContent='center' spacing='2'>
           <CalCell>Sun</CalCell>
           <CalCell>Mon</CalCell>
           <CalCell>Tue</CalCell>
@@ -64,6 +64,7 @@ export default function CalenderInput({}: ICalenderInputProps) {
                   py='5px'
                   border={!!selectedDate && dayjs(selectedDate).date() === i + item ? '1px solid' : ''}
                   borderColor={!!selectedDate && dayjs(selectedDate).date() === i + item ? 'primary.1' : ''}
+                  color='black'
                   _hover={{ bg: 'secondary.1', cursor: 'pointer' }}
                   onClick={() => handleChange(i + item)}
                 >
