@@ -2,6 +2,7 @@ import { procedure, router } from '../trpc';
 import { authRouter } from './auth.router';
 import { productRouter } from './product.router';
 import { productExtraRouter } from './productExtra.router';
+import { bookingRouter } from './booking.router';
 
 /**
  * Create your application's root router
@@ -19,6 +20,7 @@ export const appRouter = router({
   auth: authRouter,
   product: productRouter,
   productExtraRouter: productExtraRouter,
+  book: bookingRouter,
 });
 
 export type AppRouter = typeof appRouter;

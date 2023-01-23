@@ -4,10 +4,10 @@ import { useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 import { getCurrentTimestamp, isPublicRoute, publicRoutes } from '@/utils/helper';
-import useRefreshToken from '@/modules/un_hooks/useRefreshToken.hook';
-import { useLogout } from '@/modules/un_hooks/useLogout.hook';
-import { useRefreshTokenJob } from '@/modules/un_hooks/useRefreshTokenJob';
-import { useSyncTabs } from '@/modules/un_hooks/useSyncTabs';
+import useRefreshToken from '@/modules/hooks/useRefreshToken.hook';
+import { useLogout } from '@/modules/hooks/useLogout.hook';
+import { useRefreshTokenJob } from '@/modules/hooks/useRefreshTokenJob';
+import { useSyncTabs } from '@/modules/hooks/useSyncTabs';
 import useAuthStoreTrack from '@/store/auth.store';
 import Loader from '@/components/Loader';
 
