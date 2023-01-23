@@ -1,0 +1,52 @@
+import { useState } from 'react';
+import { Input, Box, chakra } from '@chakra-ui/react';
+import { UseFormRegister } from 'react-hook-form';
+import { BsFillEyeSlashFill, BsFillEyeFill } from 'react-icons/bs';
+
+const EyeCloseIcon = chakra(BsFillEyeSlashFill);
+const EyeOpenIcon = chakra(BsFillEyeFill);
+
+export interface IPasswordInputProps {
+  formInput?: {
+    register?: UseFormRegister<any>;
+    property: any;
+  };
+  placeholder?: string;
+}
+
+export function PasswordInput({ formInput, placeholder }: IPasswordInputProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const toggleShowPassword = () => setShowPassword(!showPassword);
+
+  const useFormRegisterField = formInput?.register ? formInput.register(formInput.property) : {};
+
+  return (
+    <Box position='relative'>
+      <Input {...useFormRegisterField} placeholder={placeholder || 'PASSWORD'} type={showPassword ? 'text' : 'password'} />
+      {showPassword ? (
+        <EyeCloseIcon
+          pos='absolute'
+          zIndex='10'
+          right='3'
+          top='1.5'
+          h='30px'
+          w='30px'
+          cursor='pointer'
+          onClick={() => toggleShowPassword()}
+        />
+      ) : (
+        <EyeOpenIcon
+          pos='absolute'
+          zIndex='10'
+          right='3'
+          top='1.5'
+          h='30px'
+          w='30px'
+          cursor='pointer'
+          onClick={() => toggleShowPassword()}
+        />
+      )}
+    </Box>
+  );
+}

@@ -33,11 +33,13 @@ export default function useLogin() {
     setAuthState('idToken', data?.AuthenticationResult?.IdToken);
     setAuthState('expiresIn', data?.AuthenticationResult?.ExpiresIn);
     setAuthState('expiresAt', data.expiresAt);
-    router.push('/');
+    router.push('/admin');
     loginAllTabs();
   };
 
   const signIn = (formData: typeof schema._input) => {
+    console.log('INPUT HERE');
+    console.log(formData);
     mutate(formData, {
       onSuccess(data) {
         setErrMessage(null);

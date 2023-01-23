@@ -1,8 +1,14 @@
 import Head from 'next/head';
 import { Heading, Box, Input, Stack, Button } from '@chakra-ui/react';
+
 import Layout from '@/layouts/login';
+import useLogin from '@/hooks/useLogin.hook';
+import { PasswordInput } from '@/components/PasswordInput';
+import { ErrorAlert } from '@/components/ErrorAlert';
 
 function Login() {
+  const { errMessage, handleSubmit, signIn, isSignInLoading, register } = useLogin();
+
   return (
     <Layout>
       <Head>
@@ -17,12 +23,19 @@ function Login() {
             WELCOME, ADMIN!
           </Heading>
 
-          <Stack spacing='5' mt='20px'>
-            <Input placeholder='USERNAME' />
+          <form onSubmit={handleSubmit(signIn)}>
+            <Stack spacing='5' mt='20px'>
+              <Input {...register('username')} placeholder='USERNAME' />
 
-            <Input placeholder='PASSWORD' />
-            <Button>LOG IN</Button>
-          </Stack>
+              <PasswordInput formInput={{ register, property: 'password' }} />
+
+              {!!errMessage ? <ErrorAlert message={errMessage} /> : ''}
+
+              <Button type='submit' isLoading={isSignInLoading}>
+                LOG IN
+              </Button>
+            </Stack>
+          </form>
         </Box>
       </Box>
     </Layout>

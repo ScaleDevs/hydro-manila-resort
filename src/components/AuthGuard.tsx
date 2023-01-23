@@ -76,7 +76,7 @@ const AuthGuard = ({ children }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!isLoading) return <LoaderNow />;
+  if (isLoading) return <LoaderNow />;
 
   return <AuthGuardMainComponent>{children}</AuthGuardMainComponent>;
 };
