@@ -1,5 +1,3 @@
-// unused module but retained code incse for future use
-
 import crypto from 'crypto';
 import {
   CognitoIdentityProviderClient,

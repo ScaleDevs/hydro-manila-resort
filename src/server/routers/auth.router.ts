@@ -1,5 +1,3 @@
-// unused module but retained code incse for future use
-
 import { z } from 'zod';
 import { deleteCookie, getCookie } from 'cookies-next';
 

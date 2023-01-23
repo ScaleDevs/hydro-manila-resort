@@ -1,7 +1,6 @@
-// unused module but retained code incse for future use
-
 import { useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { Spinner, Center } from '@chakra-ui/react';
 
 import { getCurrentTimestamp, isPublicRoute, publicRoutes } from '@/utils/helper';
 import useRefreshToken from '@/modules/hooks/useRefreshToken.hook';
@@ -9,13 +8,12 @@ import { useLogout } from '@/modules/hooks/useLogout.hook';
 import { useRefreshTokenJob } from '@/modules/hooks/useRefreshTokenJob';
 import { useSyncTabs } from '@/modules/hooks/useSyncTabs';
 import useAuthStoreTrack from '@/store/auth.store';
-import Loader from '@/components/Loader';
 
 const LoaderNow = () => {
   return (
-    <div className='h-screen w-full flex flex-row justify-center items-center'>
-      <Loader h='h-24' w='w-24' color='fill-slate-700' />
-    </div>
+    <Center className='h-screen w-full flex flex-row justify-center items-center' h='100vh' w='100%'>
+      <Spinner thickness='4px' speed='0.65s' emptyColor='gray.200' color='blue.500' size='xl' />
+    </Center>
   );
 };
 
@@ -78,7 +76,7 @@ const AuthGuard = ({ children }: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (isLoading) return <LoaderNow />;
+  if (!isLoading) return <LoaderNow />;
 
   return <AuthGuardMainComponent>{children}</AuthGuardMainComponent>;
 };
