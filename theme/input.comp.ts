@@ -10,6 +10,9 @@ const Input = defineMultiStyleConfig({
         border: '1px solid',
         borderColor: 'secondary.2',
         borderRadius: 'sm',
+        _hover: {
+          borderColor: 'primary.1',
+        },
       },
     },
   },
