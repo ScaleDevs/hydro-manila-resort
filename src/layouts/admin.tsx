@@ -39,13 +39,13 @@ export default function Layout({ children }: any) {
             </Center>
           </Stack>
         </Box>
-        <Stack p={10} direction='row' justifyContent='right' alignItems='center'>
+        <Stack p={10} direction='row' justifyContent='right' alignItems='center' spacing={5}>
           <Heading as='h1' size='lg' noOfLines={1} textAlign='right'>
             ADMIN
           </Heading>
           <Avatar bg='primary.1' />
         </Stack>
-        <Container maxW='container.xl' bg='red'>
+        <Container maxW='container.xl' bg='gray'>
           {children}
         </Container>
       </Box>
