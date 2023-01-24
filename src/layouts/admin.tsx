@@ -39,14 +39,14 @@ export default function Layout({ children }: any) {
             </Center>
           </Stack>
         </Box>
-        <Stack p={10} direction='row' justifyContent='right' alignItems='center' spacing={5}>
+        <Stack px={10} pt={5} direction='row' justifyContent='right' alignItems='center' spacing={5}>
           <Heading as='h1' size='lg' noOfLines={1} textAlign='right'>
             ADMIN
           </Heading>
           <Avatar bg='primary.1' />
         </Stack>
 
-        <Container maxW={{ base: '90%', xl: 'container.xl' }} border='1px solid gray' p='20px'>
+        <Container maxW={{ base: '90%', xl: 'container.xl' }} p='20px'>
           {children}
         </Container>
       </Box>

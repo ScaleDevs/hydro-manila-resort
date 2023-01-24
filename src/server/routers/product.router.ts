@@ -19,7 +19,7 @@ export const productRouter = router({
           scheduleEndHour: z.number().max(12),
           scheduleEndMin: z.number().max(59),
           scheduleEndPost: z.enum(['AM', 'PM']),
-          scheduleEndDay: z.number().max(1),
+          scheduleEndNextDay: z.boolean(),
           withRooms: z.boolean(),
         }),
       }),
@@ -35,7 +35,7 @@ export const productRouter = router({
         scheduleEndHour,
         scheduleEndMin,
         scheduleEndPost,
-        scheduleEndDay,
+        scheduleEndNextDay,
         withRooms,
       } = input.details;
 
@@ -48,7 +48,7 @@ export const productRouter = router({
             maxHeadCount: maxHeadCount,
             scheduleStart: `${scheduleStartHour}:${scheduleStartMin}:00 ${scheduleStartPost}`,
             scheduleEnd: `${scheduleEndHour}:${scheduleEndMin}:00 ${scheduleEndPost}`,
-            scheduleEndDay: scheduleEndDay,
+            scheduleEndNextDay: scheduleEndNextDay,
             withRooms,
           },
         ],

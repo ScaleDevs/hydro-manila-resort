@@ -11,13 +11,13 @@ datasource db {
 }
 
 type ProductDetails {
-  price          Float
-  minHeadCount   Int
-  maxHeadCount   Int
-  scheduleStart  String
-  scheduleEnd    String
-  scheduleEndDay Int
-  withRooms      Boolean
+  price              Float
+  minHeadCount       Int
+  maxHeadCount       Int
+  scheduleStart      String
+  scheduleEnd        String
+  scheduleEndNextDay Boolean
+  withRooms          Boolean
 }
 
 type ProductExtraDetails {

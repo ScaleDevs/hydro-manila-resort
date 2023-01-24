@@ -3,6 +3,7 @@ import day from 'dayjs';
 
 export const RegexValidations = {
   NumberOnly: /(^[0-9]+$|^$)/,
+  FloatOnly: /(^[1-9]\d*(\.\d+)?$)/,
   NoNumber: /(^[a-zA-Z\s-'.]*$)/,
   Address: /(^[a-zA-Z0-9\s-'#.]*$)/,
   MobileNumber: /^[0-9-]*$/,

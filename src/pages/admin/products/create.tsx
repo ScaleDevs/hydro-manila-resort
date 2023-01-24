@@ -1,15 +1,20 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Input, Text, RadioGroup, Radio, Select } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Text } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Layout from '@/layouts/admin';
+import { NumberField } from '@/components/NumberField';
+import { TextField } from '@/components/TextField';
+import { SelectNumberField } from '@/components/SelectNumberField';
+import { SelectField } from '@/components/SelectField';
+import { RadioBooleanField } from '@/components/RadioBooleanField';
 
 const schema = z.object({
-  name: z.string(),
+  name: z.string().min(1, 'Required'),
   price: z.number(),
   minHeadCount: z.number(),
   maxHeadCount: z.number(),
@@ -19,7 +24,7 @@ const schema = z.object({
   scheduleEndHour: z.number().max(12, 'Max value is 12'),
   scheduleEndMin: z.number().max(59, 'Max value is 59'),
   scheduleEndPost: z.enum(['AM', 'PM']),
-  scheduleEndDay: z.number().max(1, 'Max value is 1'),
+  scheduleEndNextDay: z.boolean(),
   withRooms: z.boolean(),
 });
 
@@ -29,27 +34,22 @@ const Label = ({ children }: any) => {
   return <Text fontWeight='semibold'>{children}</Text>;
 };
 
-const SelectNumber = ({ placeholder, maxOpt }: { placeholder: string; maxOpt: number }) => {
-  return (
-    <Select>
-      <option value='' disabled selected>
-        {placeholder}
-      </option>
-      {Array(maxOpt)
-        .fill(1)
-        .map((v, i) => (
-          <option key={i} value={v + i}>
-            {v + i}
-          </option>
-        ))}
-    </Select>
-  );
-};
-
 function Admin() {
-  const { register } = useForm<FormSchemaType>({
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
   });
+
+  const addProductSubmit = (data: FormSchemaType) => {
+    console.log('DATA');
+    console.log(data);
+  };
+
+  console.log(errors);
 
   return (
     <Layout>
@@ -69,76 +69,111 @@ function Admin() {
         <Heading>Create Product Form</Heading>
 
         <Box w='100%' mx='auto'>
-          <form>
+          <form onSubmit={handleSubmit(addProductSubmit)}>
             <Stack spacing={6}>
               <Stack>
                 <Label>BASIC INFO:</Label>
                 <Stack direction='row'>
-                  <Input {...register('name')} placeholder='Product Name' />
-                  <Input {...register('price')} placeholder='Product Price' />
+                  <TextField register={register} property='name' placeholder='Product Name' errMsg={errors.name?.message} />
+                  <NumberField register={register} property='price' placeholder='Product Price' errMsg={errors.price?.message} />
                 </Stack>
               </Stack>
 
               <Stack>
                 <Label>HEAD COUNT CONFIGURATION:</Label>
                 <Stack direction='row'>
-                  <Input {...register('minHeadCount')} placeholder='Initial Max Head Count' />
-                  <Input {...register('maxHeadCount')} placeholder='Final Max Head Count' />
+                  <NumberField
+                    register={register}
+                    property='minHeadCount'
+                    placeholder='Initial Max Head Count'
+                    errMsg={errors.minHeadCount?.message}
+                  />
+                  <NumberField
+                    register={register}
+                    property='maxHeadCount'
+                    placeholder='Final Max Head Count'
+                    errMsg={errors.maxHeadCount?.message}
+                  />
                 </Stack>
               </Stack>
 
               <Stack>
                 <Label>SCHEDULE START DETAILS:</Label>
                 <Stack direction='row'>
-                  <SelectNumber placeholder='Hour' maxOpt={12} />
-                  <SelectNumber placeholder='Minute' maxOpt={59} />
-                  <Select>
-                    <option value='' disabled selected>
-                      AM/PM
-                    </option>
-                    <option value='AM'>AM</option>
-                    <option value='PM'>PM</option>
-                  </Select>
+                  <SelectNumberField
+                    placeholder='Hour'
+                    maxOpt={12}
+                    register={register}
+                    property='scheduleStartHour'
+                    errMsg={errors.scheduleStartHour?.message}
+                  />
+                  <SelectNumberField
+                    placeholder='Minute'
+                    maxOpt={59}
+                    register={register}
+                    property='scheduleStartMin'
+                    errMsg={errors.scheduleStartMin?.message}
+                  />
+                  <SelectField
+                    register={register}
+                    property='scheduleStartPost'
+                    placeholder='AM/PM'
+                    options={[
+                      { label: 'AM', value: 'AM' },
+                      { label: 'PM', value: 'PM' },
+                    ]}
+                    errMsg={!!errors.scheduleStartPost?.message ? 'Required!' : undefined}
+                  />
                 </Stack>
               </Stack>
 
               <Stack>
                 <Label>SCHEDULE END DETAILS:</Label>
                 <Stack direction='row'>
-                  <SelectNumber placeholder='Hour' maxOpt={12} />
-                  <SelectNumber placeholder='Minute' maxOpt={59} />
-                  <Select>
-                    <option value='' disabled selected>
-                      AM/PM
-                    </option>
-                    <option value='AM'>AM</option>
-                    <option value='PM'>PM</option>
-                  </Select>
-                  <Select>
-                    <option value='' disabled selected>
-                      Next Day?
-                    </option>
-                    <option value='0'>Yes</option>
-                    <option value='1'>No</option>
-                  </Select>
+                  <SelectNumberField
+                    placeholder='Hour'
+                    maxOpt={12}
+                    register={register}
+                    property='scheduleEndHour'
+                    errMsg={errors.scheduleEndHour?.message}
+                  />
+                  <SelectNumberField
+                    placeholder='Minute'
+                    maxOpt={59}
+                    register={register}
+                    property='scheduleEndMin'
+                    errMsg={errors.scheduleEndMin?.message}
+                  />
+                  <SelectField
+                    register={register}
+                    property='scheduleEndPost'
+                    placeholder='AM/PM'
+                    options={[
+                      { label: 'AM', value: 'AM' },
+                      { label: 'PM', value: 'PM' },
+                    ]}
+                    errMsg={!!errors.scheduleEndPost?.message ? 'Required!' : undefined}
+                  />
                 </Stack>
               </Stack>
 
               <Stack>
-                <Label>SCHEDULE END DETAILS:</Label>
-                <RadioGroup>
-                  <Stack direction='row'>
-                    <Radio value='1' colorScheme='teal'>
-                      Yes
-                    </Radio>
-                    <Radio value='2' colorScheme='teal'>
-                      No
-                    </Radio>
-                  </Stack>
-                </RadioGroup>
+                <Label>Does Schedule End Next Day?:</Label>
+                <RadioBooleanField
+                  setValue={setValue}
+                  property='scheduleEndNextDay'
+                  errMsg={errors.scheduleEndNextDay?.message}
+                />
               </Stack>
 
-              <Button borderRadius='sm'>Add Product</Button>
+              <Stack>
+                <Label>WITH ROOMS?:</Label>
+                <RadioBooleanField setValue={setValue} property='withRooms' errMsg={errors.withRooms?.message} />
+              </Stack>
+
+              <Button type='submit' borderRadius='sm'>
+                Add Product
+              </Button>
             </Stack>
           </form>
         </Box>
