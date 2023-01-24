@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Stack, Image, Container, Center, Button } from '@chakra-ui/react';
+import { Box, Stack, Image, Container, Center, Button, Heading, Avatar } from '@chakra-ui/react';
 
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import AuthGuard from '@/components/AuthGuard';
@@ -39,7 +39,15 @@ export default function Layout({ children }: any) {
             </Center>
           </Stack>
         </Box>
-        <Container maxW='container.xl'>{children}</Container>
+        <Stack p={10} direction='row' justifyContent='right' alignItems='center'>
+          <Heading as='h1' size='lg' noOfLines={1} textAlign='right'>
+            ADMIN
+          </Heading>
+          <Avatar bg='primary.1' />
+        </Stack>
+        <Container maxW='container.xl' bg='red'>
+          {children}
+        </Container>
       </Box>
     </AuthGuard>
   );

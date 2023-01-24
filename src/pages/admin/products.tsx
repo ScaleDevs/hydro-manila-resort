@@ -12,11 +12,9 @@ function Admin() {
       </Head>
 
       <Box w='100%' mx='auto'>
-        <Box w={{ base: '90%', md: '450px' }} mt='200px' mx='auto' p='20px'>
-          <Heading as='h1' size='lg' noOfLines={1} textAlign='center'>
-            PRODUCTS PAGE
-          </Heading>
-        </Box>
+        <Heading as='h1' size='lg' noOfLines={1} textAlign='center'>
+          PRODUCTS PAGE
+        </Heading>
       </Box>
     </Layout>
   );
