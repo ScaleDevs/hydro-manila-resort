@@ -45,7 +45,8 @@ export default function Layout({ children }: any) {
           </Heading>
           <Avatar bg='primary.1' />
         </Stack>
-        <Container maxW='container.xl' bg='gray'>
+
+        <Container maxW={{ base: '90%', xl: 'container.xl' }} border='1px solid gray' p='20px'>
           {children}
         </Container>
       </Box>
