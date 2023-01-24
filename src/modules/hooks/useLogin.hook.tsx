@@ -33,7 +33,7 @@ export default function useLogin() {
     setAuthState('idToken', data?.AuthenticationResult?.IdToken);
     setAuthState('expiresIn', data?.AuthenticationResult?.ExpiresIn);
     setAuthState('expiresAt', data.expiresAt);
-    router.push('/admin');
+    router.push('/admin/bookings');
     loginAllTabs();
   };
 

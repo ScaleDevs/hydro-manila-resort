@@ -14,7 +14,7 @@ function Admin() {
       <Box w='100%' mx='auto'>
         <Box w={{ base: '90%', md: '450px' }} mt='200px' mx='auto' p='20px'>
           <Heading as='h1' size='lg' noOfLines={1} textAlign='center'>
-            PRIVATE PAGE
+            BOOKING RECORDS PAGE
           </Heading>
         </Box>
       </Box>

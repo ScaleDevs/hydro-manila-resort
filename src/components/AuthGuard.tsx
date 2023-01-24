@@ -52,7 +52,7 @@ const AuthGuardMainComponent = ({ children }: AuthGuardMainComponentProps) => {
       if (getCurrentTimestamp() > expiresAt && !isPublicRoute(router.pathname)) refreshAccessToken();
 
       // loggedIn but in login page
-      if (expiresAt && accessToken && publicRoutes['/login'] === router.pathname) return router.push('/');
+      if (expiresAt && accessToken && publicRoutes['/login'] === router.pathname) return router.push('/admin/bookings');
     }
   };
 
