@@ -21,6 +21,7 @@ export const productRouter = router({
           scheduleEndPost: z.enum(['AM', 'PM']),
           scheduleEndNextDay: z.boolean(),
           withRooms: z.boolean(),
+          description: z.string().optional(),
         }),
       }),
     )
@@ -37,6 +38,7 @@ export const productRouter = router({
         scheduleEndPost,
         scheduleEndNextDay,
         withRooms,
+        description,
       } = input.details;
 
       const productData: Omit<IProduct, 'id' | 'activeVersion'> = {
@@ -50,15 +52,13 @@ export const productRouter = router({
             scheduleEnd: `${scheduleEndHour}:${scheduleEndMin}:00 ${scheduleEndPost}`,
             scheduleEndNextDay: scheduleEndNextDay,
             withRooms,
+            description: description === undefined ? null : description,
           },
         ],
       };
 
       return ProductService.createProduct(productData);
     }),
-  getProductById: procedure.input(z.string()).query(({ input }) => {
-    return ProductService.findProductById(input);
-  }),
   updateProduct: procedure
     .input(
       z.object({
@@ -132,4 +132,18 @@ export const productRouter = router({
   deleteProduct: procedure.input(z.string()).mutation(({ input }) => {
     return ProductService.deleteProduct(input);
   }),
+  getProductById: procedure.input(z.string()).query(({ input }) => {
+    return ProductService.findProductById(input);
+  }),
+  getProducts: procedure
+    .input(
+      z.object({
+        name: z.string().optional(),
+        page: z.number(),
+        limit: z.number(),
+      }),
+    )
+    .query(({ input }) => {
+      return ProductService.findProducts(input);
+    }),
 });

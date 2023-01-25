@@ -16,6 +16,7 @@ import { trpc } from '@/utils/trpc';
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
+  description: z.string().optional(),
   price: z.number(),
   minHeadCount: z.number(),
   maxHeadCount: z.number(),
@@ -101,6 +102,12 @@ function Admin() {
                 <Label>BASIC INFO:</Label>
                 <Stack direction='row'>
                   <TextField register={register} property='name' placeholder='Product Name' errMsg={errors.name?.message} />
+                  <TextField
+                    register={register}
+                    property='description'
+                    placeholder='Product Description'
+                    errMsg={errors.description?.message}
+                  />
                   <NumberField register={register} property='price' placeholder='Product Price' errMsg={errors.price?.message} />
                 </Stack>
               </Stack>

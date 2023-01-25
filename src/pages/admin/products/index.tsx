@@ -1,7 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { Box, Button, HStack, Text } from '@chakra-ui/react';
+
 import Layout from '@/layouts/admin';
+import TableProducts from '@/modules/products/TableProducts';
 
 function Admin() {
   return (
@@ -23,6 +25,10 @@ function Admin() {
             Product
           </Text>
         </HStack>
+
+        <br />
+
+        <TableProducts />
       </Box>
     </Layout>
   );

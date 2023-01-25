@@ -18,6 +18,7 @@ type ProductDetails {
   scheduleEnd        String
   scheduleEndNextDay Boolean
   withRooms          Boolean
+  description        String?
 }
 
 type ProductExtraDetails {

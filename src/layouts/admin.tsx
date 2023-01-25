@@ -22,21 +22,23 @@ export default function Layout({ children }: any) {
               />
             </Box>
 
-            <Center p={{ base: '10px', md: '30px' }}>
-              <Link href='/admin/bookings'>
-                <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
-                  BOOKING RECORDS
+            <Box display={{ base: 'none', md: 'block' }}>
+              <Center h='100%' p={{ base: '10px', md: '30px' }}>
+                <Link href='/admin/bookings'>
+                  <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
+                    BOOKING RECORDS
+                  </Button>
+                </Link>
+                <Link href='/admin/products'>
+                  <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
+                    PRODUCTS
+                  </Button>
+                </Link>
+                <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }} onClick={() => signOutWithMutate()}>
+                  LOGOUT
                 </Button>
-              </Link>
-              <Link href='/admin/products'>
-                <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
-                  PRODUCTS
-                </Button>
-              </Link>
-              <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }} onClick={() => signOutWithMutate()}>
-                LOGOUT
-              </Button>
-            </Center>
+              </Center>
+            </Box>
           </Stack>
         </Box>
         <Stack px={10} pt={5} direction='row' justifyContent='right' alignItems='center' spacing={5}>
