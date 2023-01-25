@@ -6,13 +6,14 @@ export interface ISelectFieldProps {
   property: string;
   placeholder?: string;
   errMsg?: string;
+  value?: string;
   options: { label: string; value: any }[];
 }
 
-export function SelectField({ register, property, placeholder, options, errMsg }: ISelectFieldProps) {
+export function SelectField({ register, property, value, placeholder, options, errMsg }: ISelectFieldProps) {
   return (
     <Box w='100%'>
-      <Select {...register(property)}>
+      <Select {...register(property, { value: value === undefined ? '' : value })}>
         <option value='' disabled selected>
           {placeholder}
         </option>

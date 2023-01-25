@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Text } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Text, useToast } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { TextField } from '@/components/TextField';
 import { SelectNumberField } from '@/components/SelectNumberField';
 import { SelectField } from '@/components/SelectField';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
+import { trpc } from '@/utils/trpc';
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -35,11 +36,16 @@ const Label = ({ children }: any) => {
 };
 
 function Admin() {
+  const { mutate, isLoading } = trpc.product.create.useMutation();
+  const toast = useToast();
+
   const {
     register,
     setValue,
     handleSubmit,
     formState: { errors },
+    watch,
+    reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
   });
@@ -47,6 +53,26 @@ function Admin() {
   const addProductSubmit = (data: FormSchemaType) => {
     console.log('DATA');
     console.log(data);
+    const { name, ...rest } = data;
+
+    const payload = {
+      name: name,
+      details: {
+        ...rest,
+      },
+    };
+
+    mutate(payload, {
+      onSuccess() {
+        toast({
+          title: 'Product created.',
+          status: 'success',
+          duration: 9000,
+          isClosable: true,
+        });
+        reset();
+      },
+    });
   };
 
   console.log(errors);
@@ -105,6 +131,7 @@ function Admin() {
                     maxOpt={12}
                     register={register}
                     property='scheduleStartHour'
+                    value={watch('scheduleStartHour')}
                     errMsg={errors.scheduleStartHour?.message}
                   />
                   <SelectNumberField
@@ -112,11 +139,13 @@ function Admin() {
                     maxOpt={59}
                     register={register}
                     property='scheduleStartMin'
+                    value={watch('scheduleStartMin')}
                     errMsg={errors.scheduleStartMin?.message}
                   />
                   <SelectField
                     register={register}
                     property='scheduleStartPost'
+                    value={watch('scheduleStartPost')}
                     placeholder='AM/PM'
                     options={[
                       { label: 'AM', value: 'AM' },
@@ -135,6 +164,7 @@ function Admin() {
                     maxOpt={12}
                     register={register}
                     property='scheduleEndHour'
+                    value={watch('scheduleEndHour')}
                     errMsg={errors.scheduleEndHour?.message}
                   />
                   <SelectNumberField
@@ -142,11 +172,13 @@ function Admin() {
                     maxOpt={59}
                     register={register}
                     property='scheduleEndMin'
+                    value={watch('scheduleEndMin')}
                     errMsg={errors.scheduleEndMin?.message}
                   />
                   <SelectField
                     register={register}
                     property='scheduleEndPost'
+                    value={watch('scheduleEndPost')}
                     placeholder='AM/PM'
                     options={[
                       { label: 'AM', value: 'AM' },
@@ -161,6 +193,7 @@ function Admin() {
                 <Label>Does Schedule End Next Day?:</Label>
                 <RadioBooleanField
                   setValue={setValue}
+                  value={watch('scheduleEndNextDay')}
                   property='scheduleEndNextDay'
                   errMsg={errors.scheduleEndNextDay?.message}
                 />
@@ -168,10 +201,15 @@ function Admin() {
 
               <Stack>
                 <Label>WITH ROOMS?:</Label>
-                <RadioBooleanField setValue={setValue} property='withRooms' errMsg={errors.withRooms?.message} />
+                <RadioBooleanField
+                  setValue={setValue}
+                  value={watch('withRooms')}
+                  property='withRooms'
+                  errMsg={errors.withRooms?.message}
+                />
               </Stack>
 
-              <Button type='submit' borderRadius='sm'>
+              <Button type='submit' borderRadius='sm' isLoading={isLoading}>
                 Add Product
               </Button>
             </Stack>
