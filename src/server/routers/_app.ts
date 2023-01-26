@@ -1,7 +1,7 @@
 import { procedure, router } from '../trpc';
 import { authRouter } from './auth.router';
 import { productRouter } from './product.router';
-import { productExtraRouter } from './productExtra.router';
+import { addOnRouter } from './addOn.router';
 import { bookingRouter } from './booking.router';
 
 /**
@@ -19,7 +19,7 @@ export const appRouter = router({
   }),
   auth: authRouter,
   product: productRouter,
-  productExtraRouter: productExtraRouter,
+  addOn: addOnRouter,
   book: bookingRouter,
 });
 

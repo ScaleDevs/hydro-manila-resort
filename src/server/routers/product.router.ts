@@ -41,7 +41,7 @@ export const productRouter = router({
         description,
       } = input.details;
 
-      const productData: Omit<IProduct, 'id' | 'activeVersion'> = {
+      const productData: Omit<IProduct, 'productId' | 'activeVersion'> = {
         ...input,
         details: [
           {

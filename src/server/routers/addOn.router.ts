@@ -1,10 +1,10 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { procedure, router } from '../trpc';
-import { ProductExtraService } from '@/svc/productExtra.service';
-import { IProductExtra } from '@/utils/types';
+import { AddOnService } from '@/server/services/addOn.service';
+import { IAddOn } from '@/utils/types';
 
-export const productExtraRouter = router({
+export const addOnRouter = router({
   create: procedure
     .input(
       z.object({
@@ -19,7 +19,7 @@ export const productExtraRouter = router({
     .mutation(({ input }) => {
       const { price, description } = input.details;
 
-      const data: Omit<IProductExtra, 'id' | 'activeVersion'> = {
+      const data: Omit<IAddOn, 'addOnId' | 'activeVersion'> = {
         ...input,
         details: [
           {
@@ -29,12 +29,12 @@ export const productExtraRouter = router({
         ],
       };
 
-      return ProductExtraService.createProductExtra(data);
+      return AddOnService.createAddOn(data);
     }),
-  getProductExtraById: procedure.input(z.string()).query(({ input }) => {
-    return ProductExtraService.findProductExtraById(input);
+  getAddOnById: procedure.input(z.string()).query(({ input }) => {
+    return AddOnService.findAddOnById(input);
   }),
-  updateProductExtra: procedure
+  updateAddOn: procedure
     .input(
       z.object({
         id: z.string(),
@@ -46,9 +46,9 @@ export const productExtraRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return ProductExtraService.updateProductExtra(input.id, input.partialData);
+      return AddOnService.updateAddOn(input.id, input.partialData);
     }),
-  createNewProductExtraVersion: procedure
+  createNewAddOnVersion: procedure
     .input(
       z.object({
         id: z.string(),
@@ -60,23 +60,23 @@ export const productExtraRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, details } = input;
-      const currentProductExtra = await ProductExtraService.findProductExtraById(id);
+      const currentAddOn = await AddOnService.findAddOnById(id);
 
-      if (!currentProductExtra) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product Extra does not exist' });
+      if (!currentAddOn) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product Extra does not exist' });
 
-      const currDetailsLength = currentProductExtra.details.length;
+      const currDetailsLength = currentAddOn.details.length;
 
-      const newProductExtraDetails = {
-        ...currentProductExtra.details[currDetailsLength - 1],
+      const newAddOnDetails = {
+        ...currentAddOn.details[currDetailsLength - 1],
         ...details,
       };
 
-      return ProductExtraService.updateProductExtra(id, {
+      return AddOnService.updateAddOn(id, {
         activeVersion: currDetailsLength + 1,
-        details: [...currentProductExtra.details, newProductExtraDetails],
+        details: [...currentAddOn.details, newAddOnDetails],
       });
     }),
-  deleteProductExtra: procedure.input(z.string()).mutation(({ input }) => {
-    return ProductExtraService.deleteProductExtra(input);
+  deleteAddOn: procedure.input(z.string()).mutation(({ input }) => {
+    return AddOnService.deleteAddOn(input);
   }),
 });

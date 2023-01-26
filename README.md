@@ -32,3 +32,13 @@ This is a Dashboard template built with Next.js fullstack setup (Helpful for sma
 - MAILER\*SEND_FROM_EMAIL={mailer send from email} \*\*\*(currently not used)\_\*\*
 - MAILER\*SEND_FROM_NAME={mailer send from name} \*\*\*(currently not used)\_\*\*
 - MAILER\*SEND_API_KEY={api key of your mailer send account domain} \*\*\*(currently not used)\_\*\*
+
+## prio
+
+- add product extra
+- apply api integration to booking
+
+## later
+
+- add side nav when mobile
+- add update feature for product & product extra

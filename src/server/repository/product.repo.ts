@@ -6,12 +6,12 @@ export type IFindProductsInput = {
 } & IPaginationInputs;
 
 class Respository {
-  public async createProduct(productData: Omit<IProduct, 'id' | 'activeVersion'>) {
+  public async createProduct(productData: Omit<IProduct, 'productId' | 'activeVersion'>) {
     return prisma.product.create({ data: { ...productData } });
   }
 
   public async findProductById(id: string) {
-    return prisma.product.findFirst({ where: { id } });
+    return prisma.product.findFirst({ where: { productId: id } });
   }
 
   public async findProducts({ page, limit, name }: IFindProductsInput) {
@@ -40,13 +40,13 @@ class Respository {
 
   public async updateProduct(id: string, partialData: Partial<IProduct>) {
     return prisma.product.update({
-      where: { id },
+      where: { productId: id },
       data: partialData,
     });
   }
 
   public async deleteProduct(id: string) {
-    return prisma.product.delete({ where: { id } });
+    return prisma.product.delete({ where: { productId: id } });
   }
 }
 

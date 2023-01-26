@@ -3,7 +3,7 @@ import { IFindProductsInput, ProductRepository } from '@/server/repository/produ
 import { TRPCError } from '@trpc/server';
 
 class Service {
-  public async createProduct(productData: Omit<IProduct, 'id' | 'activeVersion'>) {
+  public async createProduct(productData: Omit<IProduct, 'productId' | 'activeVersion'>) {
     try {
       return ProductRepository.createProduct(productData);
     } catch (err) {

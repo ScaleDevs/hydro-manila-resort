@@ -21,7 +21,7 @@ type ProductDetails {
   description        String?
 }
 
-type ProductExtraDetails {
+type AddOnDetails {
   description String
   price       Float
 }
@@ -33,41 +33,41 @@ type Receipt {
   total                Float
 }
 
-enum ProductExtraType {
+enum AddOnType {
   ROOM
   PERSON
 }
 
 model Product {
-  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  productId     String           @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   activeVersion Int?             @default(1)
   details       ProductDetails[]
   Booking       Booking[]
 }
 
-model ProductExtra {
-  id            String                @id @default(auto()) @map("_id") @db.ObjectId
+model AddOn {
+  addOnId       String         @id @default(auto()) @map("_id") @db.ObjectId
   name          String
-  type          ProductExtraType
-  activeVersion Int?                  @default(1)
-  details       ProductExtraDetails[]
+  type          AddOnType
+  activeVersion Int?           @default(1)
+  details       AddOnDetails[]
   Booking       Booking[]
 }
 
 model Booking {
-  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
-  name                String
-  email               String
-  phoneNumber         String
-  startSession        DateTime
-  endSession          DateTime
-  guests              Int
-  room                ProductExtra @relation(fields: [productExtraId], references: [id])
-  productExtraId      String       @db.ObjectId
-  productExtraVersion Int
-  product             Product      @relation(fields: [productId], references: [id])
-  productId           String       @db.ObjectId
-  productVersion      Int
-  receipt             Receipt
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String
+  phoneNumber    String
+  startSession   DateTime
+  endSession     DateTime
+  guests         Int
+  room           AddOn    @relation(fields: [AddOnId], references: [addOnId])
+  AddOnId        String   @db.ObjectId
+  AddOnVersion   Int
+  product        Product  @relation(fields: [productId], references: [productId])
+  productId      String   @db.ObjectId
+  productVersion Int
+  receipt        Receipt
 }
