@@ -36,7 +36,7 @@ const Label = ({ children }: any) => {
   return <Text fontWeight='semibold'>{children}</Text>;
 };
 
-function Admin() {
+function CreateProduct() {
   const { mutate, isLoading } = trpc.product.create.useMutation();
   const toast = useToast();
 
@@ -227,4 +227,4 @@ function Admin() {
   );
 }
 
-export default Admin;
+export default CreateProduct;

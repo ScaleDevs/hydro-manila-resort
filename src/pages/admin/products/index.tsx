@@ -6,7 +6,7 @@ import Layout from '@/layouts/admin';
 import TableProducts from '@/modules/products/TableProducts';
 import TableAddOns from '@/modules/addOns/TableAddOns';
 
-function Admin() {
+function Products() {
   return (
     <Layout>
       <Head>
@@ -33,10 +33,23 @@ function Admin() {
 
         <Divider orientation='horizontal' my='30px' border='2px solid' borderColor='pimray.1' />
 
+        <HStack>
+          <Link href='/admin/products/create-addons'>
+            <Button borderRadius='full' h='50px' w='50px' fontSize='25px' fontWeight='normal'>
+              +
+            </Button>
+          </Link>
+          <Text fontWeight='semibold' fontSize='18px'>
+            ADD ON
+          </Text>
+        </HStack>
+
+        <br />
+
         <TableAddOns />
       </Box>
     </Layout>
   );
 }
 
-export default Admin;
+export default Products;
