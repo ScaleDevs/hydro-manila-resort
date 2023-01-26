@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box } from '@chakra-ui/react';
+import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, Button, useToast } from '@chakra-ui/react';
+import { BsFillTrashFill } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
@@ -7,8 +8,32 @@ import Paginator from '@/components/Paginator';
 export interface ITableAddOnsProps {}
 
 export default function TableAddOns({}: ITableAddOnsProps) {
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const { data, isLoading } = trpc.addOn.getAddOns.useQuery({ page, limit: 5 });
+  const { mutate } = trpc.addOn.deleteAddOn.useMutation();
+  const utils = trpc.useContext();
+
+  const deleteAddOnRecord = (name: string, id: string) => {
+    mutate(id, {
+      onSuccess() {
+        utils.addOn.getAddOns.setData({ page, limit: 5 }, (rec: any) => {
+          const newRecords = rec?.records.filter((value: { addOnId: string }) => value.addOnId !== id);
+          return {
+            pageCount: rec?.pageCount,
+            records: newRecords,
+          };
+        });
+
+        toast({
+          title: `${name} Add On deleted.`,
+          status: 'error',
+          duration: 9000,
+          isClosable: true,
+        });
+      },
+    });
+  };
 
   const handlePageChange = (pageNumber: number) => {
     setPage(pageNumber);
@@ -60,6 +85,11 @@ export default function TableAddOns({}: ITableAddOnsProps) {
                   <Td>{v.name}</Td>
                   <Td>{v.details[(v.activeVersion || 1) - 1].description}</Td>
                   <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                  <Td>
+                    <Button borderRadius='sm' onClick={() => deleteAddOnRecord(v.name, v.addOnId)}>
+                      <BsFillTrashFill />
+                    </Button>
+                  </Td>
                 </Tr>
               ))
             )}
