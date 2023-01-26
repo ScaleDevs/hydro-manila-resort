@@ -35,40 +35,48 @@ export default function TableProducts({}: ITableProductsProps) {
             </Tr>
           </Thead>
           <Tbody>
-            {isLoading
-              ? Array(5)
-                  .fill(1)
-                  .map((v, i) => (
-                    <Tr key={i}>
-                      <Td>
-                        <Skeleton height='20px' />
-                      </Td>
-                      <Td>
-                        <Skeleton height='20px' />
-                      </Td>
-                      <Td>
-                        <Skeleton height='20px' />
-                      </Td>
-                      <Td>
-                        <Skeleton height='20px' />
-                      </Td>
-                    </Tr>
-                  ))
-              : data?.records.map((v, i) => (
-                  <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                    <Td>{v.name}</Td>
+            {isLoading ? (
+              Array(5)
+                .fill(1)
+                .map((v, i) => (
+                  <Tr key={i}>
                     <Td>
-                      {v.details[(v.activeVersion || 1) - 1].scheduleStart} - {v.details[(v.activeVersion || 1) - 1].scheduleEnd}
+                      <Skeleton height='20px' />
                     </Td>
-                    <Td>{v.details[(v.activeVersion || 1) - 1].description}</Td>
-                    <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                    <Td>
+                      <Skeleton height='20px' />
+                    </Td>
+                    <Td>
+                      <Skeleton height='20px' />
+                    </Td>
+                    <Td>
+                      <Skeleton height='20px' />
+                    </Td>
                   </Tr>
-                ))}
+                ))
+            ) : data?.records.length === 0 ? (
+              <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
+                <Td colSpan={4} textAlign='center' fontSize='lg'>
+                  No Records Found
+                </Td>
+              </Tr>
+            ) : (
+              data?.records.map((v, i) => (
+                <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
+                  <Td>{v.name}</Td>
+                  <Td>
+                    {v.details[(v.activeVersion || 1) - 1].scheduleStart} - {v.details[(v.activeVersion || 1) - 1].scheduleEnd}
+                  </Td>
+                  <Td>{v.details[(v.activeVersion || 1) - 1].description}</Td>
+                  <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                </Tr>
+              ))
+            )}
           </Tbody>
         </Table>
       </TableContainer>
       <Box w='100%' mt='20px'>
-        <Paginator currentPage={page} pageCount={data?.pageCount || 10} handlePageChange={handlePageChange} />
+        <Paginator currentPage={page} pageCount={data?.pageCount || 0} handlePageChange={handlePageChange} />
       </Box>
     </>
   );
