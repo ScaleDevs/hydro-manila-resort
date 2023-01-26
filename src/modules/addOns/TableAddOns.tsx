@@ -21,7 +21,7 @@ export default function TableAddOns({}: ITableAddOnsProps) {
           <Thead>
             <Tr>
               <Th fontSize='md' fontFamily='primary'>
-                ADDON NAME
+                ADD ON NAME
               </Th>
               <Th fontSize='md' fontFamily='primary'>
                 DESCRIPTION

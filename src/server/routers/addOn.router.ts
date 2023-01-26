@@ -17,14 +17,13 @@ export const addOnRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      const { price, description } = input.details;
+      const { details, ...rest } = input;
 
       const data: Omit<IAddOn, 'addOnId' | 'activeVersion'> = {
-        ...input,
+        ...rest,
         details: [
           {
-            price,
-            description,
+            ...details,
           },
         ],
       };

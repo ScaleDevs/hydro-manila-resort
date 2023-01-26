@@ -52,8 +52,6 @@ function CreateProduct() {
   });
 
   const addProductSubmit = (data: FormSchemaType) => {
-    console.log('DATA');
-    console.log(data);
     const { name, ...rest } = data;
 
     const payload = {

@@ -22,7 +22,6 @@ export function NumberField({ register, property, placeholder, errMsg }: INumber
           setValueAs: setFormValue,
         })}
         placeholder={placeholder}
-        type='number'
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>
