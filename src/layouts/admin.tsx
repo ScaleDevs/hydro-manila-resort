@@ -1,16 +1,22 @@
 import React from 'react';
-import { Box, Stack, Image, Container, Center, Button, Heading, Avatar } from '@chakra-ui/react';
+import { Box, Stack, Image, Container, Center, Button, Heading, Avatar, chakra, useDisclosure } from '@chakra-ui/react';
+import { RxHamburgerMenu } from 'react-icons/rx';
 
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import AuthGuard from '@/components/AuthGuard';
 import Link from 'next/link';
+import SideNav from '@/components/SideNav';
+
+const HamburgerMenu = chakra(RxHamburgerMenu);
 
 export default function Layout({ children }: any) {
   const { signOutWithMutate } = useLogout();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <AuthGuard>
       <Box bg='primary.2' height='100vh'>
+        <SideNav isOpen={isOpen} onClose={onClose} />
         <Box w='100%' py='0' bg='primary.1' pos='relative'>
           <Stack direction='row' h='90px' w='100%' justifyContent='space-between' gap='10' textColor='whiteAlpha.800'>
             <Box>
@@ -39,6 +45,9 @@ export default function Layout({ children }: any) {
                 </Button>
               </Center>
             </Box>
+            <Center p='20px' display={{ base: 'flex', md: 'none' }}>
+              <HamburgerMenu _hover={{ cursor: 'pointer' }} w='25px' h='25px' onClick={onOpen} />
+            </Center>
           </Stack>
         </Box>
         <Stack px={10} pt={5} direction='row' justifyContent='right' alignItems='center' spacing={5}>
