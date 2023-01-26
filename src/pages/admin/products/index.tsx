@@ -1,9 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, HStack, Text } from '@chakra-ui/react';
+import { Box, Button, Divider, HStack, Text } from '@chakra-ui/react';
 
 import Layout from '@/layouts/admin';
 import TableProducts from '@/modules/products/TableProducts';
+import TableAddOns from '@/modules/addOns/TableAddOns';
 
 function Admin() {
   return (
@@ -29,6 +30,10 @@ function Admin() {
         <br />
 
         <TableProducts />
+
+        <Divider orientation='horizontal' my='30px' border='2px solid' borderColor='pimray.1' />
+
+        <TableAddOns />
       </Box>
     </Layout>
   );

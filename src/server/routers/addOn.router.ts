@@ -31,9 +31,6 @@ export const addOnRouter = router({
 
       return AddOnService.createAddOn(data);
     }),
-  getAddOnById: procedure.input(z.string()).query(({ input }) => {
-    return AddOnService.findAddOnById(input);
-  }),
   updateAddOn: procedure
     .input(
       z.object({
@@ -79,4 +76,18 @@ export const addOnRouter = router({
   deleteAddOn: procedure.input(z.string()).mutation(({ input }) => {
     return AddOnService.deleteAddOn(input);
   }),
+  getAddOnById: procedure.input(z.string()).query(({ input }) => {
+    return AddOnService.findAddOnById(input);
+  }),
+  getAddOns: procedure
+    .input(
+      z.object({
+        name: z.string().optional(),
+        page: z.number(),
+        limit: z.number(),
+      }),
+    )
+    .query(({ input }) => {
+      return AddOnService.findManyAddOn(input);
+    }),
 });
