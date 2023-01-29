@@ -26,7 +26,7 @@ export default function useRefreshToken() {
       resetAuthState();
       setAuthState('authLoader', false);
       logoutAllTabs();
-      router.push(publicRoutes['/login']);
+      router.push(publicRoutes['/admin/login']);
     },
   });
 
@@ -37,7 +37,7 @@ export default function useRefreshToken() {
     setAuthState('expiresAt', data.expiresAt);
     setAuthState('authLoader', false);
     if (!publicRoutes[router.pathname as keyof typeof publicRoutes]) return;
-    else router.push(publicRoutes['/login']);
+    else router.push(publicRoutes['/admin/login']);
   };
 
   const refreshAccessToken = () => mutate();

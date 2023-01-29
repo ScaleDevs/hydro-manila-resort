@@ -17,7 +17,7 @@ export function useLogout() {
       logoutAllTabs();
       clearRefreshTokenJob();
       resetAuthState();
-      router.push('/login');
+      router.push('/admin/login');
     },
     onError(error) {
       setErrMessage(error.message);
@@ -31,7 +31,7 @@ export function useLogout() {
   const signOut = () => {
     clearRefreshTokenJob();
     resetAuthState();
-    router.push('/login');
+    router.push('/admin/login');
   };
 
   const signOutWithMutate = () => mutate();

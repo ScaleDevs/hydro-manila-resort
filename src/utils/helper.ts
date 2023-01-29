@@ -51,7 +51,7 @@ export const createTempPassword = () => {
 };
 
 export const publicRoutes = {
-  '/login': '/login',
+  '/admin/login': '/admin/login',
 };
 
 export const isPublicRoute = (pathname: string) => {

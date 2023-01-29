@@ -25,7 +25,7 @@ export function useSyncTabs() {
         setAuthState('authLoader', false);
       } else if (msg.action === 'LOGOUT') {
         resetAuthState();
-        if (!isPublicRoute(router.pathname)) router.push({ pathname: '/login' });
+        if (!isPublicRoute(router.pathname)) router.push({ pathname: '/admin/login' });
       }
     };
   };
