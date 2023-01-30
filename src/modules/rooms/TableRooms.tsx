@@ -5,20 +5,20 @@ import { BsFillTrashFill } from 'react-icons/bs';
 import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
 
-export interface ITableAddOnsProps {}
+export interface ITableRoomProps {}
 
-export default function TableAddOns({}: ITableAddOnsProps) {
+export default function TableRoom({}: ITableRoomProps) {
   const toast = useToast();
   const [page, setPage] = useState(1);
-  const { data, isLoading } = trpc.addOn.getAddOns.useQuery({ page, limit: 5 });
-  const { mutate } = trpc.addOn.deleteAddOn.useMutation();
+  const { data, isLoading } = trpc.room.getRooms.useQuery({ page, limit: 5 });
+  const { mutate } = trpc.room.deleteRoom.useMutation();
   const utils = trpc.useContext();
 
-  const deleteAddOnRecord = (name: string, id: string) => {
+  const deleteRoomRecord = (roomNumber: number, id: string) => {
     mutate(id, {
       onSuccess() {
-        utils.addOn.getAddOns.setData({ page, limit: 5 }, (rec: any) => {
-          const newRecords = rec?.records.filter((value: { addOnId: string }) => value.addOnId !== id);
+        utils.room.getRooms.setData({ page, limit: 5 }, (rec: any) => {
+          const newRecords = rec?.records.filter((value: { roomId: string }) => value.roomId !== id);
           return {
             pageCount: rec?.pageCount,
             records: newRecords,
@@ -26,7 +26,7 @@ export default function TableAddOns({}: ITableAddOnsProps) {
         });
 
         toast({
-          title: `${name} Add On deleted.`,
+          title: `Room ${roomNumber} deleted.`,
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -46,10 +46,13 @@ export default function TableAddOns({}: ITableAddOnsProps) {
           <Thead>
             <Tr>
               <Th fontSize='md' fontFamily='primary'>
-                ADD ON NAME
+                ROOM NUMBER
               </Th>
               <Th fontSize='md' fontFamily='primary'>
-                DESCRIPTION
+                PAX
+              </Th>
+              <Th fontSize='md' fontFamily='primary'>
+                BATHROOM
               </Th>
               <Th fontSize='md' fontFamily='primary'>
                 PRICE
@@ -71,6 +74,9 @@ export default function TableAddOns({}: ITableAddOnsProps) {
                     <Td>
                       <Skeleton height='20px' />
                     </Td>
+                    <Td>
+                      <Skeleton height='20px' />
+                    </Td>
                   </Tr>
                 ))
             ) : data?.records.length === 0 ? (
@@ -82,11 +88,12 @@ export default function TableAddOns({}: ITableAddOnsProps) {
             ) : (
               data?.records.map((v, i) => (
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td>{v.name}</Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].description}</Td>
+                  <Td>ROOM {v.roomNumber}</Td>
+                  <Td>{v.details[(v.activeVersion || 1) - 1].guests}</Td>
+                  <Td>{v.details[(v.activeVersion || 1) - 1].withBathroom ? 'AVAILABLE' : 'N/A'}</Td>
                   <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
                   <Td>
-                    <Button borderRadius='sm' onClick={() => deleteAddOnRecord(v.name, v.addOnId)}>
+                    <Button borderRadius='sm' onClick={() => deleteRoomRecord(v.roomNumber, v.roomId)}>
                       <BsFillTrashFill />
                     </Button>
                   </Td>

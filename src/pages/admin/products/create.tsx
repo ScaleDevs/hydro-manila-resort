@@ -18,8 +18,6 @@ const schema = z.object({
   name: z.string().min(1, 'Required'),
   description: z.string().optional(),
   price: z.number(),
-  minHeadCount: z.number(),
-  maxHeadCount: z.number(),
   scheduleStartHour: z.number().max(12, 'Max value is 12'),
   scheduleStartMin: z.number().max(59, 'Max value is 59'),
   scheduleStartPost: z.enum(['AM', 'PM']),
@@ -107,24 +105,6 @@ function CreateProduct() {
                     errMsg={errors.description?.message}
                   />
                   <NumberField register={register} property='price' placeholder='Product Price' errMsg={errors.price?.message} />
-                </Stack>
-              </Stack>
-
-              <Stack>
-                <Label>HEAD COUNT CONFIGURATION:</Label>
-                <Stack direction='row'>
-                  <NumberField
-                    register={register}
-                    property='minHeadCount'
-                    placeholder='Initial Max Head Count'
-                    errMsg={errors.minHeadCount?.message}
-                  />
-                  <NumberField
-                    register={register}
-                    property='maxHeadCount'
-                    placeholder='Final Max Head Count'
-                    errMsg={errors.maxHeadCount?.message}
-                  />
                 </Stack>
               </Stack>
 

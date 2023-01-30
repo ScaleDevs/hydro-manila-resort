@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Grid, GridItem, Heading, HStack, Text } from '@chakra-ui/react';
 import dayjs from 'dayjs';
+import { UseFormSetValue } from 'react-hook-form';
 
 const CalCell = ({ children }: { children: any }) => {
   return (
@@ -10,9 +11,11 @@ const CalCell = ({ children }: { children: any }) => {
   );
 };
 
-interface ICalenderInputProps {}
+interface ICalenderInputProps {
+  setValue: UseFormSetValue<any>;
+}
 
-export default function CalenderInput({}: ICalenderInputProps) {
+export default function CalenderInput({ setValue }: ICalenderInputProps) {
   const [year] = useState(dayjs().year());
   const [month] = useState(dayjs().format('MMMM'));
   const [days] = useState(dayjs().daysInMonth());
@@ -21,7 +24,9 @@ export default function CalenderInput({}: ICalenderInputProps) {
   const handleChange = (value: any) => {
     const dayjsInstance = dayjs();
     console.log(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('DD-MM-YYYY'));
+    const dateValue = dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD');
     setSelecetedDate(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD'));
+    setValue('bookingDate', dateValue);
   };
 
   return (
@@ -62,7 +67,7 @@ export default function CalenderInput({}: ICalenderInputProps) {
                   key={i}
                   textAlign='center'
                   py='5px'
-                  border={!!selectedDate && dayjs(selectedDate).date() === i + item ? '1px solid' : ''}
+                  border={!!selectedDate && dayjs(selectedDate).date() === i + item ? '2px solid' : ''}
                   borderColor={!!selectedDate && dayjs(selectedDate).date() === i + item ? 'primary.1' : ''}
                   color='black'
                   _hover={{ bg: 'secondary.1', cursor: 'pointer' }}

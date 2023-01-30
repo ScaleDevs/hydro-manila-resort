@@ -1,25 +1,26 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { procedure, router } from '../trpc';
-import { AddOnService } from '@/server/services/addOn.service';
-import { IAddOn } from '@/utils/types';
+import { RoomService } from '@/server/services/room.service';
+import { IRoom } from '@/utils/types';
 
-export const addOnRouter = router({
+export const roomRouter = router({
   create: procedure
     .input(
       z.object({
-        name: z.string(),
-        type: z.enum(['ROOM', 'PERSON']),
+        roomNumber: z.number(),
         details: z.object({
           price: z.number(),
-          description: z.string(),
+          description: z.string().nullable(),
+          withBathroom: z.boolean(),
+          guests: z.number(),
         }),
       }),
     )
     .mutation(({ input }) => {
       const { details, ...rest } = input;
 
-      const data: Omit<IAddOn, 'addOnId' | 'activeVersion'> = {
+      const data: Omit<IRoom, 'roomId' | 'activeVersion'> = {
         ...rest,
         details: [
           {
@@ -28,9 +29,9 @@ export const addOnRouter = router({
         ],
       };
 
-      return AddOnService.createAddOn(data);
+      return RoomService.createRoom(data);
     }),
-  updateAddOn: procedure
+  updateRoom: procedure
     .input(
       z.object({
         id: z.string(),
@@ -42,9 +43,9 @@ export const addOnRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return AddOnService.updateAddOn(input.id, input.partialData);
+      return RoomService.updateRoom(input.id, input.partialData);
     }),
-  createNewAddOnVersion: procedure
+  createNewRoomVersion: procedure
     .input(
       z.object({
         id: z.string(),
@@ -56,29 +57,29 @@ export const addOnRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, details } = input;
-      const currentAddOn = await AddOnService.findAddOnById(id);
+      const currentRoom = await RoomService.findRoomById(id);
 
-      if (!currentAddOn) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product Extra does not exist' });
+      if (!currentRoom) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product Extra does not exist' });
 
-      const currDetailsLength = currentAddOn.details.length;
+      const currDetailsLength = currentRoom.details.length;
 
-      const newAddOnDetails = {
-        ...currentAddOn.details[currDetailsLength - 1],
+      const newRoometails = {
+        ...currentRoom.details[currDetailsLength - 1],
         ...details,
       };
 
-      return AddOnService.updateAddOn(id, {
+      return RoomService.updateRoom(id, {
         activeVersion: currDetailsLength + 1,
-        details: [...currentAddOn.details, newAddOnDetails],
+        details: [...currentRoom.details, newRoometails],
       });
     }),
-  deleteAddOn: procedure.input(z.string()).mutation(({ input }) => {
-    return AddOnService.deleteAddOn(input);
+  deleteRoom: procedure.input(z.string()).mutation(({ input }) => {
+    return RoomService.deleteRoom(input);
   }),
-  getAddOnById: procedure.input(z.string()).query(({ input }) => {
-    return AddOnService.findAddOnById(input);
+  getRoomById: procedure.input(z.string()).query(({ input }) => {
+    return RoomService.findRoomById(input);
   }),
-  getAddOns: procedure
+  getRooms: procedure
     .input(
       z.object({
         name: z.string().optional(),
@@ -87,6 +88,6 @@ export const addOnRouter = router({
       }),
     )
     .query(({ input }) => {
-      return AddOnService.findManyAddOn(input);
+      return RoomService.findManyRoom(input);
     }),
 });

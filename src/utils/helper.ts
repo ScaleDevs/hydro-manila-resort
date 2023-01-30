@@ -62,3 +62,8 @@ export const isPublicRoute = (pathname: string) => {
 export const getCurrentTimestamp = () => {
   return day().unix();
 };
+
+export const PHpeso = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'PHP',
+});

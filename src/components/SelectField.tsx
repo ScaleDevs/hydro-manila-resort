@@ -7,13 +7,30 @@ export interface ISelectFieldProps {
   placeholder?: string;
   errMsg?: string;
   value?: string;
-  options: { label: string; value: any }[];
+  options: { label: string | JSX.Element; value: any }[];
+  children?: any;
+  handleOnChange?: (value: any) => void;
+  disabled?: boolean;
 }
 
-export function SelectField({ register, property, value, placeholder, options, errMsg }: ISelectFieldProps) {
+export function SelectField({
+  register,
+  property,
+  value,
+  placeholder,
+  options,
+  errMsg,
+  children,
+  handleOnChange,
+  disabled,
+}: ISelectFieldProps) {
+  const onChange = (e: any) => {
+    !!handleOnChange && handleOnChange(e.target.value);
+  };
+
   return (
     <Box w='100%'>
-      <Select {...register(property, { value: value === undefined ? '' : value })}>
+      <Select {...register(property, { value: value === undefined ? '' : value, onChange })} disabled={disabled}>
         <option value='' disabled selected>
           {placeholder}
         </option>
@@ -24,6 +41,7 @@ export function SelectField({ register, property, value, placeholder, options, e
         ))}
       </Select>
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
+      {children}
     </Box>
   );
 }

@@ -9,11 +9,11 @@ export const bookingRouter = router({
         name: z.string(),
         email: z.string().email(),
         phoneNumber: z.string(),
-        startSession: z.date(),
-        endSession: z.date(),
+        startSession: z.string(),
+        endSession: z.string(),
         guests: z.number(),
-        productExtraId: z.string(),
-        productExtraVersion: z.number(),
+        roomId: z.string(),
+        roomVersion: z.number(),
         productId: z.string(),
         productVersion: z.number(),
         receipt: z.object({
@@ -25,7 +25,11 @@ export const bookingRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return BookingService.createBooking(input);
+      return BookingService.createBooking({
+        ...input,
+        startSession: new Date(input.startSession),
+        endSession: new Date(input.endSession),
+      });
     }),
   getManyBooking: procedure
     .input(

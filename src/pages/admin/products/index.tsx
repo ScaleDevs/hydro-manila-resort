@@ -4,7 +4,7 @@ import { Box, Button, Divider, HStack, Text } from '@chakra-ui/react';
 
 import Layout from '@/layouts/admin';
 import TableProducts from '@/modules/products/TableProducts';
-import TableAddOns from '@/modules/addOns/TableAddOns';
+import TableRooms from '@/modules/rooms/TableRooms';
 
 function Products() {
   return (
@@ -34,19 +34,19 @@ function Products() {
         <Divider orientation='horizontal' my='30px' border='2px solid' borderColor='pimray.1' />
 
         <HStack>
-          <Link href='/admin/products/create-addons'>
+          <Link href='/admin/products/create-rooms'>
             <Button borderRadius='full' h='50px' w='50px' fontSize='25px' fontWeight='normal'>
               +
             </Button>
           </Link>
           <Text fontWeight='semibold' fontSize='18px'>
-            ADD ON
+            ROOMS
           </Text>
         </HStack>
 
         <br />
 
-        <TableAddOns />
+        <TableRooms />
       </Box>
     </Layout>
   );

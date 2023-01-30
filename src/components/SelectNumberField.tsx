@@ -14,7 +14,7 @@ export interface ISelectNumberFieldProps {
 export function SelectNumberField({ register, property, value, placeholder, maxOpt, errMsg }: ISelectNumberFieldProps) {
   const setFormValue = (v: string) => {
     if (v === '') return undefined;
-    if (v === '0') return 0;
+    if (v === '00') return 0;
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
   };
 
@@ -29,7 +29,7 @@ export function SelectNumberField({ register, property, value, placeholder, maxO
         <option value='' disabled selected>
           {placeholder}
         </option>
-        <option value='0'>0</option>
+        <option value='00'>00</option>
         {Array(maxOpt)
           .fill(1)
           .map((v, i) => (

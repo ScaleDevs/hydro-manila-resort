@@ -11,8 +11,6 @@ export const productRouter = router({
         name: z.string(),
         details: z.object({
           price: z.number(),
-          minHeadCount: z.number(),
-          maxHeadCount: z.number(),
           scheduleStartHour: z.number().max(12),
           scheduleStartMin: z.number().max(59),
           scheduleStartPost: z.enum(['AM', 'PM']),
@@ -28,8 +26,6 @@ export const productRouter = router({
     .mutation(({ input }) => {
       const {
         price,
-        minHeadCount,
-        maxHeadCount,
         scheduleStartHour,
         scheduleStartMin,
         scheduleStartPost,
@@ -46,10 +42,8 @@ export const productRouter = router({
         details: [
           {
             price: price,
-            minHeadCount: minHeadCount,
-            maxHeadCount: maxHeadCount,
-            scheduleStart: `${scheduleStartHour}:${scheduleStartMin}:00 ${scheduleStartPost}`,
-            scheduleEnd: `${scheduleEndHour}:${scheduleEndMin}:00 ${scheduleEndPost}`,
+            scheduleStart: `${scheduleStartHour}:${scheduleStartMin === 0 ? '00' : scheduleStartMin}:00 ${scheduleStartPost}`,
+            scheduleEnd: `${scheduleEndHour}:${scheduleEndMin === 0 ? '00' : scheduleEndMin}:00 ${scheduleEndPost}`,
             scheduleEndNextDay: scheduleEndNextDay,
             withRooms,
             description: description === undefined ? null : description,

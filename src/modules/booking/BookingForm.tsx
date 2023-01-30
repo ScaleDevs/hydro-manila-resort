@@ -1,88 +1,240 @@
-import * as React from 'react';
-import { Box, Stack, Input, Text, HStack, VStack, Button } from '@chakra-ui/react';
+import { useEffect, useState } from 'react';
+import { Box, Stack, useToast, Text, HStack, VStack, Button } from '@chakra-ui/react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { trpc } from '@/utils/trpc';
+import { IProduct, IRoom } from '@/utils/types';
+import { PHpeso } from '@/utils/helper';
 import CalenderInput from '@/components/CalendarInput';
+import { SelectField } from '@/components/SelectField';
+import { TextField } from '@/components/TextField';
+import { NumberField } from '@/components/NumberField';
+import CostView from './CostView';
+import dayjs from 'dayjs';
 
-const CostView = () => {
-  return (
-    <>
-      <Box w='100%' fontSize='18px' bg='primary.1' mt='20px' p='10px'>
-        <Text fontWeight='bold' color='white' textAlign='center'>
-          TOTAL: P0000
-        </Text>
-      </Box>
+const schema = z.object({
+  name: z.string().min(1, 'Required'),
+  phoneNumber: z.string(),
+  email: z.string().email(),
+  guests: z.number().max(30, 'Max Additional Heads 5'),
+  productId: z.string(),
+  roomId: z.string(),
+  bookingDate: z.string(),
+});
 
-      <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
-        <Text>BREAKDOWN:</Text>
-        <HStack mt='10px' justifyContent='space-between'>
-          <Text>DAYSWIMMING:</Text>
-          <Text>8,000</Text>
-        </HStack>
-        <HStack justifyContent='space-between'>
-          <Text>ADDITIONAL ROOM (ROOM 1)</Text>
-          <Text>2,000</Text>
-        </HStack>
-        <HStack justifyContent='space-between'>
-          <Text>ADDITIONAL PAX (2)</Text>
-          <Text>500</Text>
-        </HStack>
-      </Box>
-    </>
-  );
-};
+type FormSchemaType = z.infer<typeof schema>;
 
 export interface IBookingFormProps {}
 
 export default function BookingForm({}: IBookingFormProps) {
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
+  const [productActiveVersion, setProductActiveVersion] = useState(0);
+  const [selectedRoom, setSelectedRoom] = useState<IRoom | undefined>(undefined);
+  const [roomActiveVersion, setRoomActiveVersion] = useState(0);
+
+  const { data: productsData, isLoading: getProductsLoader } = trpc.product.getProducts.useQuery({
+    page: 1,
+    limit: 100,
+  });
+  const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
+  const { mutate } = trpc.booking.create.useMutation();
+
+  const toast = useToast();
+
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    reset,
+  } = useForm<FormSchemaType>({
+    resolver: zodResolver(schema),
+  });
+
+  const handleSelectProduct = (value: any) => {
+    if (productsData) setSelectedProduct(productsData.records.find((v) => v.productId === value));
+  };
+
+  const handleSelectRoom = (value: any) => {
+    if (roomsData) setSelectedRoom(roomsData.records.find((v) => v.roomId === value));
+  };
+
+  const submitBooking = (data: FormSchemaType) => {
+    console.log('SUBMIT');
+    console.log(data);
+
+    let total = 0;
+    if (selectedProduct) total += selectedProduct.details[selectedProduct.activeVersion - 1].price;
+    if (selectedRoom) total += selectedRoom.details[selectedRoom.activeVersion - 1].price;
+    if (data.guests && data.guests > 25) total += (data.guests - 25) * 250;
+
+    const endDate = dayjs(data.bookingDate).add(1, 'day').format('YYYY-MM-DD');
+
+    const payload = {
+      name: data.name,
+      email: data.email,
+      phoneNumber: data.phoneNumber,
+      startSession: new Date(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).toString(),
+      endSession: new Date(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).toString(),
+      guests: data.guests,
+      roomId: data.roomId,
+      roomVersion: selectedRoom?.activeVersion || 1,
+      productId: data.productId,
+      productVersion: selectedProduct?.activeVersion || 1,
+      receipt: {
+        productPrice: selectedProduct?.details[productActiveVersion].price || 0,
+        roomPrice: selectedRoom?.details[roomActiveVersion].price || 0,
+        additionalHeadsPrice: data.guests && data.guests > 25 ? (data.guests - 25) * 250 : 0,
+        total,
+      },
+    };
+
+    console.log(payload);
+
+    mutate(payload, {
+      onSuccess() {
+        toast({
+          title: 'Booking successful.',
+          status: 'success',
+          duration: 9000,
+          isClosable: true,
+        });
+        reset();
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (selectedProduct) setProductActiveVersion(selectedProduct.activeVersion - 1);
+
+    if (selectedProduct?.details[selectedProduct.activeVersion - 1].withRooms) {
+      setValue('roomId', '');
+      setSelectedRoom(undefined);
+    }
+  }, [selectedProduct, setValue]);
+
+  useEffect(() => {
+    if (selectedRoom) setRoomActiveVersion(selectedRoom.activeVersion - 1);
+  }, [selectedRoom]);
+
   return (
-    <Stack direction='row' w='100%' mx='auto' justifyContent='space-between'>
-      <Box w={{ base: '95%', md: '350px' }} mx={{ base: 'auto', md: '0' }}>
-        <Box display={{ base: 'block', md: 'none' }} mt='20px'>
-          <CalenderInput />
-        </Box>
-
-        <Stack spacing='3' mt='20px'>
-          <Input placeholder='*Name' />
-          <Input placeholder='*Contact Number' />
-          <Input placeholder='*Email' />
-        </Stack>
-
-        <HStack mt='15px'>
-          <Box h='100%' w='30%' p='-0'>
-            <Input placeholder='*PAX' />
+    <form onSubmit={handleSubmit(submitBooking)}>
+      <Stack direction='row' w='100%' mx='auto' justifyContent='space-between'>
+        <Box w={{ base: '95%', md: '350px' }} mx={{ base: 'auto', md: '0' }}>
+          <Box display={{ base: 'block', md: 'none' }} mt='20px'>
+            <CalenderInput setValue={setValue} />
           </Box>
-          <Box w='70%' fontSize='12px'>
-            <Text>MAX OF 25 PAX</Text>
-            <Text>EXTRA PERSON P250/HEAD</Text>
-            <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
-            <Text>Do not add in # of pax</Text>
+
+          <Stack spacing='3' mt='20px'>
+            <TextField register={register} property='name' placeholder='*Name' errMsg={errors.name?.message} />
+            <TextField
+              register={register}
+              property='phoneNumber'
+              placeholder='*Contact Number'
+              errMsg={errors.phoneNumber?.message}
+            />
+            <TextField register={register} property='email' placeholder='*Email' errMsg={errors.email?.message} />
+          </Stack>
+
+          <HStack mt='15px'>
+            <Box h='100%' w='30%' p='-0'>
+              <NumberField register={register} property='guests' placeholder='*PAX' errMsg={errors.guests?.message} />
+              {/* <Input placeholder='*PAX' /> */}
+            </Box>
+            <Box w='70%' fontSize='12px'>
+              <Text>MAX OF 25 PAX</Text>
+              <Text>EXTRA PERSON ₱250/HEAD</Text>
+              <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
+              <Text>Do not add in # of pax</Text>
+            </Box>
+          </HStack>
+
+          <Stack spacing='3' mt='20px'>
+            <SelectField
+              handleOnChange={handleSelectProduct}
+              register={register}
+              property='productId'
+              value={watch('productId')}
+              placeholder='*Schedule'
+              options={
+                productsData?.records.map((v) => ({
+                  label: v.name,
+                  value: v.productId,
+                })) || []
+              }
+              errMsg={!!errors.productId?.message ? 'Required!' : undefined}
+            >
+              {!!selectedProduct ? (
+                <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
+                  <Text fontSize='14px' color='white'>
+                    {selectedProduct.name} | {PHpeso.format(selectedProduct.details[productActiveVersion].price)}
+                  </Text>
+                  <Text fontSize='14px' color='white'>
+                    {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
+                    {selectedProduct.details[productActiveVersion].scheduleEnd} |{' '}
+                    {selectedProduct.details[productActiveVersion].withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
+                  </Text>
+                </Box>
+              ) : (
+                ''
+              )}
+            </SelectField>
+
+            <SelectField
+              disabled={selectedProduct?.details[0].withRooms}
+              handleOnChange={handleSelectRoom}
+              register={register}
+              property='roomId'
+              value={watch('roomId')}
+              placeholder='ROOM RENTAL(optional)'
+              options={roomsData?.records.map((v) => ({ label: <Text>ROOM {v.roomNumber}</Text>, value: v.roomId })) || []}
+              errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
+            >
+              {!!selectedRoom ? (
+                <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
+                  <Text fontSize='14px' color='white'>
+                    ROOM {selectedRoom.roomNumber} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
+                    bathroom
+                  </Text>
+                  <Text fontSize='14px' color='white'>
+                    ROOM {selectedRoom.details[roomActiveVersion].guests} PAX | ADDITIONAL{' '}
+                    {PHpeso.format(selectedRoom.details[roomActiveVersion].price)}
+                  </Text>
+                </Box>
+              ) : (
+                ''
+              )}
+            </SelectField>
+          </Stack>
+
+          <VStack display={{ base: 'block', md: 'none' }}>
+            <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
+          </VStack>
+
+          <Box display={{ base: 'flex', md: 'none' }} justifyContent='right'>
+            <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+              PROCEED TO PAYMENT
+            </Button>
           </Box>
-        </HStack>
-
-        <Stack spacing='3' mt='20px'>
-          <Input placeholder='*Schedule' />
-          <Input placeholder='ROOM RENTAL(optional)' />
-        </Stack>
-
-        <VStack display={{ base: 'block', md: 'none' }}>
-          <CostView />
-        </VStack>
-
-        <Box display='flex' justifyContent='right'>
-          <Button mt='20px'>PROCEED TO PAYMENT</Button>
-        </Box>
-      </Box>
-
-      <Box display={{ base: 'none', md: 'block' }}>
-        <Box>
-          <CalenderInput />
         </Box>
 
-        <CostView />
+        <Box display={{ base: 'none', md: 'block' }}>
+          <Box>
+            <CalenderInput setValue={setValue} />
+          </Box>
 
-        <Box display='flex' justifyContent='right'>
-          <Button mt='20px'>PROCEED TO PAYMENT</Button>
+          <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
+
+          <Box display='flex' justifyContent='right'>
+            <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+              PROCEED TO PAYMENT
+            </Button>
+          </Box>
         </Box>
-      </Box>
-    </Stack>
+      </Stack>
+    </form>
   );
 }

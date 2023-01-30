@@ -12,8 +12,6 @@ datasource db {
 
 type ProductDetails {
   price              Float
-  minHeadCount       Int
-  maxHeadCount       Int
   scheduleStart      String
   scheduleEnd        String
   scheduleEndNextDay Boolean
@@ -21,9 +19,11 @@ type ProductDetails {
   description        String?
 }
 
-type AddOnDetails {
-  description String
-  price       Float
+type RoomDetails {
+  description  String?
+  withBathroom Boolean
+  guests       Int
+  price        Float
 }
 
 type Receipt {
@@ -33,25 +33,19 @@ type Receipt {
   total                Float
 }
 
-enum AddOnType {
-  ROOM
-  PERSON
-}
-
 model Product {
   productId     String           @id @default(auto()) @map("_id") @db.ObjectId
   name          String
-  activeVersion Int?             @default(1)
+  activeVersion Int              @default(1)
   details       ProductDetails[]
   Booking       Booking[]
 }
 
-model AddOn {
-  addOnId       String         @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  type          AddOnType
-  activeVersion Int?           @default(1)
-  details       AddOnDetails[]
+model Room {
+  roomId        String        @id @default(auto()) @map("_id") @db.ObjectId
+  roomNumber    Int
+  activeVersion Int           @default(1)
+  details       RoomDetails[]
   Booking       Booking[]
 }
 
@@ -63,9 +57,9 @@ model Booking {
   startSession   DateTime
   endSession     DateTime
   guests         Int
-  room           AddOn    @relation(fields: [AddOnId], references: [addOnId])
-  AddOnId        String   @db.ObjectId
-  AddOnVersion   Int
+  room           Room     @relation(fields: [roomId], references: [roomId])
+  roomId         String   @db.ObjectId
+  roomVersion    Int
   product        Product  @relation(fields: [productId], references: [productId])
   productId      String   @db.ObjectId
   productVersion Int

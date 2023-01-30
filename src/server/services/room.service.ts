@@ -1,47 +1,47 @@
-import { IAddOn } from '@/utils/types';
-import { IFindManyAddOnInput, AddOnRepository } from '@/server/repository/addOn.repo';
+import { IRoom } from '@/utils/types';
+import { IFindManyroomInput, RoomRepository } from '@/server/repository/room.repo';
 import { TRPCError } from '@trpc/server';
 
 class Service {
-  public async createAddOn(data: Omit<IAddOn, 'addOnId' | 'activeVersion'>) {
+  public async createRoom(data: Omit<IRoom, 'roomId' | 'activeVersion'>) {
     try {
-      return AddOnRepository.createAddOn(data);
+      return RoomRepository.createRoom(data);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
-  public async findAddOnById(id: string) {
+  public async findRoomById(id: string) {
     try {
-      return AddOnRepository.findAddOnById(id);
+      return RoomRepository.findRoomById(id);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
-  public async findManyAddOn(inputs: IFindManyAddOnInput) {
+  public async findManyRoom(inputs: IFindManyroomInput) {
     try {
-      return AddOnRepository.findManyAddOn(inputs);
+      return RoomRepository.findManyRoom(inputs);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
-  public async updateAddOn(id: string, partialData: Partial<IAddOn>) {
+  public async updateRoom(id: string, partialData: Partial<IRoom>) {
     try {
-      return AddOnRepository.updateAddOn(id, partialData);
+      return RoomRepository.updateRoom(id, partialData);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
-  public async deleteAddOn(id: string) {
+  public async deleteRoom(id: string) {
     try {
-      return AddOnRepository.deleteAddOn(id);
+      return RoomRepository.deleteRoom(id);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 }
 
-export const AddOnService = new Service();
+export const RoomService = new Service();
