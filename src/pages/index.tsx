@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import Head from 'next/head';
-import { Heading, Box } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import Layout from '@/layouts/index';
 import BookingForm from '@/modules/booking/BookingForm';
+import PaymentForm from '@/modules/payment/PaymentForm';
 
 function Home() {
+  const [step, setStep] = useState(1);
   return (
     <Layout>
       <Head>
@@ -14,12 +17,8 @@ function Home() {
 
       <br />
       <Box w={{ base: '100%', sm: '90%', lg: '780px' }} mx='auto'>
-        <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
-          BOOK THE PLACE!
-        </Heading>
-
-        <BookingForm />
-
+        {step === 1 ? <BookingForm setStep={setStep} /> : ''}
+        {step === 2 ? <PaymentForm /> : ''}
         <br />
         <br />
         <br />

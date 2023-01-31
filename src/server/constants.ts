@@ -17,4 +17,9 @@ export const constants = {
     fromName: process.env.MAILER_SEND_FROM_NAME,
     apiKey: process.env.MAILER_SEND_API_KEY,
   },
+
+  paymongo: {
+    pubKey: process.env.PAYMONGO_PUBLIC_KEY,
+    secretKey: process.env.PAYMONGO_SECRET_KEY,
+  },
 };
