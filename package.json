@@ -8,6 +8,7 @@
     "start": "next start",
     "prisma-generate": "npx prisma generate",
     "lint": "next lint",
+    "lint:fix": "npm run lint -- --fix",
     "prettier": "prettier \"**/*.{js,jsx,ts,tsx}\" --check",
     "prettier:fix": "npm run prettier -- --write"
   },

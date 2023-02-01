@@ -1,5 +1,4 @@
 import { Booking, Product, Room } from '@prisma/client';
-import { any, boolean, number } from 'zod';
 
 export type IProduct = Product;
 export type IRoom = Room;
@@ -20,7 +19,7 @@ export type PaymentMethodTypes = 'gcash' | 'card' | 'dob' | 'paymaya' | 'billeas
 
 export type PaymongoWebhookEventType = 'source.chargeable' | 'payment.paid' | 'payment.failed' | 'payment.refunded';
 
-export type PaymentIntentResource = {
+export interface PaymentIntentResource {
   data: {
     id: string;
     type: 'payment_intent';
@@ -52,7 +51,7 @@ export type PaymentIntentResource = {
       metadata: any;
     };
   };
-};
+}
 
 export interface PayMongoWebHookResponse {
   data: {
