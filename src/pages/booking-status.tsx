@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
-import { Heading, VStack, Text, Image, Box, Button } from '@chakra-ui/react';
+import { Heading, VStack, Text, Image, Box, Button, Spinner, Stack } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
 
 const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
-  const { data } = trpc.payment.getPaymentIntentSession.useQuery({ paymentIntentId: payment_intent_id as string });
+  const { data, isLoading } = trpc.payment.getPaymentIntentSession.useQuery({ paymentIntentId: payment_intent_id as string });
 
   const retryPayment = () => {
     if (data && data.attributes.next_action?.redirect?.url) window.location.href = data.attributes.next_action.redirect.url;
@@ -23,7 +23,12 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
           />
         </Box>
 
-        {data?.attributes.status}
+        {isLoading && (
+          <Stack justifyContent='center' alignItems='center' spacing={5}>
+            <Text fontSize='x-large'>Resolving Payment</Text>
+            <Spinner />
+          </Stack>
+        )}
 
         {data?.attributes.status === 'awaiting_next_action' && (
           <Button bg='primary.1' borderRadius='sm' size='lg' onClick={retryPayment}>
