@@ -1,6 +1,4 @@
 import { extendTheme } from '@chakra-ui/react';
-import Input from './theme/input.comp';
-import Select from './theme/select.comp';
 import Button from './theme/button.comp';
 import Heading from './theme/heading.comp';
 import Text from './theme/text.comp';
@@ -23,8 +21,6 @@ export const theme = extendTheme({
   components: {
     Heading,
     Button,
-    Input,
-    Select,
     Text,
   },
 });

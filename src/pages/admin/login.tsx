@@ -1,10 +1,11 @@
 import Head from 'next/head';
-import { Heading, Box, Input, Stack, Button } from '@chakra-ui/react';
+import { Heading, Box, Stack, Button } from '@chakra-ui/react';
 
 import Layout from '@/layouts/login';
 import useLogin from '@/hooks/useLogin.hook';
 import { PasswordInput } from '@/components/PasswordInput';
 import { ErrorAlert } from '@/components/ErrorAlert';
+import { TextField } from '@/components/TextField';
 
 function Login() {
   const { errMessage, handleSubmit, signIn, isSignInLoading, register } = useLogin();
@@ -25,7 +26,7 @@ function Login() {
 
           <form onSubmit={handleSubmit(signIn)}>
             <Stack spacing='5' mt='20px'>
-              <Input {...register('username')} placeholder='USERNAME' />
+              <TextField register={register} property='username' placeholder='USERNAME' />
 
               <PasswordInput formInput={{ register, property: 'password' }} />
 

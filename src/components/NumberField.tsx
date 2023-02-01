@@ -22,6 +22,12 @@ export function NumberField({ register, property, placeholder, errMsg }: INumber
           setValueAs: setFormValue,
         })}
         placeholder={placeholder}
+        borderColor='primary.1'
+        borderRadius='sm'
+        _hover={{
+          borderColor: 'teal',
+        }}
+        focusBorderColor='teal.400'
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>

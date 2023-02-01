@@ -91,7 +91,7 @@ function Admin() {
         <Box w='100%' mx='auto'>
           <form onSubmit={handleSubmit(createAddOnSubmit)}>
             <Stack spacing={6}>
-              <Stack direction='row'>
+              <Stack direction={{ base: 'column', md: 'row' }}>
                 <NumberField
                   register={register}
                   property='roomNumber'
@@ -106,7 +106,7 @@ function Admin() {
                 />
               </Stack>
 
-              <Stack direction='row'>
+              <Stack direction={{ base: 'column', md: 'row' }}>
                 <NumberField
                   register={register}
                   property='guests'
@@ -127,7 +127,7 @@ function Admin() {
               </Stack>
 
               <Button type='submit' borderRadius='sm' isLoading={isLoading}>
-                Add Product
+                Add Room
               </Button>
             </Stack>
           </form>

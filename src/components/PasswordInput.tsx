@@ -23,7 +23,17 @@ export function PasswordInput({ formInput, placeholder }: IPasswordInputProps) {
 
   return (
     <Box position='relative'>
-      <Input {...useFormRegisterField} placeholder={placeholder || 'PASSWORD'} type={showPassword ? 'text' : 'password'} />
+      <Input
+        {...useFormRegisterField}
+        placeholder={placeholder || 'PASSWORD'}
+        type={showPassword ? 'text' : 'password'}
+        borderColor='primary.1'
+        borderRadius='sm'
+        _hover={{
+          borderColor: 'teal.400',
+        }}
+        focusBorderColor='teal.400'
+      />
       {showPassword ? (
         <EyeCloseIcon
           pos='absolute'

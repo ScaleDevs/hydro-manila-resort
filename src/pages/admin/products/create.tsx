@@ -96,7 +96,7 @@ function CreateProduct() {
             <Stack spacing={6}>
               <Stack>
                 <Label>BASIC INFO:</Label>
-                <Stack direction='row'>
+                <Stack direction={{ base: 'column', md: 'row' }}>
                   <TextField register={register} property='name' placeholder='Product Name' errMsg={errors.name?.message} />
                   <TextField
                     register={register}
@@ -110,7 +110,7 @@ function CreateProduct() {
 
               <Stack>
                 <Label>SCHEDULE START DETAILS:</Label>
-                <Stack direction='row'>
+                <Stack direction={{ base: 'column', md: 'row' }}>
                   <SelectNumberField
                     placeholder='Hour'
                     maxOpt={12}
@@ -143,7 +143,7 @@ function CreateProduct() {
 
               <Stack>
                 <Label>SCHEDULE END DETAILS:</Label>
-                <Stack direction='row'>
+                <Stack direction={{ base: 'column', md: 'row' }}>
                   <SelectNumberField
                     placeholder='Hour'
                     maxOpt={12}

@@ -5,7 +5,7 @@ const Button = defineStyleConfig({
     fontFamily: 'primary',
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    borderRadius: '0',
+    borderRadius: 'sm',
   },
   sizes: {
     sm: {

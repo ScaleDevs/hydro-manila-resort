@@ -25,6 +25,12 @@ export function SelectNumberField({ register, property, value, placeholder, maxO
           setValueAs: setFormValue,
           value: value === undefined ? '' : value,
         })}
+        borderColor='primary.1'
+        borderRadius='sm'
+        _hover={{
+          borderColor: 'teal',
+        }}
+        focusBorderColor='teal.400'
       >
         <option value='' disabled selected>
           {placeholder}

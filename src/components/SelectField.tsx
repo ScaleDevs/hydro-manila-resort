@@ -30,7 +30,16 @@ export function SelectField({
 
   return (
     <Box w='100%'>
-      <Select {...register(property, { value: value === undefined ? '' : value, onChange })} disabled={disabled}>
+      <Select
+        {...register(property, { value: value === undefined ? '' : value, onChange })}
+        disabled={disabled}
+        borderColor='primary.1'
+        borderRadius='sm'
+        _hover={{
+          borderColor: 'teal',
+        }}
+        focusBorderColor='teal.400'
+      >
         <option value='' disabled selected>
           {placeholder}
         </option>
