@@ -6,7 +6,7 @@ import BookingForm from '@/modules/booking/BookingForm';
 import PaymentForm from '@/modules/payment/PaymentForm';
 
 function Home() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   return (
     <Layout>
       <Head>

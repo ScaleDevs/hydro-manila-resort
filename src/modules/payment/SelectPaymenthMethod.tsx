@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { Center, Stack, HStack, Image, Text } from '@chakra-ui/react';
-import { UseFormSetValue } from 'react-hook-form';
 
 const PaymentMethodWrapper = ({
   srcImg,
@@ -18,7 +17,7 @@ const PaymentMethodWrapper = ({
       h='130px'
       p='12px'
       border='2px solid'
-      borderColor={active === title ? 'primary.1' : 'gray.400'}
+      borderColor={active === title ? 'teal.500' : 'gray.400'}
       spacing='5'
       borderRadius='sm'
       _hover={{ borderColor: 'primary.1', cursor: 'pointer', transition: 'border-color 0.5s ease;' }}
@@ -35,24 +34,17 @@ const PaymentMethodWrapper = ({
 };
 
 export interface ISelectPaymentMethodProps {
-  setValue: UseFormSetValue<any>;
-  property: string;
+  paymentMethod: string;
+  setPaymentMethod: Dispatch<SetStateAction<string>>;
 }
 
-export default function SelectPaymentMethod({ setValue, property }: ISelectPaymentMethodProps) {
-  const [active, setActive] = useState('');
-
-  const handleClick = (value: string) => {
-    setActive(value);
-    setValue(property, value, {
-      shouldValidate: true,
-    });
-  };
+export default function SelectPaymentMethod({ paymentMethod, setPaymentMethod }: ISelectPaymentMethodProps) {
+  const handleClick = (value: string) => setPaymentMethod(value);
 
   return (
     <Stack mt='20px' direction={{ base: 'column', md: 'row' }}>
-      <PaymentMethodWrapper srcImg='/gcash.webp' title='gcash' active={active} onClick={handleClick} />
-      <PaymentMethodWrapper srcImg='/mastercard.png' title='card' active={active} onClick={handleClick} />
+      <PaymentMethodWrapper srcImg='/gcash.webp' title='gcash' active={paymentMethod} onClick={handleClick} />
+      <PaymentMethodWrapper srcImg='/mastercard.png' title='card' active={paymentMethod} onClick={handleClick} />
     </Stack>
   );
 }
