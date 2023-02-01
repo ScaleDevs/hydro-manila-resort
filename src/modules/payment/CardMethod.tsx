@@ -13,7 +13,11 @@ const InvalidIcon = chakra(AiOutlineClose);
 
 const schema = z.object({
   details: z.object({
-    card_number: z.string().regex(RegexValidations.masterCard, 'Invalid Card Number').max(16, 'Must be 16 digits'),
+    card_number: z.union([
+      z.string().regex(RegexValidations.masterCard, 'Invalid Card Number').length(16, 'Must be 16 digits'),
+      z.string().regex(RegexValidations.visaCard, 'Invalid Card Number').length(16, 'Must be 16 digits'),
+      z.string().regex(RegexValidations.visaCard, 'Invalid Card Number').length(13, 'Must be 13 digits'),
+    ]),
   }),
 });
 
