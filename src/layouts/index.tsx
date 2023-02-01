@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, Stack, Image, Container } from '@chakra-ui/react';
+import { Box, Stack, Image } from '@chakra-ui/react';
 
 export default function Layout({ children }: any) {
   return (
-    <Box bg='primary.2' height='100vh'>
+    <Box bg='primary.2' height='100vh' overflowY='auto'>
       <Box w='100%' py='0' bg='primary.1' pos='relative'>
         <Stack
           maxW='container.xl'
@@ -23,7 +23,9 @@ export default function Layout({ children }: any) {
           />
         </Stack>
       </Box>
-      <Container maxW='container.xl'>{children}</Container>
+      <Box w='100%' maxW={{ lg: 'container.xl' }} mx='auto'>
+        {children}
+      </Box>
     </Box>
   );
 }

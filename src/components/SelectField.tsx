@@ -11,6 +11,8 @@ export interface ISelectFieldProps {
   children?: any;
   handleOnChange?: (value: any) => void;
   disabled?: boolean;
+  label?: string;
+  required?: boolean;
 }
 
 export function SelectField({
@@ -23,6 +25,8 @@ export function SelectField({
   children,
   handleOnChange,
   disabled,
+  label,
+  required,
 }: ISelectFieldProps) {
   const onChange = (e: any) => {
     !!handleOnChange && handleOnChange(e.target.value);
@@ -30,6 +34,14 @@ export function SelectField({
 
   return (
     <Box w='100%'>
+      <Text fontSize='md'>
+        {label}
+        {required && (
+          <Text as='span' color='red' pl='1'>
+            *
+          </Text>
+        )}
+      </Text>
       <Select
         {...register(property, { value: value === undefined ? '' : value, onChange })}
         disabled={disabled}
@@ -39,6 +51,7 @@ export function SelectField({
           borderColor: 'teal',
         }}
         focusBorderColor='teal.400'
+        className='scrollbar'
       >
         <option value='' disabled selected>
           {placeholder}

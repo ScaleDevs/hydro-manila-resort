@@ -6,7 +6,7 @@ import BookingForm from '@/modules/booking/BookingForm';
 import PaymentForm from '@/modules/payment/PaymentForm';
 
 function Home() {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   return (
     <Layout>
       <Head>
@@ -16,7 +16,7 @@ function Home() {
       </Head>
 
       <br />
-      <Box w={{ base: '100%', sm: '90%', lg: '780px' }} mx='auto'>
+      <Box w={{ base: '100%', sm: '90%', lg: '1000px' }} mx='auto'>
         {step === 1 ? <BookingForm setStep={setStep} /> : ''}
         {step === 2 ? <PaymentForm /> : ''}
         <br />

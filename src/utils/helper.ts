@@ -1,5 +1,7 @@
 import genString from 'randomstring';
 import day from 'dayjs';
+import phGeoJsonData from './ph-geo.json';
+import { IPHGeo } from './types';
 
 export const RegexValidations = {
   NumberOnly: /(^[0-9]+$|^$)/,
@@ -74,4 +76,33 @@ export const base64Encoding = (str: string) => {
   const bufferObj = Buffer.from(str, 'utf8');
   const result = bufferObj.toString('base64');
   return result;
+};
+
+export const getProvincesOptions = () => {
+  const locations = phGeoJsonData as IPHGeo;
+
+  return locations.map((arr) => {
+    return {
+      label: arr[0].name,
+      value: arr[0].name,
+    };
+  });
+};
+
+export const getCitiesOptions = (province: string) => {
+  const locations = phGeoJsonData as IPHGeo;
+
+  const provIndex = locations.find((arr) => {
+    return arr[0].name === province;
+  });
+
+  if (provIndex)
+    return provIndex[1].map((record) => {
+      return {
+        label: record.name,
+        value: record.name,
+      };
+    });
+
+  return [];
 };

@@ -8,10 +8,23 @@ export interface ISelectNumberFieldProps {
   placeholder?: string;
   errMsg?: string;
   value?: number;
+  minOpt?: number;
   maxOpt: number;
+  label?: string;
+  noZeroStart?: boolean;
 }
 
-export function SelectNumberField({ register, property, value, placeholder, maxOpt, errMsg }: ISelectNumberFieldProps) {
+export function SelectNumberField({
+  register,
+  property,
+  value,
+  placeholder,
+  minOpt,
+  maxOpt,
+  errMsg,
+  label,
+  noZeroStart,
+}: ISelectNumberFieldProps) {
   const setFormValue = (v: string) => {
     if (v === '') return undefined;
     if (v === '00') return 0;
@@ -20,6 +33,7 @@ export function SelectNumberField({ register, property, value, placeholder, maxO
 
   return (
     <Box w='100%'>
+      <Text fontSize='lg'>{label}</Text>
       <Select
         {...register(property, {
           setValueAs: setFormValue,
@@ -31,16 +45,17 @@ export function SelectNumberField({ register, property, value, placeholder, maxO
           borderColor: 'teal',
         }}
         focusBorderColor='teal.400'
+        className='scrollbar'
       >
         <option value='' disabled selected>
           {placeholder}
         </option>
-        <option value='00'>00</option>
+        {!noZeroStart && <option value='00'>00</option>}
         {Array(maxOpt)
-          .fill(1)
+          .fill(minOpt || 1)
           .map((v, i) => (
             <option key={i} value={v + i}>
-              {v + i}
+              {v + i < 10 ? `0${v + i}` : v + i}
             </option>
           ))}
       </Select>

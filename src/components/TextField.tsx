@@ -7,11 +7,21 @@ export interface ITextFieldProps {
   placeholder?: string;
   errMsg?: string;
   onBlur?: () => void;
+  label?: string;
+  required?: boolean;
 }
 
-export function TextField({ register, property, placeholder, errMsg, onBlur }: ITextFieldProps) {
+export function TextField({ register, property, placeholder, errMsg, onBlur, label, required }: ITextFieldProps) {
   return (
     <Box w='100%'>
+      <Text fontSize='md'>
+        {label}
+        {required && (
+          <Text as='span' color='red' pl='1'>
+            *
+          </Text>
+        )}
+      </Text>
       <Input
         {...register(property, {
           onBlur: () => {

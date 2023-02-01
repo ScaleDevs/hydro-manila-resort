@@ -9,3 +9,6 @@ export type IPaginationInputs = {
   page: number;
   limit: number;
 };
+
+// ph geo data
+export type IPHGeo = [{ name: string; region: string; key: string }, { name: string; province: string; city?: boolean }[]][];

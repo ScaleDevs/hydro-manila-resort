@@ -123,122 +123,126 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
   return (
     <>
-      <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
-        BOOK THE PLACE!
-      </Heading>
       <form onSubmit={handleSubmit(proceedToPayment)}>
-        <Stack direction='row' w='100%' mx='auto' justifyContent='space-between'>
-          <Box w={{ base: '95%', md: '350px' }} mx={{ base: 'auto', md: '0' }}>
-            <Box display={{ base: 'block', md: 'none' }} mt='20px'>
-              <CalenderInput setValue={setValue} />
+        <Stack direction='column' w={{ md: '100%', lg: '75%' }} mx='auto' alignItems='center'>
+          <Box w={{ base: '100%', md: '90%' }}>
+            <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
+              BOOK THE PLACE!
+            </Heading>
+          </Box>
+          <Stack direction='row' w='90%' spacing='5'>
+            <Box w={{ base: '100%', md: '100%' }} mx={{ base: 'auto', md: '0' }}>
+              <Box display={{ base: 'block', md: 'none' }} mt='20px'>
+                <CalenderInput setValue={setValue} />
+              </Box>
+
+              <Stack spacing='3' mt='20px'>
+                <TextField register={register} property='name' placeholder='*Name' errMsg={errors.name?.message} />
+                <TextField
+                  register={register}
+                  property='phoneNumber'
+                  placeholder='*Contact Number'
+                  errMsg={errors.phoneNumber?.message}
+                />
+                <TextField register={register} property='email' placeholder='*Email' errMsg={errors.email?.message} />
+              </Stack>
+
+              <HStack mt='15px'>
+                <Box h='100%' w='30%' p='-0'>
+                  <NumberField register={register} property='guests' placeholder='*PAX' errMsg={errors.guests?.message} />
+                  {/* <Input placeholder='*PAX' /> */}
+                </Box>
+                <Box w='70%' fontSize='12px'>
+                  <Text>MAX OF 25 PAX</Text>
+                  <Text>EXTRA PERSON ₱250/HEAD</Text>
+                  <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
+                  <Text>Do not add in # of pax</Text>
+                </Box>
+              </HStack>
+
+              <Stack spacing='3' mt='20px'>
+                <SelectField
+                  handleOnChange={handleSelectProduct}
+                  register={register}
+                  property='productId'
+                  value={watch('productId')}
+                  placeholder='*Schedule'
+                  options={
+                    productsData?.records.map((v) => ({
+                      label: v.name,
+                      value: v.productId,
+                    })) || []
+                  }
+                  errMsg={!!errors.productId?.message ? 'Required!' : undefined}
+                >
+                  {!!selectedProduct ? (
+                    <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
+                      <Text fontSize='14px' color='white'>
+                        {selectedProduct.name} | {PHpeso.format(selectedProduct.details[productActiveVersion].price)}
+                      </Text>
+                      <Text fontSize='14px' color='white'>
+                        {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
+                        {selectedProduct.details[productActiveVersion].scheduleEnd} |{' '}
+                        {selectedProduct.details[productActiveVersion].withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
+                      </Text>
+                    </Box>
+                  ) : (
+                    ''
+                  )}
+                </SelectField>
+
+                <SelectField
+                  disabled={selectedProduct?.details[0].withRooms}
+                  handleOnChange={handleSelectRoom}
+                  register={register}
+                  property='roomId'
+                  value={watch('roomId')}
+                  placeholder='ROOM RENTAL(optional)'
+                  options={roomsData?.records.map((v) => ({ label: <Text>ROOM {v.roomNumber}</Text>, value: v.roomId })) || []}
+                  errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
+                >
+                  {!!selectedRoom ? (
+                    <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
+                      <Text fontSize='14px' color='white'>
+                        ROOM {selectedRoom.roomNumber} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
+                        bathroom
+                      </Text>
+                      <Text fontSize='14px' color='white'>
+                        ROOM {selectedRoom.details[roomActiveVersion].guests} PAX | ADDITIONAL{' '}
+                        {PHpeso.format(selectedRoom.details[roomActiveVersion].price)}
+                      </Text>
+                    </Box>
+                  ) : (
+                    ''
+                  )}
+                </SelectField>
+              </Stack>
+
+              <VStack display={{ base: 'block', md: 'none' }}>
+                <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
+              </VStack>
+
+              <Box display={{ base: 'flex', md: 'none' }} justifyContent='right'>
+                <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+                  PROCEED TO PAYMENT
+                </Button>
+              </Box>
             </Box>
 
-            <Stack spacing='3' mt='20px'>
-              <TextField register={register} property='name' placeholder='*Name' errMsg={errors.name?.message} />
-              <TextField
-                register={register}
-                property='phoneNumber'
-                placeholder='*Contact Number'
-                errMsg={errors.phoneNumber?.message}
-              />
-              <TextField register={register} property='email' placeholder='*Email' errMsg={errors.email?.message} />
-            </Stack>
-
-            <HStack mt='15px'>
-              <Box h='100%' w='30%' p='-0'>
-                <NumberField register={register} property='guests' placeholder='*PAX' errMsg={errors.guests?.message} />
-                {/* <Input placeholder='*PAX' /> */}
+            <Box display={{ base: 'none', md: 'block' }}>
+              <Box>
+                <CalenderInput setValue={setValue} />
               </Box>
-              <Box w='70%' fontSize='12px'>
-                <Text>MAX OF 25 PAX</Text>
-                <Text>EXTRA PERSON ₱250/HEAD</Text>
-                <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
-                <Text>Do not add in # of pax</Text>
-              </Box>
-            </HStack>
 
-            <Stack spacing='3' mt='20px'>
-              <SelectField
-                handleOnChange={handleSelectProduct}
-                register={register}
-                property='productId'
-                value={watch('productId')}
-                placeholder='*Schedule'
-                options={
-                  productsData?.records.map((v) => ({
-                    label: v.name,
-                    value: v.productId,
-                  })) || []
-                }
-                errMsg={!!errors.productId?.message ? 'Required!' : undefined}
-              >
-                {!!selectedProduct ? (
-                  <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
-                    <Text fontSize='14px' color='white'>
-                      {selectedProduct.name} | {PHpeso.format(selectedProduct.details[productActiveVersion].price)}
-                    </Text>
-                    <Text fontSize='14px' color='white'>
-                      {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
-                      {selectedProduct.details[productActiveVersion].scheduleEnd} |{' '}
-                      {selectedProduct.details[productActiveVersion].withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
-                    </Text>
-                  </Box>
-                ) : (
-                  ''
-                )}
-              </SelectField>
-
-              <SelectField
-                disabled={selectedProduct?.details[0].withRooms}
-                handleOnChange={handleSelectRoom}
-                register={register}
-                property='roomId'
-                value={watch('roomId')}
-                placeholder='ROOM RENTAL(optional)'
-                options={roomsData?.records.map((v) => ({ label: <Text>ROOM {v.roomNumber}</Text>, value: v.roomId })) || []}
-                errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
-              >
-                {!!selectedRoom ? (
-                  <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
-                    <Text fontSize='14px' color='white'>
-                      ROOM {selectedRoom.roomNumber} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
-                      bathroom
-                    </Text>
-                    <Text fontSize='14px' color='white'>
-                      ROOM {selectedRoom.details[roomActiveVersion].guests} PAX | ADDITIONAL{' '}
-                      {PHpeso.format(selectedRoom.details[roomActiveVersion].price)}
-                    </Text>
-                  </Box>
-                ) : (
-                  ''
-                )}
-              </SelectField>
-            </Stack>
-
-            <VStack display={{ base: 'block', md: 'none' }}>
               <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
-            </VStack>
 
-            <Box display={{ base: 'flex', md: 'none' }} justifyContent='right'>
-              <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
-                PROCEED TO PAYMENT
-              </Button>
+              <Box display='flex' justifyContent='right'>
+                <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+                  PROCEED TO PAYMENT
+                </Button>
+              </Box>
             </Box>
-          </Box>
-
-          <Box display={{ base: 'none', md: 'block' }}>
-            <Box>
-              <CalenderInput setValue={setValue} />
-            </Box>
-
-            <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
-
-            <Box display='flex' justifyContent='right'>
-              <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
-                PROCEED TO PAYMENT
-              </Button>
-            </Box>
-          </Box>
+          </Stack>
         </Stack>
       </form>
     </>
