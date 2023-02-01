@@ -1,4 +1,4 @@
-import { PayMongoWebHookResponse } from "@/utils/types";
+import { PayMongoWebHookResponse } from '@/utils/types';
 
 export default function handler(req: any, res: any) {
   console.log('==========INVOKED========');
