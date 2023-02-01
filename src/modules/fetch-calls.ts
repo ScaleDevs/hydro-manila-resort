@@ -1,8 +1,26 @@
 import { base64Encoding } from '@/utils/helper';
 
-export interface CreatePaymentMethodInput {
+export type CreatePaymentMethodInput = {
   type: 'card' | 'gcash';
-}
+  details?: {
+    card_number: string;
+    exp_month: number;
+    exp_year: number;
+    cvc: string;
+  };
+  billing?: {
+    address: {
+      line1: string;
+      line2: string;
+      city: string;
+      postal_code: string;
+      country: string;
+    };
+    name: string;
+    email: string;
+    phone: string;
+  };
+};
 
 export interface PaymentMethodResource {
   data: {
