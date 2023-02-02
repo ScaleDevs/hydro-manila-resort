@@ -50,18 +50,21 @@ model Room {
 }
 
 model Booking {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  name           String
-  email          String
-  phoneNumber    String
-  startSession   DateTime
-  endSession     DateTime
-  guests         Int
-  room           Room     @relation(fields: [roomId], references: [roomId])
-  roomId         String   @db.ObjectId
-  roomVersion    Int
-  product        Product  @relation(fields: [productId], references: [productId])
-  productId      String   @db.ObjectId
-  productVersion Int
-  receipt        Receipt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  email           String
+  phoneNumber     String
+  startSession    DateTime
+  endSession      DateTime
+  guests          Int
+  room            Room     @relation(fields: [roomId], references: [roomId])
+  roomId          String   @db.ObjectId
+  roomVersion     Int
+  product         Product  @relation(fields: [productId], references: [productId])
+  productId       String   @db.ObjectId
+  productVersion  Int
+  receipt         Receipt
+  paymentIntentId String   @unique
+  paymentId       String
+  createdAt       DateTime @default(now())
 }

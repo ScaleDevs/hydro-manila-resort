@@ -9,7 +9,7 @@ import { TRPCError } from '@trpc/server';
 import { constants } from '../constants';
 
 class Service {
-  public async initiatePaymentSessionForBooking(data: Omit<IBooking, 'id'>) {
+  public async initiatePaymentSessionForBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId'>) {
     try {
       return createPaymentIntent({
         // in cents formula peso * 100

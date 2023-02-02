@@ -37,8 +37,6 @@ export const createPaymentIntent = async (data: CreatePaymentIntentAttr) => {
 
   const result = (await response.json()) as any;
 
-  console.log(result);
-
   return result as PaymentIntentResource;
 };
 
@@ -70,6 +68,8 @@ export const attachPaymentMethodToIntent = async (data: AttachPaymentMethodToInt
 
   const result = (await response.json()) as PaymentIntentResource;
 
+  console.log(result);
+
   return result;
 };
 
@@ -83,9 +83,6 @@ export const getPaymentIntentSession = async (paymentIntentId: string) => {
   });
 
   const result = (await response.json()) as PaymentIntentResource;
-
-  console.log('RESULT');
-  console.log(result);
 
   return result.data;
 };

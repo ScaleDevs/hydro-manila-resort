@@ -3,34 +3,6 @@ import { procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
 
 export const bookingRouter = router({
-  create: procedure
-    .input(
-      z.object({
-        name: z.string(),
-        email: z.string().email(),
-        phoneNumber: z.string(),
-        startSession: z.string(),
-        endSession: z.string(),
-        guests: z.number(),
-        roomId: z.string(),
-        roomVersion: z.number(),
-        productId: z.string(),
-        productVersion: z.number(),
-        receipt: z.object({
-          productPrice: z.number(),
-          roomPrice: z.number(),
-          additionalHeadsPrice: z.number(),
-          total: z.number(),
-        }),
-      }),
-    )
-    .mutation(({ input }) => {
-      return BookingService.createBooking({
-        ...input,
-        startSession: new Date(input.startSession),
-        endSession: new Date(input.endSession),
-      });
-    }),
   getManyBooking: procedure
     .input(
       z.object({

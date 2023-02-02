@@ -3,7 +3,7 @@ import { IFindManyBookingInput, BookingRepository } from '@/server/repository/bo
 import { TRPCError } from '@trpc/server';
 
 class Service {
-  public async createBooking(data: Omit<IBooking, 'id'>) {
+  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
     try {
       return BookingRepository.createBooking(data);
     } catch (err) {
@@ -14,6 +14,14 @@ class Service {
   public async findBookingById(id: string) {
     try {
       return BookingRepository.findBookingById(id);
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    }
+  }
+
+  public async findBookingByPaymentIntentId(paymentIntentId: string) {
+    try {
+      return BookingRepository.findBookingByPaymentIntentId(paymentIntentId);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
