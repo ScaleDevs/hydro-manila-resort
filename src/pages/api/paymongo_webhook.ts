@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z } from 'zod';
+import dayjs from 'dayjs';
 import { PayMongoWebHookResponse } from '@/utils/types';
 import { BookingService } from '@/svc/booking.service';
 import { PaymentService } from '@/server/services/payment.service';
+import { ProductService } from '@/svc/product.service';
+import { sendBookingSuccessEmail } from '@/server/repository/mailersend.repo';
 
 const inputSchema = z.object({
   name: z.string(),
@@ -80,5 +83,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   console.log('SUCCESSFULLY ADDED BOOKING');
+
+  const product = await ProductService.findProductById(bookingResult.productId);
+
+  await sendBookingSuccessEmail({
+    recipientEmail: bookingResult.email,
+    customer_name: bookingResult.name,
+    product_type: product?.name || '',
+    booking_date: `${dayjs(bookingResult.startSession).format('MMM DD, YYYY hh:mm:ss A')} - ${dayjs(
+      bookingResult.endSession,
+    ).format('MMM DD, YYYY hh:mm:ss A')}`,
+  });
+
+  console.log('EMAIL SUCCESSFULLY SENT');
   res.end();
 }
