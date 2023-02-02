@@ -43,6 +43,17 @@ export const paymentRouter = router({
     .mutation(({ input }) => {
       return PaymentService.attachPaymentMethodToIntent(input);
     }),
+  createRefund: procedure
+    .input(
+      z.object({
+        amount: z.number(),
+        payment_id: z.string(),
+        reason: z.enum(['others', 'duplicate', 'fraudulent', 'requested_by_customer']),
+      }),
+    )
+    .mutation(({ input }) => {
+      return PaymentService.createRefund(input);
+    }),
   getPaymentIntentSession: procedure
     .input(
       z.object({

@@ -1,11 +1,15 @@
+import { v4 } from 'uuid';
 import { IBooking } from '@/utils/types';
 import { IFindManyBookingInput, BookingRepository } from '@/server/repository/booking.repo';
 import { TRPCError } from '@trpc/server';
 
 class Service {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
+  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'refundId' | 'ref_no'>) {
     try {
-      return BookingRepository.createBooking(data);
+      return BookingRepository.createBooking({
+        ...data,
+        ref_no: v4(),
+      });
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }

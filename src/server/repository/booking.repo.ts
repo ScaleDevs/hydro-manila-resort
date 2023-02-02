@@ -7,7 +7,7 @@ export type IFindManyBookingInput = {
 } & IPaginationInputs;
 
 class Respository {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
+  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'refundId'>) {
     return prisma.booking.create({ data: { ...data } });
   }
 

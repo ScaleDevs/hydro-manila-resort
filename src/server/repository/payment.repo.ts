@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { constants } from '../constants';
 import { base64Encoding } from '@/utils/helper';
-import { PaymentMethodTypes, PaymentIntentResource } from '@/utils/types';
+import { PaymentMethodTypes, PaymentIntentResource, RefundResource, RefundResourceReason } from '@/utils/types';
 
 export interface CreatePaymentIntentAttr {
   amount: number;
@@ -85,4 +85,46 @@ export const getPaymentIntentSession = async (paymentIntentId: string) => {
   const result = (await response.json()) as PaymentIntentResource;
 
   return result.data;
+};
+
+export interface CreateRefundInput {
+  amount: number;
+  payment_id: string;
+  reason: RefundResourceReason;
+}
+
+export const createRefund = async (data: CreateRefundInput) => {
+  const response = await fetch('https://api.paymongo.com/refunds', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      accept: 'application/json',
+      authorization: 'Basic ' + base64Encoding(`${constants.paymongo.secretKey as string}:`),
+    },
+    body: JSON.stringify({
+      data: {
+        attributes: {
+          ...data,
+        },
+      },
+    }),
+  });
+
+  const result = (await response.json()) as RefundResource;
+
+  return result.data;
+};
+
+export const getRefundDetails = async (refundId: string) => {
+  const response = await fetch('https://api.paymongo.com/refunds/' + refundId, {
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+      authorization: 'Basic ' + base64Encoding(`${constants.paymongo.secretKey as string}:`),
+    },
+  });
+
+  const result = (await response.json()) as RefundResource | undefined;
+
+  if (result) return result.data;
 };

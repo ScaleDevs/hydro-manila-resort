@@ -12,7 +12,9 @@ export const constants = {
   },
 
   mailerSend: {
-    templateId: process.env.MAILER_SEND_TEMPLATE_ID,
+    userInviteTempId: process.env.MAILER_SEND_USER_INVITE_TEMPLATE_ID || '',
+    bookingTempId: process.env.MAILER_SEND_BOOKING_TEMPLATE_ID || '',
+    refundTempId: process.env.MAILER_SEND_REFUND_TEMPLATE_ID || '',
     fromEmail: process.env.MAILER_SEND_FROM_EMAIL,
     fromName: process.env.MAILER_SEND_FROM_NAME,
     apiKey: process.env.MAILER_SEND_API_KEY,

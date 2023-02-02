@@ -51,6 +51,7 @@ model Room {
 
 model Booking {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  ref_no          String   @unique
   name            String
   email           String
   phoneNumber     String
@@ -66,5 +67,6 @@ model Booking {
   receipt         Receipt
   paymentIntentId String   @unique
   paymentId       String
+  refundId        String?
   createdAt       DateTime @default(now())
 }

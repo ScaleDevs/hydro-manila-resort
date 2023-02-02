@@ -53,6 +53,31 @@ export interface PaymentIntentResource {
   };
 }
 
+export type RefundResourceReason = 'others' | 'duplicate' | 'fraudulent' | 'requested_by_customer';
+
+export interface RefundResource {
+  data: {
+    id: string;
+    type: 'refund';
+    attributes: {
+      amount: number;
+      balance_transaction_id: string;
+      currency: 'PHP';
+      livemode: boolean;
+      metadata: null | any;
+      notes: null | any;
+      payment_id: string;
+      payout_id: null | string;
+      reason: RefundResourceReason;
+      status: 'succeeded' | 'pending' | 'processing' | 'failed';
+      available_at: number;
+      created_at: number;
+      refunded_at: number;
+      updated_at: number;
+    };
+  };
+}
+
 export interface PayMongoWebHookResponse {
   data: {
     id: string;
