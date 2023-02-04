@@ -5,6 +5,8 @@ import { devtools } from 'zustand/middleware';
 export type AppStates = {
   sideNavOpen: boolean;
 
+  productsLinksOpen: boolean;
+
   setAppState: (label: keyof Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'>, value: any) => void;
 
   setWholeAppState: (appStates: Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'>) => void;
@@ -14,6 +16,8 @@ export type AppStates = {
 
 const initState: Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'> = {
   sideNavOpen: true,
+
+  productsLinksOpen: false,
 };
 
 const stateStore = devtools((set) => ({

@@ -4,6 +4,7 @@ import { productRouter } from './product.router';
 import { roomRouter } from './room.router';
 import { bookingRouter } from './booking.router';
 import { paymentRouter } from './payment.router';
+import { bookingSettingRouter } from './booksetting.router';
 
 /**
  * Create your application's root router
@@ -23,6 +24,7 @@ export const appRouter = router({
   room: roomRouter,
   booking: bookingRouter,
   payment: paymentRouter,
+  bookingSetting: bookingSettingRouter,
 });
 
 export type AppRouter = typeof appRouter;

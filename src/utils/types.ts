@@ -1,8 +1,9 @@
-import { Booking, Product, Room } from '@prisma/client';
+import { Booking, Product, Room, BookingSetting } from '@prisma/client';
 
 export type IProduct = Product;
 export type IRoom = Room;
 export type IBooking = Booking;
+export type IBookingSetting = BookingSetting;
 
 // inputs
 export type IPaginationInputs = {

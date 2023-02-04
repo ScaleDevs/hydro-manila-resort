@@ -70,3 +70,11 @@ model Booking {
   refundId        String?
   createdAt       DateTime @default(now())
 }
+
+model BookingSetting {
+  bookingSettingId String   @id @default(auto()) @map("_id") @db.ObjectId
+  bookingFee       Int
+  minPax           Int
+  maxPax           Int
+  createdAt        DateTime @default(now())
+}
