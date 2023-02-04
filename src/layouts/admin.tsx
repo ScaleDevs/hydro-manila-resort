@@ -1,66 +1,31 @@
 import React from 'react';
-import { Box, Stack, Image, Container, Center, Button, Heading, Avatar, chakra, useDisclosure } from '@chakra-ui/react';
-import { RxHamburgerMenu } from 'react-icons/rx';
+import { Box, HStack, VStack, Heading, Avatar } from '@chakra-ui/react';
 
-import { useLogout } from '@/modules/hooks/useLogout.hook';
 import AuthGuard from '@/components/AuthGuard';
-import Link from 'next/link';
-import SideNav from '@/components/SideNav';
-
-const HamburgerMenu = chakra(RxHamburgerMenu);
+import AdminNav from '@/components/AdminNav';
 
 export default function Layout({ children }: any) {
-  const { signOutWithMutate } = useLogout();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   return (
     <AuthGuard>
-      <Box bg='primary.2' height='100vh'>
-        <SideNav isOpen={isOpen} onClose={onClose} />
-        <Box w='100%' py='0' bg='primary.1' pos='relative'>
-          <Stack direction='row' h='90px' w='100%' justifyContent='space-between' gap='10' textColor='whiteAlpha.800'>
-            <Box>
-              <Image
-                src='/logo_white.png'
-                alt='Hydro Resort Logo'
-                h={{ base: '150px', xl: '200px' }}
-                marginTop={{ base: '-30px', xl: '-60px' }}
-              />
-            </Box>
-
-            <Box display={{ base: 'none', md: 'block' }}>
-              <Center h='100%' p={{ base: '10px', md: '30px' }}>
-                <Link href='/admin/bookings'>
-                  <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
-                    BOOKING RECORDS
-                  </Button>
-                </Link>
-                <Link href='/admin/products'>
-                  <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }}>
-                    PRODUCTS
-                  </Button>
-                </Link>
-                <Button fontWeight='normal' fontSize={{ base: '14px', md: '20px' }} onClick={() => signOutWithMutate()}>
-                  LOGOUT
-                </Button>
-              </Center>
-            </Box>
-            <Center p='20px' display={{ base: 'flex', md: 'none' }}>
-              <HamburgerMenu _hover={{ cursor: 'pointer' }} w='25px' h='25px' onClick={onOpen} />
-            </Center>
-          </Stack>
+      <HStack bg='primary.2' height='100vh' overflowY='auto' spacing={0} position='relative'>
+        <AdminNav />
+        <Box
+          h='100%'
+          w={{ base: '100%', md: '95%', lg: '100%' }}
+          px={{ base: '30px', sm: '20px', md: '40px', lg: '100px' }}
+          pt='80px'
+          position='relative'
+        >
+          <VStack w='100%'>
+            <HStack w='100%' justifyContent='right'>
+              <Heading>ADMIN</Heading>
+              <Avatar name='Dan Abrahmov' src='https://bit.ly/dan-abramov' />
+            </HStack>
+            <br />
+            {children}
+          </VStack>
         </Box>
-        <Stack px={10} pt={5} direction='row' justifyContent='right' alignItems='center' spacing={5}>
-          <Heading as='h1' size='lg' noOfLines={1} textAlign='right'>
-            ADMIN
-          </Heading>
-          <Avatar bg='primary.1' />
-        </Stack>
-
-        <Container maxW={{ base: '90%', xl: 'container.xl' }} p='20px'>
-          {children}
-        </Container>
-      </Box>
+      </HStack>
     </AuthGuard>
   );
 }

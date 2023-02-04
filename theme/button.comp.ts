@@ -31,6 +31,9 @@ const Button = defineStyleConfig({
       _hover: {
         bg: 'teal',
       },
+      _active: {
+        bg: 'teal.400',
+      },
     },
   },
   defaultProps: {
