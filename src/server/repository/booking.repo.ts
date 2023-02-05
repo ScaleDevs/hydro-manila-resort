@@ -7,12 +7,16 @@ export type IFindManyBookingInput = {
 } & IPaginationInputs;
 
 class Respository {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'refundId'>) {
+  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
     return prisma.booking.create({ data: { ...data } });
   }
 
   public async findBookingById(id: string) {
     return prisma.booking.findFirst({ where: { id } });
+  }
+
+  public async findBookingByReferenceNo(refNo: string) {
+    return prisma.booking.findFirst({ where: { ref_no: refNo } });
   }
 
   public async findBookingByPaymentIntentId(paymentIntentId: string) {

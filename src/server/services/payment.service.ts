@@ -9,13 +9,13 @@ import {
   getPaymentIntentSession,
   getRefundDetails,
   createRefund,
-  CreateRefundInput,
 } from '@/server/repository/payment.repo';
 import { TRPCError } from '@trpc/server';
 import { constants } from '../constants';
 import { BookingService } from '@/svc/booking.service';
 import { ProductService } from '@/svc/product.service';
 import { sendBookingSuccessEmail, sendRefundEmail } from '@/server/repository/mailersend.repo';
+import { BookingRefundRepository } from '@/server/repository/bookingrefund.repo';
 
 const bookingDataSchema = z.object({
   name: z.string(),
@@ -41,7 +41,7 @@ type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
 class Service {
   public async initiatePaymentSessionForBooking(
-    data: Omit<IBooking, 'id' | 'createdAt' | 'refundId' | 'paymentIntentId' | 'paymentId' | 'ref_no'>,
+    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no'>,
   ) {
     try {
       return createPaymentIntent({
@@ -81,10 +81,54 @@ class Service {
     }
   }
 
-  public async createRefund(data: CreateRefundInput) {
+  public async createRefund(
+    ref_no: string,
+    reason: string,
+  ): Promise<{ status: 'MANUAL_PROCESSING' | 'AUTOMATIC_PROCESSING' | 'FAILED' }> {
     try {
-      return createRefund(data);
+      const bookingRecord = await BookingService.findBookingByReferenceNo(ref_no);
+      if (!bookingRecord) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Booking record does not exist' });
+
+      const { total } = bookingRecord.receipt;
+
+      const result = await createRefund({
+        amount: total * 100,
+        payment_id: bookingRecord.paymentId,
+        reason: 'requested_by_customer',
+        metadata: {
+          reason,
+        },
+      });
+
+      if ('error' in result) {
+        if (result.error === 'available_balance_insufficient') {
+          await BookingRefundRepository.createBookingRefund({
+            paymongoRefundId: null,
+            type: 'MANUAL',
+            reason: reason,
+            status: 'PROCESSING',
+            bookingId: bookingRecord.id,
+          });
+
+          console.log('SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND');
+          // both customer and hydro manila will receive email for awareness
+
+          return {
+            status: 'MANUAL_PROCESSING',
+          };
+        }
+
+        if (result.error === 'something_went_wrong')
+          return {
+            status: 'FAILED',
+          };
+      }
+
+      return {
+        status: 'AUTOMATIC_PROCESSING',
+      };
     } catch (err) {
+      console.log(err);
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
@@ -158,7 +202,7 @@ class Service {
     }
 
     if (!refundId) {
-      console.log('No Payment Intent Id!');
+      console.log('No Refund Id!');
       return;
     }
 
@@ -177,12 +221,33 @@ class Service {
         return;
       }
 
-      if (!!bookingRecord.refundId) {
+      const bookingRefundRecord = await BookingRefundRepository.findBookingRefundByBookingId(bookingRecord.id);
+
+      if (!!bookingRefundRecord && bookingRefundRecord.status === 'PROCESSING' && bookingRefundRecord.type === 'MANUAL') {
+        await BookingRefundRepository.updateBookinRefund(bookingRefundRecord.bookingRefundId, {
+          paymongoRefundId: refundId,
+          status: 'SUCCESS',
+        });
+        await sendRefundEmail({
+          recipientEmail: bookingRecord.email,
+          customer_name: bookingRecord.name,
+          ref_no: bookingRecord.ref_no,
+        });
+
+        console.log('EMAIL SUCCESSFULLY SENT');
+        return;
+      } else if (!!bookingRefundRecord && bookingRefundRecord.status === 'SUCCESS') {
         console.log('Booking record already refunded');
         return;
       }
 
-      await BookingService.updateBooking(bookingRecord.id, { refundId });
+      await BookingRefundRepository.createBookingRefund({
+        paymongoRefundId: refundId,
+        type: 'AUTOMATIC',
+        reason: refundResource.attributes.metadata.reason || '',
+        status: 'SUCCESS',
+        bookingId: bookingRecord.id,
+      });
 
       await sendRefundEmail({
         recipientEmail: bookingRecord.email,

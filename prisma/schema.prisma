@@ -34,6 +34,17 @@ type Receipt {
   total                Float
 }
 
+enum BookingRefundStatus {
+  FAILED
+  PROCESSING
+  SUCCESS
+}
+
+enum BookingRefundType {
+  AUTOMATIC
+  MANUAL
+}
+
 model Product {
   productId     String           @id @default(auto()) @map("_id") @db.ObjectId
   name          String
@@ -68,7 +79,6 @@ model Booking {
   receipt         Receipt
   paymentIntentId String   @unique
   paymentId       String
-  refundId        String?
   createdAt       DateTime @default(now())
 }
 
@@ -80,4 +90,14 @@ model BookingSetting {
   maxPax           Int
   createdAt        DateTime  @default(now())
   updatedAt        DateTime? @updatedAt
+}
+
+model BookingRefund {
+  bookingRefundId  String              @id @default(auto()) @map("_id") @db.ObjectId
+  paymongoRefundId String?
+  reason           String
+  status           BookingRefundStatus
+  type             BookingRefundType
+  bookingId        String              @unique
+  createdAt        DateTime            @default(now())
 }

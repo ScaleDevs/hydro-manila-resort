@@ -30,11 +30,11 @@ export default function CalenderInput({ setValue }: ICalenderInputProps) {
   };
 
   return (
-    <Box maxW={{ md: '350px' }} mx='auto'>
+    <Box maxW={{ base: '100%' }} mx='auto'>
       <Heading size='md' textAlign={{ base: 'left', md: 'center' }} color='primary.1'>
         CHOOSE A DATE
       </Heading>
-      <Box maxW={{ md: '350px' }} border='1px solid' borderColor='secondary.2' p='3' bg='white'>
+      <Box border='1px solid' borderColor='secondary.2' p='3' bg='white'>
         <Heading size='md' textAlign='center' color='primary.1'>
           {month} {year}
         </Heading>

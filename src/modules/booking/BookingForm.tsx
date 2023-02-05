@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Box, Stack, Text, HStack, VStack, Button, Heading } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -129,16 +130,16 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   }, [selectedRoom]);
 
   return (
-    <>
+    <Box>
       <form onSubmit={handleSubmit(proceedToPayment)}>
-        <Stack direction='column' w={{ md: '100%', lg: '75%' }} mx='auto' alignItems='center'>
+        <Stack direction='column' w={{ base: '95%', md: '100%' }} mx='auto' alignItems='center'>
           <Box w={{ base: '100%', md: '90%' }}>
             <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
               BOOK THE PLACE!
             </Heading>
           </Box>
-          <Stack direction='row' w='90%' spacing='5'>
-            <Box w={{ base: '100%', md: '100%' }} mx={{ base: 'auto', md: '0' }}>
+          <Stack direction='row' w={{ base: '100%', lg: '90%' }} spacing='5'>
+            <Box w={{ base: '100%', md: '50%' }} mx={{ base: 'auto', md: '0' }}>
               <Box display={{ base: 'block', md: 'none' }} mt='20px'>
                 <CalenderInput setValue={setValue} />
               </Box>
@@ -154,7 +155,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                 <TextField register={register} property='email' placeholder='*Email' errMsg={errors.email?.message} />
               </Stack>
 
-              <VStack>
+              <VStack alignItems='left'>
                 <HStack mt='15px'>
                   <Box h='100%' w='30%' p='-0'>
                     <NumberField register={register} property='guests' placeholder='*PAX' />
@@ -252,7 +253,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
               </Box>
             </Box>
 
-            <Box display={{ base: 'none', md: 'block' }}>
+            <Box display={{ base: 'none', md: 'block' }} w={{ base: '100%', md: '50%' }}>
               <Box>
                 <CalenderInput setValue={setValue} />
               </Box>
@@ -273,6 +274,17 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
           </Stack>
         </Stack>
       </form>
-    </>
+      <br />
+      <Stack direction='column' w={{ base: '95%', md: '100%', lg: '90%' }} mx='auto' alignItems='left'>
+        <Text color='primary.1' fontFamily='primary.1' fontSize='xl' fontWeight='semibold'>
+          Want to cancel a Booking?
+        </Text>
+        <Link href='/booking/cancel'>
+          <Button w='300px' bg='red.500' _hover={{ bg: 'red.400' }}>
+            Cancel your booking here
+          </Button>
+        </Link>
+      </Stack>
+    </Box>
   );
 }

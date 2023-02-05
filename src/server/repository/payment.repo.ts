@@ -68,8 +68,6 @@ export const attachPaymentMethodToIntent = async (data: AttachPaymentMethodToInt
 
   const result = (await response.json()) as PaymentIntentResource;
 
-  console.log(result);
-
   return result;
 };
 
@@ -91,6 +89,7 @@ export interface CreateRefundInput {
   amount: number;
   payment_id: string;
   reason: RefundResourceReason;
+  metadata?: any;
 }
 
 export const createRefund = async (data: CreateRefundInput) => {
@@ -110,9 +109,19 @@ export const createRefund = async (data: CreateRefundInput) => {
     }),
   });
 
-  const result = (await response.json()) as RefundResource;
+  const result: any = await response.json();
 
-  return result.data;
+  if (!!result.errors && result.errors[0].code === 'available_balance_insufficient') {
+    return {
+      error: 'available_balance_insufficient',
+    };
+  } else if (!!result.errors) {
+    return {
+      error: 'something_went_wrong',
+    };
+  }
+
+  return result as RefundResource;
 };
 
 export const getRefundDetails = async (refundId: string) => {
