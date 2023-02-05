@@ -75,6 +75,8 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     if (data.guests && data.guests > bookingSetting.minPax)
       total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
+    total += (bookingSetting.bookingFee / 100) * total;
+
     const endDate = dayjs(data.bookingDate).add(1, 'day').format('YYYY-MM-DD');
 
     const payload = {

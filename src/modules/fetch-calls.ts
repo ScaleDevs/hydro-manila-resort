@@ -56,8 +56,6 @@ export interface PaymentMethodResource {
 }
 
 export const createPaymentMethod = async (data: CreatePaymentMethodInput) => {
-  console.log('CREATING');
-
   if (!process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY) return;
 
   const response = await fetch('https://api.paymongo.com/v1/payment_methods', {
@@ -77,8 +75,6 @@ export const createPaymentMethod = async (data: CreatePaymentMethodInput) => {
   });
 
   const result = (await response.json()) as PaymentMethodResource;
-
-  console.log(result);
 
   return result.data;
 };
