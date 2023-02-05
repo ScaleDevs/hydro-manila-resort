@@ -19,7 +19,7 @@ const schema = z.object({
   name: z.string().min(1, 'Required'),
   phoneNumber: z.string(),
   email: z.string().email(),
-  guests: z.number().max(30, 'Max Additional Heads 5'),
+  guests: z.number(),
   productId: z.string(),
   roomId: z.string(),
   bookingDate: z.string(),
@@ -43,6 +43,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     page: 1,
     limit: 100,
   });
+  const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
   const { mutate } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
 
@@ -66,13 +67,13 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   };
 
   const proceedToPayment = (data: FormSchemaType) => {
-    console.log('SUBMIT');
-    console.log(data);
+    if (!bookingSetting) return;
 
-    // let total = 0;
-    // if (selectedProduct) total += selectedProduct.details[selectedProduct.activeVersion - 1].price;
-    // if (selectedRoom) total += selectedRoom.details[selectedRoom.activeVersion - 1].price;
-    // if (data.guests && data.guests > 25) total += (data.guests - 25) * 250;
+    let total = 0;
+    if (selectedProduct) total += selectedProduct.details[selectedProduct.activeVersion - 1].price;
+    if (selectedRoom) total += selectedRoom.details[selectedRoom.activeVersion - 1].price;
+    if (data.guests && data.guests > bookingSetting.minPax)
+      total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
     const endDate = dayjs(data.bookingDate).add(1, 'day').format('YYYY-MM-DD');
 
@@ -90,8 +91,12 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       receipt: {
         productPrice: selectedProduct?.details[productActiveVersion].price || 0,
         roomPrice: selectedRoom?.details[roomActiveVersion].price || 0,
-        additionalHeadsPrice: data.guests && data.guests > 25 ? (data.guests - 25) * 250 : 0,
-        total: 100,
+        additionalHeadsPrice:
+          data.guests && data.guests > bookingSetting.minPax
+            ? (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee
+            : 0,
+        bookingFee: bookingSetting.bookingFee,
+        total,
       },
     };
 
@@ -147,18 +152,29 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                 <TextField register={register} property='email' placeholder='*Email' errMsg={errors.email?.message} />
               </Stack>
 
-              <HStack mt='15px'>
-                <Box h='100%' w='30%' p='-0'>
-                  <NumberField register={register} property='guests' placeholder='*PAX' errMsg={errors.guests?.message} />
-                  {/* <Input placeholder='*PAX' /> */}
-                </Box>
-                <Box w='70%' fontSize='12px'>
-                  <Text>MAX OF 25 PAX</Text>
-                  <Text>EXTRA PERSON ₱250/HEAD</Text>
-                  <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
-                  <Text>Do not add in # of pax</Text>
-                </Box>
-              </HStack>
+              <VStack>
+                <HStack mt='15px'>
+                  <Box h='100%' w='30%' p='-0'>
+                    <NumberField register={register} property='guests' placeholder='*PAX' />
+                  </Box>
+                  <Box w='70%' fontSize='12px'>
+                    <Text>MAX OF {bookingSetting?.minPax || 25} PAX</Text>
+                    <Text>EXTRA PERSON ₱{bookingSetting?.extraHeadFee || 250}/HEAD</Text>
+                    <Text mt='10px'>CHILDREN 2 YEARS BELOW ARE FREE</Text>
+                    <Text>Do not add in # of pax</Text>
+                  </Box>
+                </HStack>
+                <Stack w='100%'>
+                  <Text color='red.500' textAlign='left'>
+                    {errors.guests?.message ||
+                      (bookingSetting
+                        ? watch('guests') > bookingSetting.maxPax
+                          ? `Extra Heads Allowed are only ${bookingSetting.maxPax - bookingSetting.minPax}!`
+                          : ''
+                        : '')}
+                  </Text>
+                </Stack>
+              </VStack>
 
               <Stack spacing='3' mt='20px'>
                 <SelectField
@@ -223,7 +239,12 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
               </VStack>
 
               <Box display={{ base: 'flex', md: 'none' }} justifyContent='right'>
-                <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+                <Button
+                  mt='20px'
+                  type='submit'
+                  isLoading={getProductsLoader || getRoomLoader}
+                  disabled={bookingSetting ? watch('guests') > bookingSetting.maxPax : false}
+                >
                   PROCEED TO PAYMENT
                 </Button>
               </Box>
@@ -237,7 +258,12 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
               <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
 
               <Box display='flex' justifyContent='right'>
-                <Button mt='20px' type='submit' isLoading={getProductsLoader || getRoomLoader}>
+                <Button
+                  mt='20px'
+                  type='submit'
+                  isLoading={getProductsLoader || getRoomLoader || bookingSettingLoader}
+                  disabled={bookingSetting ? watch('guests') > bookingSetting.maxPax : false}
+                >
                   PROCEED TO PAYMENT
                 </Button>
               </Box>

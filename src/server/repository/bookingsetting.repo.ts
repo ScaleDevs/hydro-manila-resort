@@ -2,7 +2,7 @@ import prisma from './prisma.client';
 import { IPaginationInputs, IBookingSetting } from '@/utils/types';
 
 class Respository {
-  public async createBookingSetting(data: Omit<IBookingSetting, 'bookingSettingId' | 'createdAt'>) {
+  public async createBookingSetting(data: Omit<IBookingSetting, 'bookingSettingId' | 'createdAt' | 'updatedAt'>) {
     return prisma.bookingSetting.create({ data: { ...data } });
   }
 

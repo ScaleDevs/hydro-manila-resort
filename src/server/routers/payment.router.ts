@@ -21,6 +21,7 @@ export const paymentRouter = router({
           roomPrice: z.number(),
           additionalHeadsPrice: z.number(),
           total: z.number(),
+          bookingFee: z.number(),
         }),
       }),
     )

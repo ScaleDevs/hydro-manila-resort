@@ -32,6 +32,7 @@ const bookingDataSchema = z.object({
     productPrice: z.number(),
     roomPrice: z.number(),
     additionalHeadsPrice: z.number(),
+    bookingFee: z.number(),
     total: z.number(),
   }),
 });
@@ -122,11 +123,11 @@ class Service {
     }
 
     const bookingRecord = await BookingService.createBooking({
-      ...bookingData,
+      ...parsed.data,
       paymentIntentId: paymentIntentRecord.id,
       paymentId: paymentIntentRecord.attributes.payments[0].id || '',
-      startSession: new Date(bookingData.startSession),
-      endSession: new Date(bookingData.endSession),
+      startSession: new Date(parsed.data.startSession),
+      endSession: new Date(parsed.data.endSession),
     });
 
     if (!bookingRecord) {

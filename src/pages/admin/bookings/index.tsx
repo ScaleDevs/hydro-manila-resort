@@ -1,6 +1,10 @@
 import Head from 'next/head';
-import { Heading, Box } from '@chakra-ui/react';
+import { Box, chakra } from '@chakra-ui/react';
 import Layout from '@/layouts/admin';
+import { IoSettingsOutline } from 'react-icons/io5';
+import BookingSetting from '@/modules/booking/BookingSettingForm';
+
+const SettingIcon = chakra(IoSettingsOutline);
 
 function Admin() {
   return (
@@ -12,11 +16,9 @@ function Admin() {
       </Head>
 
       <Box w='100%' mx='auto'>
-        <Box w={{ base: '90%', md: '450px' }} mt='200px' mx='auto' p='20px'>
-          <Heading as='h1' size='lg' noOfLines={1} textAlign='center'>
-            BOOKING RECORDS PAGE
-          </Heading>
-        </Box>
+        <SettingIcon h='30px' w='30px' _hover={{ cursor: 'pointer', color: 'teal.500' }} transition='color 0.25s' />
+        <br />
+        <BookingSetting />
       </Box>
     </Layout>
   );

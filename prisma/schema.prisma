@@ -30,6 +30,7 @@ type Receipt {
   productPrice         Float
   roomPrice            Float
   additionalHeadsPrice Float
+  bookingFee           Int
   total                Float
 }
 
@@ -72,9 +73,11 @@ model Booking {
 }
 
 model BookingSetting {
-  bookingSettingId String   @id @default(auto()) @map("_id") @db.ObjectId
+  bookingSettingId String    @id @default(auto()) @map("_id") @db.ObjectId
   bookingFee       Int
+  extraHeadFee     Int
   minPax           Int
   maxPax           Int
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime? @updatedAt
 }
