@@ -45,7 +45,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
       </Heading>
       <Box border='1px solid' borderColor='secondary.2' p='3' bg='white'>
         <HStack justifyContent='center'>
-          <LeftArrowIcon onClick={() => setMonth((currVal) => --currVal)} _hover={{ cursor: 'pointer' }}/>
+          <LeftArrowIcon onClick={() => setMonth((currVal) => --currVal)} _hover={{ cursor: 'pointer' }} />
 
           <Heading size='md' textAlign='center' color='primary.1'>
             {dayjs().add(month, 'M').format('MMMM YYYY')}
