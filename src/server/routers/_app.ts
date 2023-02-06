@@ -5,6 +5,7 @@ import { roomRouter } from './room.router';
 import { bookingRouter } from './booking.router';
 import { paymentRouter } from './payment.router';
 import { bookingSettingRouter } from './booksetting.router';
+import { scheduledEventRouter } from './scheduledevent.router';
 
 /**
  * Create your application's root router
@@ -25,6 +26,7 @@ export const appRouter = router({
   booking: bookingRouter,
   payment: paymentRouter,
   bookingSetting: bookingSettingRouter,
+  scheduledevent: scheduledEventRouter,
 });
 
 export type AppRouter = typeof appRouter;

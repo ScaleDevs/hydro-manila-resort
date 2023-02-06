@@ -12,7 +12,7 @@ class Respository {
     return prisma.scheduledEvent.create({ data: { ...data } });
   }
 
-  public async findBookingSettingById(scheduledEventId: string) {
+  public async findScheduledEventById(scheduledEventId: string) {
     return prisma.scheduledEvent.findFirst({ where: { scheduledEventId } });
   }
 
@@ -23,7 +23,7 @@ class Respository {
       take: limit,
     });
 
-    const totalCount = await prisma.bookingSetting.count();
+    const totalCount = await prisma.scheduledEvent.count();
 
     return {
       pageCount: Math.ceil(totalCount / limit),
