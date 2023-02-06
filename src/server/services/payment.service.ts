@@ -16,6 +16,7 @@ import { BookingService } from '@/svc/booking.service';
 import { ProductService } from '@/svc/product.service';
 import { sendBookingSuccessEmail, sendRefundEmail } from '@/server/repository/mailersend.repo';
 import { BookingRefundRepository } from '@/server/repository/bookingrefund.repo';
+import { BookingRepository } from '@/server/repository/booking.repo';
 
 const bookingDataSchema = z.object({
   name: z.string(),
@@ -44,6 +45,13 @@ class Service {
     data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no'>,
   ) {
     try {
+      const isSchedAvailable = await BookingRepository.checkIfScheduleIsAvailable({
+        startDate: data.startSession,
+        endDate: data.endSession,
+      });
+
+      if (!isSchedAvailable) return { isSchedAvailable };
+
       return createPaymentIntent({
         // in cents formula peso * 100
         amount: data.receipt.total * 100,

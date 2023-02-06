@@ -10,6 +10,11 @@ export type IFindManyBookingInput = {
   endDate?: string;
 } & IPaginationInputs;
 
+export type DatesInput = {
+  startDate: string | Date;
+  endDate: string | Date;
+};
+
 export type IBookingDates = {
   [key: string]: {
     start: number;
@@ -57,6 +62,43 @@ class Respository {
       pageCount: Math.ceil(totalCount / limit),
       records: result,
     };
+  }
+
+  public async checkIfScheduleIsAvailable({ startDate, endDate }: DatesInput) {
+    const whereFilter: Prisma.BookingWhereInput = {
+      OR: [
+        {
+          startSession: {
+            gte: startDate,
+          },
+          endSession: {
+            lte: startDate,
+          },
+        },
+        {
+          startSession: {
+            gte: endDate,
+          },
+          endSession: {
+            lte: endDate,
+          },
+        },
+        {
+          startSession: {
+            lte: startDate,
+          },
+          endSession: {
+            gte: endDate,
+          },
+        },
+      ],
+    };
+
+    const totalCount = await prisma.booking.count({
+      where: whereFilter,
+    });
+
+    return totalCount > 0 ? false : true;
   }
 
   public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput) {

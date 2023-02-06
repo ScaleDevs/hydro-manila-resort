@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Box, Stack, Text, HStack, VStack, Button, Heading } from '@chakra-ui/react';
+import { Box, Stack, Text, HStack, VStack, Button, Heading, Alert, AlertIcon } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +36,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
   const [productActiveVersion, setProductActiveVersion] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<IRoom | undefined>(undefined);
+  const [isSchedAvailable, setIsSchedAvailable] = useState(true);
   const [roomActiveVersion, setRoomActiveVersion] = useState(0);
 
   const { setWholeBookingState } = useBookingStoreTrack();
@@ -46,7 +47,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   });
   const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+  const { mutate, isError } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
 
   const {
     register,
@@ -109,6 +110,13 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
     mutate(payload, {
       onSuccess(data) {
+        if ('isSchedAvailable' in data) {
+          setIsSchedAvailable(data.isSchedAvailable);
+          return;
+        }
+
+        setIsSchedAvailable(true);
+
         setWholeBookingState({
           ...payload,
           clientKey: data.data.attributes.client_key,
@@ -137,10 +145,20 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     <Box>
       <form onSubmit={handleSubmit(proceedToPayment)}>
         <Stack direction='column' w={{ base: '95%', md: '100%' }} mx='auto' alignItems='center'>
-          <Box w={{ base: '100%', md: '90%' }}>
+          <Box w={{ base: '95%', sm: '100%', lg: '90%' }}>
             <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
               BOOK THE PLACE!
             </Heading>
+            {!isSchedAvailable || isError ? (
+              <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary'>
+                <AlertIcon />
+                {!isSchedAvailable
+                  ? 'Schedule has just been booked by another customer'
+                  : 'Something went wrong, Kindly Try Again'}
+              </Alert>
+            ) : (
+              ''
+            )}
           </Box>
           <Stack direction='row' w={{ base: '100%', lg: '90%' }} spacing='5'>
             <Box w={{ base: '100%', md: '50%' }} mx={{ base: 'auto', md: '0' }}>
