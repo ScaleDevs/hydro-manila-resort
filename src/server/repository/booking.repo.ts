@@ -1,10 +1,21 @@
 import prisma from './prisma.client';
+import { Prisma } from '@prisma/client';
 import { IPaginationInputs, IBooking } from '@/utils/types';
+import dayjs from 'dayjs';
 
 export type IFindManyBookingInput = {
   name?: string;
   email?: string;
+  startDate?: string;
+  endDate?: string;
 } & IPaginationInputs;
+
+export type IBookingDates = {
+  [key: string]: {
+    start: number;
+    end: number;
+  }[];
+};
 
 class Respository {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
@@ -23,13 +34,11 @@ class Respository {
     return prisma.booking.findFirst({ where: { paymentIntentId } });
   }
 
-  public async findManyBooking({ page, limit, name, email }: IFindManyBookingInput) {
-    const whereFilter = {
-      name: {
-        startsWith: name,
-      },
-      email: {
-        startsWith: email,
+  public async findManyBooking({ page, limit, startDate, endDate }: IFindManyBookingInput) {
+    const whereFilter: Prisma.BookingWhereInput = {
+      startSession: {
+        gte: startDate,
+        lte: endDate,
       },
     };
 
@@ -47,6 +56,48 @@ class Respository {
     return {
       pageCount: Math.ceil(totalCount / limit),
       records: result,
+    };
+  }
+
+  public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput) {
+    const whereFilter: Prisma.BookingWhereInput = {
+      startSession: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    const bookingRecords = await prisma.booking.findMany({
+      where: whereFilter,
+      orderBy: { name: 'asc' },
+      skip: page > 0 ? (page - 1) * limit : 0,
+      take: limit,
+    });
+
+    const totalCount = await prisma.booking.count({
+      where: whereFilter,
+    });
+
+    const bookedDates: IBookingDates = {};
+
+    for (const booking of bookingRecords) {
+      const keyStart = dayjs(booking.startSession).format('YYYY-MM-DD');
+      const keyEnd = dayjs(booking.endSession).format('YYYY-MM-DD');
+      const value = {
+        start: dayjs(booking.startSession).unix(),
+        end: dayjs(booking.endSession).unix(),
+      };
+
+      if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
+      if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
+
+      bookedDates[keyStart].push(value);
+      bookedDates[keyEnd].push(value);
+    }
+
+    return {
+      pageCount: Math.ceil(totalCount / limit),
+      bookedDates,
     };
   }
 

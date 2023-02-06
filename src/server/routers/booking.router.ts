@@ -8,6 +8,8 @@ export const bookingRouter = router({
       z.object({
         name: z.string().min(3).optional(),
         email: z.string().min(3).optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
         page: z.number().optional().default(1),
         limit: z.number().optional().default(10),
       }),
@@ -18,6 +20,16 @@ export const bookingRouter = router({
   getBookingById: procedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingById(input);
   }),
+  getAllBookingsByDates: procedure
+    .input(
+      z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }),
+    )
+    .query(({ input }) => {
+      return BookingService.findAllBookingsByDates(input);
+    }),
   deleteBooking: procedure.input(z.string()).mutation(({ input }) => {
     return BookingService.deleteBooking(input);
   }),

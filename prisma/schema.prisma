@@ -58,7 +58,6 @@ model Room {
   roomNumber    Int
   activeVersion Int           @default(1)
   details       RoomDetails[]
-  Booking       Booking[]
 }
 
 model Booking {
@@ -70,8 +69,7 @@ model Booking {
   startSession    DateTime
   endSession      DateTime
   guests          Int
-  room            Room     @relation(fields: [roomId], references: [roomId])
-  roomId          String   @db.ObjectId
+  roomId          String?  @db.ObjectId
   roomVersion     Int
   product         Product  @relation(fields: [productId], references: [productId])
   productId       String   @db.ObjectId

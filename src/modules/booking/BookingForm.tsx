@@ -69,16 +69,20 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
   const proceedToPayment = (data: FormSchemaType) => {
     if (!bookingSetting) return;
+    if (!selectedProduct) return;
 
+    const productDetails = selectedProduct.details[productActiveVersion];
+    const endDate = dayjs(data.bookingDate)
+      .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+      .format('YYYY-MM-DD');
     let total = 0;
-    if (selectedProduct) total += selectedProduct.details[selectedProduct.activeVersion - 1].price;
-    if (selectedRoom) total += selectedRoom.details[selectedRoom.activeVersion - 1].price;
+
+    total += productDetails.price;
+    if (selectedRoom) total += productDetails.price;
     if (data.guests && data.guests > bookingSetting.minPax)
       total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
     total += (bookingSetting.bookingFee / 100) * total;
-
-    const endDate = dayjs(data.bookingDate).add(1, 'day').format('YYYY-MM-DD');
 
     const payload = {
       name: data.name,
@@ -87,7 +91,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       startSession: new Date(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).toString(),
       endSession: new Date(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).toString(),
       guests: data.guests,
-      roomId: data.roomId,
+      roomId: data.roomId === '' ? null : data.roomId,
       roomVersion: selectedRoom?.activeVersion || 1,
       productId: data.productId,
       productVersion: selectedProduct?.activeVersion || 1,
@@ -141,7 +145,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
           <Stack direction='row' w={{ base: '100%', lg: '90%' }} spacing='5'>
             <Box w={{ base: '100%', md: '50%' }} mx={{ base: 'auto', md: '0' }}>
               <Box display={{ base: 'block', md: 'none' }} mt='20px'>
-                <CalenderInput setValue={setValue} />
+                <CalenderInput setValue={setValue} product={selectedProduct} />
               </Box>
 
               <Stack spacing='3' mt='20px'>
@@ -217,7 +221,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   property='roomId'
                   value={watch('roomId')}
                   placeholder='ROOM RENTAL(optional)'
-                  options={roomsData?.records.map((v) => ({ label: <Text>ROOM {v.roomNumber}</Text>, value: v.roomId })) || []}
+                  options={roomsData?.records.map((v) => ({ label: `ROOM ${v.roomNumber}`, value: v.roomId })) || []}
                   errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
                 >
                   {!!selectedRoom ? (
@@ -255,7 +259,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
             <Box display={{ base: 'none', md: 'block' }} w={{ base: '100%', md: '50%' }}>
               <Box>
-                <CalenderInput setValue={setValue} />
+                <CalenderInput setValue={setValue} product={selectedProduct} />
               </Box>
 
               <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />

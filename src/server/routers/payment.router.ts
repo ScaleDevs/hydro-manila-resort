@@ -12,7 +12,7 @@ export const paymentRouter = router({
         startSession: z.string(),
         endSession: z.string(),
         guests: z.number(),
-        roomId: z.string(),
+        roomId: z.string().nullable(),
         roomVersion: z.number(),
         productId: z.string(),
         productVersion: z.number(),

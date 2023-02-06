@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Box, Grid, GridItem, Heading, HStack, Text } from '@chakra-ui/react';
+import { Box, Center, Grid, GridItem, Heading, HStack, Skeleton, Text } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { UseFormSetValue } from 'react-hook-form';
+import { trpc } from '@/utils/trpc';
+import { IProduct } from '@/utils/types';
 
 const CalCell = ({ children }: { children: any }) => {
   return (
@@ -13,17 +15,21 @@ const CalCell = ({ children }: { children: any }) => {
 
 interface ICalenderInputProps {
   setValue: UseFormSetValue<any>;
+  product?: IProduct;
 }
 
-export default function CalenderInput({ setValue }: ICalenderInputProps) {
+export default function CalenderInput({ setValue, product }: ICalenderInputProps) {
   const [year] = useState(dayjs().year());
   const [month] = useState(dayjs().format('MMMM'));
   const [days] = useState(dayjs().daysInMonth());
   const [selectedDate, setSelecetedDate] = useState<string | null>();
+  const { data, isLoading } = trpc.booking.getAllBookingsByDates.useQuery({
+    startDate: dayjs().startOf('M').subtract(1, 'D').format(),
+    endDate: dayjs().endOf('M').add(1, 'D').format(),
+  });
 
   const handleChange = (value: any) => {
     const dayjsInstance = dayjs();
-    console.log(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('DD-MM-YYYY'));
     const dateValue = dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD');
     setSelecetedDate(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD'));
     setValue('bookingDate', dateValue);
@@ -49,35 +55,104 @@ export default function CalenderInput({ setValue }: ICalenderInputProps) {
           <CalCell>Sat</CalCell>
         </HStack>
 
-        <Grid w='100%' justifyContent='center' templateColumns='repeat(7, 1fr)' gap='2' mt='10px'>
-          {Array(dayjs().startOf('M').day())
-            .fill(1)
-            .map((item, i) => {
-              return (
-                <GridItem key={i} textAlign='center' py='5px' _hover={{ bg: 'secondary.1', cursor: 'pointer' }}>
-                  {' '}
-                </GridItem>
-              );
-            })}
-          {Array(days)
-            .fill(1)
-            .map((item, i) => {
-              return (
-                <GridItem
-                  key={i}
-                  textAlign='center'
-                  py='5px'
-                  border={!!selectedDate && dayjs(selectedDate).date() === i + item ? '2px solid' : ''}
-                  borderColor={!!selectedDate && dayjs(selectedDate).date() === i + item ? 'primary.1' : ''}
-                  color='black'
-                  _hover={{ bg: 'secondary.1', cursor: 'pointer' }}
-                  onClick={() => handleChange(i + item)}
-                >
-                  {i + item}
-                </GridItem>
-              );
-            })}
-        </Grid>
+        {isLoading ? (
+          <Grid w='100%' justifyContent='center' templateColumns='repeat(7, 1fr)' gap='2' mt='10px'>
+            {Array(dayjs().startOf('M').day())
+              .fill(1)
+              .map((item, i) => {
+                return (
+                  <GridItem key={i} textAlign='center' py='5px' _hover={{ bg: 'secondary.1', cursor: 'pointer' }}>
+                    {' '}
+                  </GridItem>
+                );
+              })}
+            {Array(days)
+              .fill(1)
+              .map((item, i) => {
+                const currentDay = i + item;
+                return (
+                  <GridItem
+                    key={i}
+                    textAlign='center'
+                    py='5px'
+                    border={!!selectedDate && dayjs(selectedDate).date() === currentDay ? '2px solid' : ''}
+                    borderColor={!!selectedDate && dayjs(selectedDate).date() === currentDay ? 'primary.1' : ''}
+                    color='black'
+                    _hover={{ bg: 'secondary.1', cursor: 'pointer' }}
+                    onClick={() => handleChange(currentDay)}
+                  >
+                    <Center>
+                      <Skeleton height='30px' w='30px' />
+                    </Center>
+                  </GridItem>
+                );
+              })}
+          </Grid>
+        ) : (
+          <Grid w='100%' justifyContent='center' templateColumns='repeat(7, 1fr)' gap='2' mt='10px'>
+            {Array(dayjs().startOf('M').day())
+              .fill(1)
+              .map((item, i) => {
+                return (
+                  <GridItem key={i} textAlign='center' py='5px' _hover={{ bg: 'secondary.1', cursor: 'pointer' }}>
+                    {' '}
+                  </GridItem>
+                );
+              })}
+            {Array(days)
+              .fill(1)
+              .map((item, i) => {
+                let pass = false;
+                const currentDay = i + item;
+                const dayjsInstance = dayjs();
+                const key = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
+
+                if (product && data && data.bookedDates[key]) {
+                  const productDetails = product.details[product.activeVersion - 1];
+                  const startDate = dayjs(`${key} ${productDetails.scheduleStart}`).unix();
+                  const endDate = dayjs(`${key} ${productDetails.scheduleEnd}`)
+                    .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
+                    .unix();
+
+                  for (const check of data.bookedDates[key]) {
+                    if ((startDate < check.start && endDate < check.start) || (startDate > check.start && startDate > check.end))
+                      pass = true;
+                  }
+                } else if (currentDay > dayjsInstance.date()) pass = true;
+
+                if (!pass)
+                  return (
+                    <GridItem
+                      key={i}
+                      bg='gray.400'
+                      textAlign='center'
+                      py='5px'
+                      borderRadius='sm'
+                      color='black'
+                      _hover={{ cursor: 'not-allowed' }}
+                    >
+                      {currentDay}
+                    </GridItem>
+                  );
+
+                return (
+                  <GridItem
+                    key={i}
+                    textAlign='center'
+                    py='5px'
+                    borderRadius='sm'
+                    border={!!selectedDate && dayjs(selectedDate).date() === currentDay ? '2px solid' : ''}
+                    borderColor={!!selectedDate && dayjs(selectedDate).date() === currentDay ? 'primary.1' : ''}
+                    color='black'
+                    _hover={{ bg: 'secondary.1', cursor: 'pointer' }}
+                    onClick={() => handleChange(currentDay)}
+                  >
+                    {currentDay}
+                  </GridItem>
+                );
+              })}
+          </Grid>
+        )}
       </Box>
     </Box>
   );

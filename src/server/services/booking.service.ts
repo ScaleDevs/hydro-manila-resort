@@ -47,6 +47,18 @@ class Service {
     }
   }
 
+  public async findAllBookingsByDates(inputs: { startDate: string; endDate: string }) {
+    try {
+      return BookingRepository.findAllBookingsByDates({
+        ...inputs,
+        page: 1,
+        limit: 1000,
+      });
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    }
+  }
+
   public async updateBooking(id: string, partialData: Partial<IBooking>) {
     try {
       return BookingRepository.updateBooking(id, partialData);

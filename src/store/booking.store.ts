@@ -9,7 +9,7 @@ export type BookingState = {
   startSession: string;
   endSession: string;
   guests: number;
-  roomId: string;
+  roomId: string | null;
   roomVersion: number;
   productId: string;
   productVersion: number;
