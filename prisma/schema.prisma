@@ -99,3 +99,11 @@ model BookingRefund {
   bookingId        String              @unique
   createdAt        DateTime            @default(now())
 }
+
+model ScheduledEvent {
+  scheduledEventId String   @id @default(auto()) @map("_id") @db.ObjectId
+  startSession     DateTime
+  endSession       DateTime
+  description      String
+  createdAt        DateTime @default(now())
+}

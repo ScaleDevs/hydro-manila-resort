@@ -14,8 +14,8 @@ class Respository {
     return prisma.bookingRefund.findFirst({ where: { bookingId } });
   }
 
-  public async findManyBookingSettings({ page, limit }: IPaginationInputs) {
-    const result = await prisma.bookingSetting.findMany({
+  public async findManyRefundByBooking({ page, limit }: IPaginationInputs) {
+    const result = await prisma.bookingRefund.findMany({
       orderBy: { createdAt: 'desc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
