@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { Box, Center, Grid, GridItem, Heading, HStack, Skeleton, Text } from '@chakra-ui/react';
+import { Box, Center, Grid, GridItem, Heading, HStack, Skeleton, Text, chakra } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { UseFormSetValue } from 'react-hook-form';
+import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
+
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
+
+const LeftArrowIcon = chakra(BsChevronLeft);
+const RightArrowIcon = chakra(BsChevronRight);
 
 const CalCell = ({ children }: { children: any }) => {
   return (
@@ -19,17 +24,15 @@ interface ICalenderInputProps {
 }
 
 export default function CalenderInput({ setValue, product }: ICalenderInputProps) {
-  const [year] = useState(dayjs().year());
-  const [month] = useState(dayjs().format('MMMM'));
-  const [days] = useState(dayjs().daysInMonth());
+  const [month, setMonth] = useState(0);
   const [selectedDate, setSelecetedDate] = useState<string | null>();
   const { data, isLoading } = trpc.booking.getAllBookingsByDates.useQuery({
-    startDate: dayjs().startOf('M').subtract(1, 'D').format(),
-    endDate: dayjs().endOf('M').add(1, 'D').format(),
+    startDate: dayjs().add(month, 'M').startOf('M').subtract(2, 'd').format(),
+    endDate: dayjs().add(month, 'M').endOf('M').add(1, 'd').format(),
   });
 
   const handleChange = (value: any) => {
-    const dayjsInstance = dayjs();
+    const dayjsInstance = dayjs().add(month, 'M');
     const dateValue = dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD');
     setSelecetedDate(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD'));
     setValue('bookingDate', dateValue);
@@ -41,9 +44,15 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
         CHOOSE A DATE
       </Heading>
       <Box border='1px solid' borderColor='secondary.2' p='3' bg='white'>
-        <Heading size='md' textAlign='center' color='primary.1'>
-          {month} {year}
-        </Heading>
+        <HStack justifyContent='center'>
+          <LeftArrowIcon onClick={() => setMonth((currVal) => --currVal)} _hover={{ cursor: 'pointer' }}/>
+
+          <Heading size='md' textAlign='center' color='primary.1'>
+            {dayjs().add(month, 'M').format('MMMM YYYY')}
+          </Heading>
+
+          <RightArrowIcon onClick={() => setMonth((currVal) => ++currVal)} _hover={{ cursor: 'pointer' }} />
+        </HStack>
 
         <HStack w='100%' borderY='2px' borderColor='black' justifyContent='center' spacing='2'>
           <CalCell>Sun</CalCell>
@@ -57,7 +66,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
 
         {isLoading ? (
           <Grid w='100%' justifyContent='center' templateColumns='repeat(7, 1fr)' gap='2' mt='10px'>
-            {Array(dayjs().startOf('M').day())
+            {Array(dayjs().add(month, 'M').startOf('M').day())
               .fill(1)
               .map((item, i) => {
                 return (
@@ -66,7 +75,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                   </GridItem>
                 );
               })}
-            {Array(days)
+            {Array(dayjs().add(month, 'M').daysInMonth())
               .fill(1)
               .map((item, i) => {
                 const currentDay = i + item;
@@ -90,7 +99,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
           </Grid>
         ) : (
           <Grid w='100%' justifyContent='center' templateColumns='repeat(7, 1fr)' gap='2' mt='10px'>
-            {Array(dayjs().startOf('M').day())
+            {Array(dayjs().add(month, 'M').startOf('M').day())
               .fill(1)
               .map((item, i) => {
                 return (
@@ -99,12 +108,12 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                   </GridItem>
                 );
               })}
-            {Array(days)
+            {Array(dayjs().add(month, 'M').daysInMonth())
               .fill(1)
               .map((item, i) => {
                 let pass = false;
                 const currentDay = i + item;
-                const dayjsInstance = dayjs();
+                const dayjsInstance = dayjs().add(month, 'M');
                 const key = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
 
                 if (product && data && data.bookedDates[key]) {
@@ -115,10 +124,9 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                     .unix();
 
                   for (const check of data.bookedDates[key]) {
-                    if ((startDate < check.start && endDate < check.start) || (startDate > check.start && startDate > check.end))
-                      pass = true;
+                    if (endDate < check.start || startDate > check.end) pass = true;
                   }
-                } else if (currentDay > dayjsInstance.date()) pass = true;
+                } else if (dayjs(key).unix() > dayjs().unix()) pass = true;
 
                 if (!pass)
                   return (
