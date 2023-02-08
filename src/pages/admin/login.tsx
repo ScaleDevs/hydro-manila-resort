@@ -12,7 +12,7 @@ function Login() {
   return (
     <Layout>
       <Head>
-        <title>Home</title>
+        <title>Admin Login</title>
         <meta name='description' content='Sample Home page with nextjs' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
