@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Center, Grid, GridItem, Heading, HStack, Skeleton, Text, chakra } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { UseFormSetValue } from 'react-hook-form';
@@ -20,10 +20,11 @@ const CalCell = ({ children }: { children: any }) => {
 
 interface ICalenderInputProps {
   setValue: UseFormSetValue<any>;
+  errMsg?: string;
   product?: IProduct;
 }
 
-export default function CalenderInput({ setValue, product }: ICalenderInputProps) {
+export default function CalenderInput({ setValue, product, errMsg }: ICalenderInputProps) {
   const [month, setMonth] = useState(0);
   const [selectedDate, setSelecetedDate] = useState<string | null>();
   const { data, isLoading } = trpc.booking.getAllBookingsByDates.useQuery({
@@ -37,6 +38,12 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
     setSelecetedDate(dayjs(`${dayjsInstance.year()}-${dayjsInstance.month() + 1}-${value}`).format('YYYY-MM-DD'));
     setValue('bookingDate', dateValue);
   };
+
+  useEffect(() => {
+    setSelecetedDate(null);
+    setValue('bookingDate', '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
 
   return (
     <Box maxW={{ base: '100%' }} mx='auto'>
@@ -116,6 +123,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                 const dayjsInstance = dayjs().add(month, 'M');
                 const key1 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
                 const key2 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay + 1}` : currentDay + 1}`;
+                const ifDateAfterToday = dayjs(key1).unix() > dayjs().unix();
 
                 if (product) {
                   const productDetails = product.details[product.activeVersion - 1];
@@ -124,13 +132,13 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                     .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
                     .unix();
 
-                  if (data && (data.bookedDates[key1] || data.bookedDates[key2])) {
+                  if (ifDateAfterToday && data && (data.bookedDates[key1] || data.bookedDates[key2])) {
                     if (data.bookedDates[key1])
                       for (const check of data.bookedDates[key1]) if (endDate < check.start || startDate > check.end) pass = true;
                     if (data.bookedDates[key2])
                       for (const check of data.bookedDates[key2]) if (endDate < check.start || startDate > check.end) pass = true;
-                  } else if (dayjs(key1).unix() > dayjs().unix()) pass = true;
-                }
+                  } else if (ifDateAfterToday) pass = true;
+                } else if (ifDateAfterToday) pass = true;
 
                 if (!pass)
                   return (
@@ -166,6 +174,7 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
           </Grid>
         )}
       </Box>
+      {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>
   );
 }

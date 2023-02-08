@@ -18,12 +18,12 @@ import CostView from './CostView';
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
-  phoneNumber: z.string(),
+  phoneNumber: z.string().min(1, 'Required'),
   email: z.string().email(),
   guests: z.number(),
-  productId: z.string(),
-  roomId: z.string(),
-  bookingDate: z.string(),
+  productId: z.string().min(1, 'Required'),
+  roomId: z.string().optional(),
+  bookingDate: z.string().min(1, 'Required'),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -92,7 +92,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       startSession: new Date(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).toString(),
       endSession: new Date(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).toString(),
       guests: data.guests,
-      roomId: data.roomId === '' ? null : data.roomId,
+      roomId: data.roomId === '' || !data.roomId ? null : data.roomId,
       roomVersion: selectedRoom?.activeVersion || 1,
       productId: data.productId,
       productVersion: selectedProduct?.activeVersion || 1,
@@ -163,7 +163,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
           <Stack direction='row' w={{ base: '100%', lg: '90%' }} spacing='5'>
             <Box w={{ base: '100%', md: '50%' }} mx={{ base: 'auto', md: '0' }}>
               <Box display={{ base: 'block', md: 'none' }} mt='20px'>
-                <CalenderInput setValue={setValue} product={selectedProduct} />
+                <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} />
               </Box>
 
               <Stack spacing='3' mt='20px'>
@@ -277,7 +277,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
             <Box display={{ base: 'none', md: 'block' }} w={{ base: '100%', md: '50%' }}>
               <Box>
-                <CalenderInput setValue={setValue} product={selectedProduct} />
+                <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} />
               </Box>
 
               <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
