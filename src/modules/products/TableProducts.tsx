@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, useToast, Button } from '@chakra-ui/react';
+import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, useToast, Button, ScaleFade } from '@chakra-ui/react';
 import { BsFillTrashFill } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
@@ -40,7 +40,7 @@ export default function TableProducts({}: ITableProductsProps) {
   };
 
   return (
-    <>
+    <ScaleFade initialScale={0.9} in>
       <TableContainer>
         <Table fontFamily='primary' color='primary.1'>
           <Thead>
@@ -108,6 +108,6 @@ export default function TableProducts({}: ITableProductsProps) {
       <Box w='100%' mt='20px'>
         <Paginator currentPage={page} pageCount={data?.pageCount || 0} handlePageChange={handlePageChange} />
       </Box>
-    </>
+    </ScaleFade>
   );
 }

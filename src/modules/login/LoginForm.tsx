@@ -1,4 +1,4 @@
-import { Heading, Stack, Button } from '@chakra-ui/react';
+import { Heading, Stack, Button, SlideFade } from '@chakra-ui/react';
 
 import useLogin from '@/hooks/useLogin.hook';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -9,7 +9,7 @@ function LoginForm() {
   const { errMessage, handleSubmit, signIn, isSignInLoading, register } = useLogin();
 
   return (
-    <>
+    <SlideFade in>
       <Heading as='h1' size='lg' noOfLines={1} textAlign='center'>
         WELCOME, ADMIN!
       </Heading>
@@ -27,7 +27,7 @@ function LoginForm() {
           </Button>
         </Stack>
       </form>
-    </>
+    </SlideFade>
   );
 }
 

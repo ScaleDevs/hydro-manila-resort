@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Alert, AlertIcon } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Alert, AlertIcon, SlideFade } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -73,42 +73,43 @@ function CreateScheduledEvent() {
         ) : (
           ''
         )}
-
-        <Box w='100%' mx='auto'>
-          <form onSubmit={handleSubmit(addScheduledEvent)}>
-            <Stack spacing={6}>
-              <TextField
-                required
-                label='DESCRIPTION:'
-                register={register}
-                property='description'
-                placeholder='Schedule Event Description'
-                errMsg={errors.description?.message}
-              />
-
-              <Stack direction={{ base: 'column', md: 'row' }}>
-                <DateTimeField
+        <SlideFade in offsetY='20px'>
+          <Box w='100%' mx='auto'>
+            <form onSubmit={handleSubmit(addScheduledEvent)}>
+              <Stack spacing={6}>
+                <TextField
                   required
-                  label='START:'
+                  label='DESCRIPTION:'
                   register={register}
-                  property='startSession'
-                  errMsg={errors.startSession?.message}
+                  property='description'
+                  placeholder='Schedule Event Description'
+                  errMsg={errors.description?.message}
                 />
-                <DateTimeField
-                  required
-                  label='END:'
-                  register={register}
-                  property='endSession'
-                  errMsg={errors.endSession?.message}
-                />
+
+                <Stack direction={{ base: 'column', md: 'row' }}>
+                  <DateTimeField
+                    required
+                    label='START:'
+                    register={register}
+                    property='startSession'
+                    errMsg={errors.startSession?.message}
+                  />
+                  <DateTimeField
+                    required
+                    label='END:'
+                    register={register}
+                    property='endSession'
+                    errMsg={errors.endSession?.message}
+                  />
+                </Stack>
+
+                <Button type='submit' borderRadius='sm' w='200px' isLoading={isLoading}>
+                  Add Schedule Event
+                </Button>
               </Stack>
-
-              <Button type='submit' borderRadius='sm' w='200px' isLoading={isLoading}>
-                Add Schedule Event
-              </Button>
-            </Stack>
-          </form>
-        </Box>
+            </form>
+          </Box>
+        </SlideFade>
       </Stack>
     </Layout>
   );

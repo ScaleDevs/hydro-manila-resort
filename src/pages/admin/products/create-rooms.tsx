@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, useToast, Text } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, useToast, Text, SlideFade } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -88,50 +88,52 @@ function Admin() {
 
         <Heading>Create Room Form</Heading>
 
-        <Box w='100%' mx='auto'>
-          <form onSubmit={handleSubmit(createAddOnSubmit)}>
-            <Stack spacing={6}>
-              <Stack direction={{ base: 'column', md: 'row' }}>
-                <NumberField
-                  register={register}
-                  property='roomNumber'
-                  placeholder='Room Number'
-                  errMsg={errors.roomNumber?.message}
-                />
-                <TextField
-                  register={register}
-                  property='description'
-                  placeholder='Room Description'
-                  errMsg={errors.description?.message}
-                />
-              </Stack>
+        <SlideFade in offsetY='20px'>
+          <Box w='100%' mx='auto'>
+            <form onSubmit={handleSubmit(createAddOnSubmit)}>
+              <Stack spacing={6}>
+                <Stack direction={{ base: 'column', md: 'row' }}>
+                  <NumberField
+                    register={register}
+                    property='roomNumber'
+                    placeholder='Room Number'
+                    errMsg={errors.roomNumber?.message}
+                  />
+                  <TextField
+                    register={register}
+                    property='description'
+                    placeholder='Room Description'
+                    errMsg={errors.description?.message}
+                  />
+                </Stack>
 
-              <Stack direction={{ base: 'column', md: 'row' }}>
-                <NumberField
-                  register={register}
-                  property='guests'
-                  placeholder='Number of guests'
-                  errMsg={errors.guests?.message}
-                />
-                <NumberField register={register} property='price' placeholder='Room Price' errMsg={errors.price?.message} />
-              </Stack>
+                <Stack direction={{ base: 'column', md: 'row' }}>
+                  <NumberField
+                    register={register}
+                    property='guests'
+                    placeholder='Number of guests'
+                    errMsg={errors.guests?.message}
+                  />
+                  <NumberField register={register} property='price' placeholder='Room Price' errMsg={errors.price?.message} />
+                </Stack>
 
-              <Stack>
-                <Label>Does it have a bathroom:</Label>
-                <RadioBooleanField
-                  setValue={setValue}
-                  value={watch('withBathroom')}
-                  property='withBathroom'
-                  errMsg={errors.withBathroom?.message}
-                />
-              </Stack>
+                <Stack>
+                  <Label>Does it have a bathroom:</Label>
+                  <RadioBooleanField
+                    setValue={setValue}
+                    value={watch('withBathroom')}
+                    property='withBathroom'
+                    errMsg={errors.withBathroom?.message}
+                  />
+                </Stack>
 
-              <Button type='submit' borderRadius='sm' isLoading={isLoading}>
-                Add Room
-              </Button>
-            </Stack>
-          </form>
-        </Box>
+                <Button type='submit' borderRadius='sm' isLoading={isLoading}>
+                  Add Room
+                </Button>
+              </Stack>
+            </form>
+          </Box>
+        </SlideFade>
       </Stack>
     </Layout>
   );

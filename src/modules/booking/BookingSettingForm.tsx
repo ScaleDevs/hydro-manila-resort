@@ -1,5 +1,19 @@
 import * as React from 'react';
-import { Box, Stack, Text, Button, chakra, HStack, Heading, useDisclosure, Spinner, Divider, useToast } from '@chakra-ui/react';
+import {
+  Box,
+  Stack,
+  Text,
+  Button,
+  chakra,
+  HStack,
+  Heading,
+  useDisclosure,
+  Spinner,
+  Divider,
+  useToast,
+  SlideFade,
+  Fade,
+} from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -94,105 +108,109 @@ export default function BookingSetting({}: IBookingSettingProps) {
       <br />
 
       {isOpen ? (
-        <form onSubmit={handleSubmit(updateOrCreateSetting)}>
-          <Stack spacing={5}>
-            <Stack spacing={0}>
-              <Text>Booking Fee:</Text>
-              <NumberField
-                placeholder='In Percentage'
-                register={register}
-                property='bookingFee'
-                errMsg={errors.bookingFee?.message}
-                defaultvalue={data?.bookingFee}
-              />
+        <Fade in>
+          <form onSubmit={handleSubmit(updateOrCreateSetting)}>
+            <Stack spacing={5}>
+              <Stack spacing={0}>
+                <Text>Booking Fee:</Text>
+                <NumberField
+                  placeholder='In Percentage'
+                  register={register}
+                  property='bookingFee'
+                  errMsg={errors.bookingFee?.message}
+                  defaultvalue={data?.bookingFee}
+                />
+              </Stack>
+
+              <Stack spacing={0}>
+                <Text>Minimum Pax:</Text>
+                <NumberField
+                  placeholder='Minimum Pax'
+                  register={register}
+                  property='minPax'
+                  errMsg={errors.minPax?.message}
+                  defaultvalue={data?.minPax}
+                />
+              </Stack>
+
+              <Stack spacing={0}>
+                <Text>Maximum Pax:</Text>
+                <NumberField
+                  placeholder='Maximum Pax'
+                  register={register}
+                  property='maxPax'
+                  errMsg={errors.maxPax?.message}
+                  defaultvalue={data?.maxPax}
+                />
+              </Stack>
+
+              <Stack spacing={0}>
+                <Text>Extra Head Fee:</Text>
+                <NumberField
+                  placeholder='Fee per head when it goes above minimum pax'
+                  register={register}
+                  property='extraHeadFee'
+                  errMsg={errors.extraHeadFee?.message}
+                  defaultvalue={data?.extraHeadFee}
+                />
+              </Stack>
             </Stack>
 
-            <Stack spacing={0}>
-              <Text>Minimum Pax:</Text>
-              <NumberField
-                placeholder='Minimum Pax'
-                register={register}
-                property='minPax'
-                errMsg={errors.minPax?.message}
-                defaultvalue={data?.minPax}
-              />
-            </Stack>
+            <br />
 
-            <Stack spacing={0}>
-              <Text>Maximum Pax:</Text>
-              <NumberField
-                placeholder='Maximum Pax'
-                register={register}
-                property='maxPax'
-                errMsg={errors.maxPax?.message}
-                defaultvalue={data?.maxPax}
-              />
-            </Stack>
-
-            <Stack spacing={0}>
-              <Text>Extra Head Fee:</Text>
-              <NumberField
-                placeholder='Fee per head when it goes above minimum pax'
-                register={register}
-                property='extraHeadFee'
-                errMsg={errors.extraHeadFee?.message}
-                defaultvalue={data?.extraHeadFee}
-              />
-            </Stack>
-          </Stack>
-
-          <br />
-
-          <Button type='submit' isLoading={processingSettings}>
-            Update
-          </Button>
-        </form>
+            <Button type='submit' isLoading={processingSettings}>
+              Update
+            </Button>
+          </form>
+        </Fade>
       ) : isLoading ? (
         <Stack alignItems='center' w='100%' p='30px'>
           <Spinner size='xl' />
           <Text>Loading Data...</Text>
         </Stack>
       ) : data ? (
-        <Stack spacing={2}>
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Booking Fee:</Text>
-            <Text>{data?.bookingFee}%</Text>
+        <SlideFade in>
+          <Stack spacing={2}>
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Booking Fee:</Text>
+              <Text>{data?.bookingFee}%</Text>
+            </Stack>
+            <Divider borderColor='gray.400' />
+
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Minimum Pax:</Text>
+              <Text>{data?.minPax}</Text>
+            </Stack>
+
+            <Divider borderColor='gray.400' />
+
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Maximum Pax:</Text>
+              <Text>{data?.maxPax}</Text>
+            </Stack>
+
+            <Divider borderColor='gray.400' />
+
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Extra Head Fee:</Text>
+              <Text>{PHpeso.format(data?.extraHeadFee)}</Text>
+            </Stack>
+
+            <Divider borderColor='gray.400' />
+
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Created At:</Text>
+              <Text>{dayjs(data?.createdAt).format('MMM DD, YYYY hh:mm:ss A')}</Text>
+            </Stack>
+
+            <Divider borderColor='gray.400' />
+
+            <Stack spacing={0} direction='row' justifyContent='space-between'>
+              <Text>Updated At:</Text>
+              <Text>{data?.updatedAt ? dayjs(data?.updatedAt).format('MMM DD, YYYY hh:mm:ss A') : 'N/A'}</Text>
+            </Stack>
           </Stack>
-          <Divider borderColor='gray.400' />
-
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Minimum Pax:</Text>
-            <Text>{data?.minPax}</Text>
-          </Stack>
-
-          <Divider borderColor='gray.400' />
-
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Maximum Pax:</Text>
-            <Text>{data?.maxPax}</Text>
-          </Stack>
-
-          <Divider borderColor='gray.400' />
-
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Extra Head Fee:</Text>
-            <Text>{PHpeso.format(data?.extraHeadFee)}</Text>
-          </Stack>
-
-          <Divider borderColor='gray.400' />
-
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Created At:</Text>
-            <Text>{dayjs(data?.createdAt).format('MMM DD, YYYY hh:mm:ss A')}</Text>
-          </Stack>
-
-          <Divider borderColor='gray.400' />
-
-          <Stack spacing={0} direction='row' justifyContent='space-between'>
-            <Text>Updated At:</Text>
-            <Text>{data?.updatedAt ? dayjs(data?.updatedAt).format('MMM DD, YYYY hh:mm:ss A') : 'N/A'}</Text>
-          </Stack>
-        </Stack>
+        </SlideFade>
       ) : (
         <>
           <Text>No Settings Created</Text>

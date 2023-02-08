@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Text, useToast } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Text, useToast, SlideFade } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -89,115 +89,122 @@ function CreateProduct() {
 
         <Heading>Create Product Form</Heading>
 
-        <Box w='100%' mx='auto'>
-          <form onSubmit={handleSubmit(addProductSubmit)}>
-            <Stack spacing={6}>
-              <Stack>
-                <Label>BASIC INFO:</Label>
-                <Stack direction={{ base: 'column', md: 'row' }}>
-                  <TextField register={register} property='name' placeholder='Product Name' errMsg={errors.name?.message} />
-                  <TextField
-                    register={register}
-                    property='description'
-                    placeholder='Product Description'
-                    errMsg={errors.description?.message}
-                  />
-                  <NumberField register={register} property='price' placeholder='Product Price' errMsg={errors.price?.message} />
+        <SlideFade in offsetY='20px'>
+          <Box w='100%' mx='auto'>
+            <form onSubmit={handleSubmit(addProductSubmit)}>
+              <Stack spacing={6}>
+                <Stack>
+                  <Label>BASIC INFO:</Label>
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <TextField register={register} property='name' placeholder='Product Name' errMsg={errors.name?.message} />
+                    <TextField
+                      register={register}
+                      property='description'
+                      placeholder='Product Description'
+                      errMsg={errors.description?.message}
+                    />
+                    <NumberField
+                      register={register}
+                      property='price'
+                      placeholder='Product Price'
+                      errMsg={errors.price?.message}
+                    />
+                  </Stack>
                 </Stack>
-              </Stack>
 
-              <Stack>
-                <Label>SCHEDULE START DETAILS:</Label>
-                <Stack direction={{ base: 'column', md: 'row' }}>
-                  <SelectNumberField
-                    placeholder='Hour'
-                    maxOpt={12}
-                    register={register}
-                    property='scheduleStartHour'
-                    value={watch('scheduleStartHour')}
-                    errMsg={errors.scheduleStartHour?.message}
-                  />
-                  <SelectNumberField
-                    placeholder='Minute'
-                    maxOpt={59}
-                    register={register}
-                    property='scheduleStartMin'
-                    value={watch('scheduleStartMin')}
-                    errMsg={errors.scheduleStartMin?.message}
-                  />
-                  <SelectField
-                    register={register}
-                    property='scheduleStartPost'
-                    value={watch('scheduleStartPost')}
-                    placeholder='AM/PM'
-                    options={[
-                      { label: 'AM', value: 'AM' },
-                      { label: 'PM', value: 'PM' },
-                    ]}
-                    errMsg={!!errors.scheduleStartPost?.message ? 'Required!' : undefined}
+                <Stack>
+                  <Label>SCHEDULE START DETAILS:</Label>
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <SelectNumberField
+                      placeholder='Hour'
+                      maxOpt={12}
+                      register={register}
+                      property='scheduleStartHour'
+                      value={watch('scheduleStartHour')}
+                      errMsg={errors.scheduleStartHour?.message}
+                    />
+                    <SelectNumberField
+                      placeholder='Minute'
+                      maxOpt={59}
+                      register={register}
+                      property='scheduleStartMin'
+                      value={watch('scheduleStartMin')}
+                      errMsg={errors.scheduleStartMin?.message}
+                    />
+                    <SelectField
+                      register={register}
+                      property='scheduleStartPost'
+                      value={watch('scheduleStartPost')}
+                      placeholder='AM/PM'
+                      options={[
+                        { label: 'AM', value: 'AM' },
+                        { label: 'PM', value: 'PM' },
+                      ]}
+                      errMsg={!!errors.scheduleStartPost?.message ? 'Required!' : undefined}
+                    />
+                  </Stack>
+                </Stack>
+
+                <Stack>
+                  <Label>SCHEDULE END DETAILS:</Label>
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <SelectNumberField
+                      placeholder='Hour'
+                      maxOpt={12}
+                      register={register}
+                      property='scheduleEndHour'
+                      value={watch('scheduleEndHour')}
+                      errMsg={errors.scheduleEndHour?.message}
+                    />
+                    <SelectNumberField
+                      placeholder='Minute'
+                      maxOpt={59}
+                      register={register}
+                      property='scheduleEndMin'
+                      value={watch('scheduleEndMin')}
+                      errMsg={errors.scheduleEndMin?.message}
+                    />
+                    <SelectField
+                      register={register}
+                      property='scheduleEndPost'
+                      value={watch('scheduleEndPost')}
+                      placeholder='AM/PM'
+                      options={[
+                        { label: 'AM', value: 'AM' },
+                        { label: 'PM', value: 'PM' },
+                      ]}
+                      errMsg={!!errors.scheduleEndPost?.message ? 'Required!' : undefined}
+                    />
+                  </Stack>
+                </Stack>
+
+                <Stack>
+                  <Label>Does Schedule End Next Day?:</Label>
+                  <RadioBooleanField
+                    setValue={setValue}
+                    value={watch('scheduleEndNextDay')}
+                    property='scheduleEndNextDay'
+                    errMsg={errors.scheduleEndNextDay?.message}
                   />
                 </Stack>
-              </Stack>
 
-              <Stack>
-                <Label>SCHEDULE END DETAILS:</Label>
-                <Stack direction={{ base: 'column', md: 'row' }}>
-                  <SelectNumberField
-                    placeholder='Hour'
-                    maxOpt={12}
-                    register={register}
-                    property='scheduleEndHour'
-                    value={watch('scheduleEndHour')}
-                    errMsg={errors.scheduleEndHour?.message}
-                  />
-                  <SelectNumberField
-                    placeholder='Minute'
-                    maxOpt={59}
-                    register={register}
-                    property='scheduleEndMin'
-                    value={watch('scheduleEndMin')}
-                    errMsg={errors.scheduleEndMin?.message}
-                  />
-                  <SelectField
-                    register={register}
-                    property='scheduleEndPost'
-                    value={watch('scheduleEndPost')}
-                    placeholder='AM/PM'
-                    options={[
-                      { label: 'AM', value: 'AM' },
-                      { label: 'PM', value: 'PM' },
-                    ]}
-                    errMsg={!!errors.scheduleEndPost?.message ? 'Required!' : undefined}
+                <Stack>
+                  <Label>WITH ROOMS?:</Label>
+                  <RadioBooleanField
+                    setValue={setValue}
+                    value={watch('withRooms')}
+                    property='withRooms'
+                    errMsg={errors.withRooms?.message}
                   />
                 </Stack>
-              </Stack>
 
-              <Stack>
-                <Label>Does Schedule End Next Day?:</Label>
-                <RadioBooleanField
-                  setValue={setValue}
-                  value={watch('scheduleEndNextDay')}
-                  property='scheduleEndNextDay'
-                  errMsg={errors.scheduleEndNextDay?.message}
-                />
+                <Button type='submit' borderRadius='sm' isLoading={isLoading}>
+                  Add Product
+                </Button>
               </Stack>
-
-              <Stack>
-                <Label>WITH ROOMS?:</Label>
-                <RadioBooleanField
-                  setValue={setValue}
-                  value={watch('withRooms')}
-                  property='withRooms'
-                  errMsg={errors.withRooms?.message}
-                />
-              </Stack>
-
-              <Button type='submit' borderRadius='sm' isLoading={isLoading}>
-                Add Product
-              </Button>
-            </Stack>
-          </form>
-        </Box>
+            </form>
+          </Box>
+        </SlideFade>
       </Stack>
     </Layout>
   );

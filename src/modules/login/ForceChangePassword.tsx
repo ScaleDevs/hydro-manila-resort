@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heading, Stack, Button, HStack, chakra, Text } from '@chakra-ui/react';
+import { Heading, Stack, Button, HStack, chakra, Text, SlideFade } from '@chakra-ui/react';
 import z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -139,7 +139,7 @@ function ForceChangePassword() {
   };
 
   return (
-    <>
+    <SlideFade in>
       <Heading as='h1' size={{ base: 'md', md: 'lg' }} noOfLines={1} textAlign='center'>
         MUST CHANGE PASSWORD
       </Heading>
@@ -174,7 +174,7 @@ function ForceChangePassword() {
           </Button>
         </Stack>
       </form>
-    </>
+    </SlideFade>
   );
 }
 
