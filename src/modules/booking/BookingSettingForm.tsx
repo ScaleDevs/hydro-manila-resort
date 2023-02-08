@@ -69,7 +69,7 @@ export default function BookingSetting({}: IBookingSettingProps) {
   };
 
   return (
-    <Box bg='white' w={{ base: '100%', md: '700px', lg: '500px' }} p='25px' borderRadius='md' boxShadow='md'>
+    <Box w={{ base: '100%', md: '700px', lg: '500px' }} bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>
       <HStack w='100%' justifyContent='space-between'>
         <Heading>Settings</Heading>
         {isOpen ? (

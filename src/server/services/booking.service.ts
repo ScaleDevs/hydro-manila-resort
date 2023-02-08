@@ -1,7 +1,9 @@
 import { v4 } from 'uuid';
 import { IBooking } from '@/utils/types';
-import { IFindManyBookingInput, BookingRepository } from '@/server/repository/booking.repo';
+import dayjs from 'dayjs';
+import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
 import { TRPCError } from '@trpc/server';
+import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'ref_no'>) {
@@ -49,11 +51,35 @@ class Service {
 
   public async findAllBookingsByDates(inputs: { startDate: string; endDate: string }) {
     try {
-      return BookingRepository.findAllBookingsByDates({
+      const bookingRecords = await BookingRepository.findAllBookingsByDates({
         ...inputs,
         page: 1,
         limit: 1000,
       });
+
+      const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates({
+        ...inputs,
+        page: 1,
+        limit: 1000,
+      });
+
+      const bookedDates: IBookingDates = {};
+
+      for (const record of [...bookingRecords, ...eventsRecords]) {
+        const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
+        const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
+        const value = {
+          start: dayjs(record.startSession).unix(),
+          end: dayjs(record.endSession).unix(),
+        };
+        if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
+        if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
+
+        bookedDates[keyStart].push(value);
+        if (keyStart !== keyEnd) bookedDates[keyEnd].push(value);
+      }
+
+      return { bookedDates };
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }

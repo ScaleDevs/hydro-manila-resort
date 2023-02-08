@@ -18,6 +18,9 @@ export const scheduledEventRouter = router({
         endSession: new Date(input.endSession),
       });
     }),
+  deleteScheduledEvent: procedure.input(z.string()).mutation(async ({ input }) => {
+    return ScheduledEventService.deleteScheduledEvent(input);
+  }),
   getScheduledEventById: procedure.input(z.string()).query(({ input }) => {
     return ScheduledEventService.findScheduledEventById(input);
   }),

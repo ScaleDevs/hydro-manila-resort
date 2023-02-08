@@ -9,12 +9,12 @@ function Products() {
   return (
     <Layout>
       <Head>
-        <title>Home</title>
+        <title>Admin | Rooms</title>
         <meta name='description' content='Sample Home page with nextjs' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <Box w='100%' mx='auto'>
+      <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         <HStack>
           <Link href='/admin/products/create-rooms'>
             <Button borderRadius='full' h='50px' w='50px' fontSize='25px' fontWeight='normal'>

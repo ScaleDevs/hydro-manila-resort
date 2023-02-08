@@ -72,18 +72,16 @@ function CreateProduct() {
     });
   };
 
-  console.log(errors);
-
   return (
     <Layout>
       <Head>
-        <title>Home</title>
+        <title>Admin | Create Schedule</title>
         <meta name='description' content='Sample Home page with nextjs' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <Stack spacing={7}>
-        <Link href='/admin/products'>
+      <Stack spacing={7} w='100%' bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>
+        <Link href='/admin/products/schedules'>
           <Button borderRadius='2xl'>
             <BsArrowLeft />
           </Button>

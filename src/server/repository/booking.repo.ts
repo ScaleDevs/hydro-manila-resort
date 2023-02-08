@@ -1,7 +1,6 @@
 import prisma from './prisma.client';
 import { Prisma } from '@prisma/client';
-import { IPaginationInputs, IBooking } from '@/utils/types';
-import dayjs from 'dayjs';
+import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 
 export type IFindManyBookingInput = {
   name?: string;
@@ -9,11 +8,6 @@ export type IFindManyBookingInput = {
   startDate?: string;
   endDate?: string;
 } & IPaginationInputs;
-
-export type DatesInput = {
-  startDate: string | Date;
-  endDate: string | Date;
-};
 
 export type IBookingDates = {
   [key: string]: {
@@ -49,7 +43,6 @@ class Respository {
 
     const result = await prisma.booking.findMany({
       where: whereFilter,
-      orderBy: { name: 'asc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
@@ -64,31 +57,31 @@ class Respository {
     };
   }
 
-  public async checkIfScheduleIsAvailable({ startDate, endDate }: DatesInput) {
+  public async checkIfScheduleTaken({ startDate, endDate }: DatesInput) {
     const whereFilter: Prisma.BookingWhereInput = {
       OR: [
+        {
+          startSession: {
+            lte: startDate,
+          },
+          endSession: {
+            gte: startDate,
+          },
+        },
+        {
+          startSession: {
+            lte: endDate,
+          },
+          endSession: {
+            gte: endDate,
+          },
+        },
         {
           startSession: {
             gte: startDate,
           },
           endSession: {
-            lte: startDate,
-          },
-        },
-        {
-          startSession: {
-            gte: endDate,
-          },
-          endSession: {
             lte: endDate,
-          },
-        },
-        {
-          startSession: {
-            lte: startDate,
-          },
-          endSession: {
-            gte: endDate,
           },
         },
       ],
@@ -98,7 +91,7 @@ class Respository {
       where: whereFilter,
     });
 
-    return totalCount > 0 ? false : true;
+    return totalCount > 0;
   }
 
   public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput) {
@@ -116,31 +109,7 @@ class Respository {
       take: limit,
     });
 
-    const totalCount = await prisma.booking.count({
-      where: whereFilter,
-    });
-
-    const bookedDates: IBookingDates = {};
-
-    for (const booking of bookingRecords) {
-      const keyStart = dayjs(booking.startSession).format('YYYY-MM-DD');
-      const keyEnd = dayjs(booking.endSession).format('YYYY-MM-DD');
-      const value = {
-        start: dayjs(booking.startSession).unix(),
-        end: dayjs(booking.endSession).unix(),
-      };
-
-      if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
-      if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
-
-      bookedDates[keyStart].push(value);
-      bookedDates[keyEnd].push(value);
-    }
-
-    return {
-      pageCount: Math.ceil(totalCount / limit),
-      bookedDates,
-    };
+    return bookingRecords;
   }
 
   public async updateBooking(id: string, partialData: Partial<IBooking>) {

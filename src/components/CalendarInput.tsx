@@ -114,19 +114,23 @@ export default function CalenderInput({ setValue, product }: ICalenderInputProps
                 let pass = false;
                 const currentDay = i + item;
                 const dayjsInstance = dayjs().add(month, 'M');
-                const key = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
+                const key1 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
+                const key2 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay + 1}` : currentDay + 1}`;
 
-                if (product && data && data.bookedDates[key]) {
+                if (product) {
                   const productDetails = product.details[product.activeVersion - 1];
-                  const startDate = dayjs(`${key} ${productDetails.scheduleStart}`).unix();
-                  const endDate = dayjs(`${key} ${productDetails.scheduleEnd}`)
+                  const startDate = dayjs(`${key1} ${productDetails.scheduleStart}`).unix();
+                  const endDate = dayjs(`${key1} ${productDetails.scheduleEnd}`)
                     .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
                     .unix();
 
-                  for (const check of data.bookedDates[key]) {
-                    if (endDate < check.start || startDate > check.end) pass = true;
-                  }
-                } else if (dayjs(key).unix() > dayjs().unix()) pass = true;
+                  if (data && (data.bookedDates[key1] || data.bookedDates[key2])) {
+                    if (data.bookedDates[key1])
+                      for (const check of data.bookedDates[key1]) if (endDate < check.start || startDate > check.end) pass = true;
+                    if (data.bookedDates[key2])
+                      for (const check of data.bookedDates[key2]) if (endDate < check.start || startDate > check.end) pass = true;
+                  } else if (dayjs(key1).unix() > dayjs().unix()) pass = true;
+                }
 
                 if (!pass)
                   return (

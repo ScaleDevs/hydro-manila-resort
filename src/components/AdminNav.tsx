@@ -7,6 +7,7 @@ import { BsFillArrowLeftSquareFill, BsFillArrowRightSquareFill, BsBook } from 'r
 import { BiLogOut } from 'react-icons/bi';
 import { FaSwimmingPool } from 'react-icons/fa';
 import { RxHamburgerMenu } from 'react-icons/rx';
+import { BsCalendarEvent } from 'react-icons/bs';
 
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import useAppStoreTrack from '@/store/app.store';
@@ -15,6 +16,7 @@ const RightArrowIconButton = chakra(BsFillArrowRightSquareFill);
 const LeftArrowIconButton = chakra(BsFillArrowLeftSquareFill);
 const ChakraLink = chakra(Link);
 const HamburgerIcon = chakra(RxHamburgerMenu);
+const CalendarIcon = chakra(BsCalendarEvent);
 
 const ParentLink = () => {
   const router = useRouter();
@@ -126,6 +128,19 @@ export default function AdminNav() {
                   isActive={router.pathname === '/admin/bookings'}
                 >
                   BOOKINGS
+                </Button>
+              </ChakraLink>
+
+              <ChakraLink href='/admin/events' w='100%'>
+                <Button
+                  fontWeight='normal'
+                  fontSize='20px'
+                  w='100%'
+                  justifyContent='left'
+                  leftIcon={<CalendarIcon />}
+                  isActive={router.pathname === '/admin/scheduledevent'}
+                >
+                  EVENT
                 </Button>
               </ChakraLink>
 

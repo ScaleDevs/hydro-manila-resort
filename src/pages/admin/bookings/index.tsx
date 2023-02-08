@@ -10,7 +10,7 @@ function Admin() {
   return (
     <Layout>
       <Head>
-        <title>Home</title>
+        <title>Admin | Bookings</title>
         <meta name='description' content='Sample Home page with nextjs' />
         <link rel='icon' href='/favicon.ico' />
       </Head>

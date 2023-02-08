@@ -5,19 +5,24 @@ import { ScheduledEventRepository } from '@/server/repository/scheduledevent.rep
 class Service {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
     try {
-      const isSchedAvailable = await ScheduledEventRepository.checkIfScheduleIsAvailable({
+      const isSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
         startDate: data.startSession,
         endDate: data.endSession,
       });
 
-      if (isSchedAvailable)
+      if (isSchedTaken)
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Record already exist :: Conflict Schedule',
         });
 
       return ScheduledEventRepository.createScheduledEvent(data);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.message === 'Record already exist :: Conflict Schedule')
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Schedule Already Filled',
+        });
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
@@ -33,6 +38,14 @@ class Service {
   public async findManyScheduledEvent(input: IPaginationInputs) {
     try {
       return ScheduledEventRepository.findManyScheduledEvent(input);
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    }
+  }
+
+  public async deleteScheduledEvent(scheduledEventId: string) {
+    try {
+      return ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }

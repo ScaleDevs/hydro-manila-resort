@@ -80,7 +80,7 @@ export default function Paginator({ currentPage, pageCount, handlePageChange }: 
                 color={currentPage === i + 1 ? 'white' : 'black'}
                 borderRadius='sm'
                 overflow='hidden'
-                _hover={{ cursor: 'pointer', bg: 'gray.100' }}
+                _hover={{ cursor: 'pointer', bg: 'teal.400' }}
                 onClick={() => handlePageChange(currentIteration)}
               >
                 <Center h='100%'>{currentIteration}</Center>

@@ -13,6 +13,11 @@ export type IPaginationInputs = {
   limit: number;
 };
 
+export type DatesInput = {
+  startDate: string | Date;
+  endDate: string | Date;
+};
+
 // ph geo data
 export type IPHGeo = [{ name: string; region: string; key: string }, { name: string; province: string; city?: boolean }[]][];
 

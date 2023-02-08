@@ -1,0 +1,41 @@
+import { Input, Box, Text } from '@chakra-ui/react';
+import { UseFormRegister } from 'react-hook-form';
+
+export interface IDateTimeFieldProps {
+  register: UseFormRegister<any>;
+  property: string;
+  errMsg?: string;
+  onBlur?: () => void;
+  label?: string;
+  required?: boolean;
+}
+
+export function DateTimeField({ register, property, errMsg, onBlur, label, required }: IDateTimeFieldProps) {
+  return (
+    <Box w='100%'>
+      <Text fontSize='md'>
+        {label}
+        {required && (
+          <Text as='span' color='red' pl='1'>
+            *
+          </Text>
+        )}
+      </Text>
+      <Input
+        {...register(property, {
+          onBlur: () => {
+            onBlur && onBlur();
+          },
+        })}
+        type='datetime-local'
+        borderColor='primary.1'
+        borderRadius='sm'
+        _hover={{
+          borderColor: 'teal.400',
+        }}
+        focusBorderColor='teal.400'
+      />
+      {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
+    </Box>
+  );
+}

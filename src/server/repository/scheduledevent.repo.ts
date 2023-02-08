@@ -1,11 +1,6 @@
 import prisma from './prisma.client';
-import { IPaginationInputs, IScheduledEvent } from '@/utils/types';
+import { IPaginationInputs, IScheduledEvent, DatesInput } from '@/utils/types';
 import { Prisma } from '@prisma/client';
-
-type DatesInput = {
-  startDate: string | Date;
-  endDate: string | Date;
-};
 
 class Respository {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
@@ -31,31 +26,48 @@ class Respository {
     };
   }
 
-  public async checkIfScheduleIsAvailable({ startDate, endDate }: DatesInput) {
+  public async findAllScheduledEventByDates({ page, limit, startDate, endDate }: IPaginationInputs & DatesInput) {
+    const whereFilter: Prisma.ScheduledEventWhereInput = {
+      startSession: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    const eventsRecords = await prisma.scheduledEvent.findMany({
+      where: whereFilter,
+      skip: page > 0 ? (page - 1) * limit : 0,
+      take: limit,
+    });
+
+    return eventsRecords;
+  }
+
+  public async checkIfScheduleIsTaken({ startDate, endDate }: DatesInput) {
     const whereFilter: Prisma.ScheduledEventWhereInput = {
       OR: [
+        {
+          startSession: {
+            lte: startDate,
+          },
+          endSession: {
+            gte: startDate,
+          },
+        },
+        {
+          startSession: {
+            lte: endDate,
+          },
+          endSession: {
+            gte: endDate,
+          },
+        },
         {
           startSession: {
             gte: startDate,
           },
           endSession: {
-            lte: startDate,
-          },
-        },
-        {
-          startSession: {
-            gte: endDate,
-          },
-          endSession: {
             lte: endDate,
-          },
-        },
-        {
-          startSession: {
-            lte: startDate,
-          },
-          endSession: {
-            gte: endDate,
           },
         },
       ],
@@ -65,7 +77,11 @@ class Respository {
       where: whereFilter,
     });
 
-    return totalCount > 0 ? false : true;
+    return totalCount > 0;
+  }
+
+  public async deleteScheduledEvent(scheduledEventId: string) {
+    return prisma.scheduledEvent.delete({ where: { scheduledEventId } });
   }
 }
 

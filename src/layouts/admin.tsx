@@ -12,7 +12,7 @@ export default function Layout({ children }: any) {
         <Box
           h='100%'
           w={{ base: '100%', md: '95%', lg: '100%' }}
-          px={{ base: '30px', sm: '20px', md: '40px', lg: '100px' }}
+          px={{ base: '20px', sm: '20px', md: '40px', lg: '50px', xl: '90px' }}
           pt='80px'
           position='relative'
         >
