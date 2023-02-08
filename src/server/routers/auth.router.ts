@@ -26,8 +26,8 @@ export const authRouter = router({
         newPassword: z.string(),
       }),
     )
-    .mutation(({ input }) => {
-      return AuthService.forceChangePassword(input.session, input.username, input.newPassword);
+    .mutation(({ ctx, input }) => {
+      return AuthService.forceChangePassword(ctx, input.session, input.username, input.newPassword);
     }),
   signOut: procedure.mutation(async ({ ctx }) => {
     const refreshToken = getCookie('refreshToken', { req: ctx.req, res: ctx.res as any });

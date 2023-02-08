@@ -31,6 +31,24 @@ const createSecretHash = (username: string) => {
   return data.digest('base64');
 };
 
+const getCookieAge = async () => {
+  const desribeUserPoolClientCommand = new DescribeUserPoolClientCommand({
+    ClientId: constants.appClientId,
+    UserPoolId: constants.UserPoolId,
+  });
+
+  const clientCommandResult = await client.send(desribeUserPoolClientCommand);
+
+  let cookieAge = 86400;
+
+  if (clientCommandResult.UserPoolClient?.RefreshTokenValidity && clientCommandResult.UserPoolClient.TokenValidityUnits)
+    cookieAge =
+      clientCommandResult.UserPoolClient.RefreshTokenValidity *
+      (clientCommandResult.UserPoolClient.TokenValidityUnits.RefreshToken === 'minutes' ? 60 : 86400);
+
+  return cookieAge;
+};
+
 export const adminCreateUser = async (email: string, tmpPwd: string) => {
   try {
     const command = new AdminCreateUserCommand({
@@ -50,20 +68,6 @@ export const adminCreateUser = async (email: string, tmpPwd: string) => {
 
 export const initiateAuth = async (username: string, password: string) => {
   try {
-    const desribeUserPoolClientCommand = new DescribeUserPoolClientCommand({
-      ClientId: constants.appClientId,
-      UserPoolId: constants.UserPoolId,
-    });
-
-    const clientCommandResult = await client.send(desribeUserPoolClientCommand);
-
-    let cookieAge = 86400;
-
-    if (clientCommandResult.UserPoolClient?.RefreshTokenValidity && clientCommandResult.UserPoolClient.TokenValidityUnits)
-      cookieAge =
-        clientCommandResult.UserPoolClient.RefreshTokenValidity *
-        (clientCommandResult.UserPoolClient.TokenValidityUnits.RefreshToken === 'minutes' ? 60 : 86400);
-
     const command = new InitiateAuthCommand({
       ClientId: constants.appClientId,
       AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
@@ -73,6 +77,8 @@ export const initiateAuth = async (username: string, password: string) => {
         SECRET_HASH: createSecretHash(username),
       },
     });
+
+    const cookieAge = await getCookieAge();
 
     const authResult = await client.send(command);
 
@@ -98,7 +104,14 @@ export const respondToNewPasswordAuthChallenge = async (session: string, usernam
       },
     });
 
-    return await client.send(command);
+    const cookieAge = await getCookieAge();
+
+    const authResult = await client.send(command);
+
+    return {
+      authResult,
+      cookieAge,
+    };
   } catch (err: any) {
     trpcErrorHandling(err);
   }

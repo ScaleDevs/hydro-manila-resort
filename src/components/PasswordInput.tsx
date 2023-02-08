@@ -12,14 +12,19 @@ export interface IPasswordInputProps {
     property: any;
   };
   placeholder?: string;
+  onChange?: (event: any) => void;
 }
 
-export function PasswordInput({ formInput, placeholder }: IPasswordInputProps) {
+export function PasswordInput({ onChange, formInput, placeholder }: IPasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => setShowPassword(!showPassword);
 
-  const useFormRegisterField = formInput?.register ? formInput.register(formInput.property) : {};
+  const useFormRegisterField = formInput?.register
+    ? formInput.register(formInput.property, {
+        onChange,
+      })
+    : {};
 
   return (
     <Box position='relative'>

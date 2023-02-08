@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ChallengeNameType, InitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
+import { ChallengeNameType } from '@aws-sdk/client-cognito-identity-provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import useAuthStoreTrack from '@/store/auth.store';
 import { trpc } from '@/utils/trpc';
@@ -28,26 +28,31 @@ export default function useLogin() {
     },
   });
 
-  const updateAuthStates = (data: InitiateAuthCommandOutput & { expiresAt: number }) => {
-    setAuthState('accessToken', data?.AuthenticationResult?.AccessToken);
-    setAuthState('idToken', data?.AuthenticationResult?.IdToken);
-    setAuthState('expiresIn', data?.AuthenticationResult?.ExpiresIn);
+  const updateAuthStates = (data: { AccessToken?: string; IdToken?: string; ExpiresIn?: number; expiresAt?: number }) => {
+    setAuthState('accessToken', data.AccessToken);
+    setAuthState('idToken', data.IdToken);
+    setAuthState('expiresIn', data.ExpiresIn);
     setAuthState('expiresAt', data.expiresAt);
     router.push('/admin/bookings');
     loginAllTabs();
   };
 
   const signIn = (formData: typeof schema._input) => {
-    console.log('INPUT HERE');
-    console.log(formData);
     mutate(formData, {
       onSuccess(data) {
+        const { authResult, expiresAt } = data;
         setErrMessage(null);
-        if (data?.ChallengeName === ChallengeNameType.NEW_PASSWORD_REQUIRED) {
+        if (authResult?.ChallengeName === ChallengeNameType.NEW_PASSWORD_REQUIRED) {
           setAuthState('forceChangePassword', true);
           setAuthState('username', formData.username);
-          data.Session && setAuthState('session', data.Session);
-        } else if (data) updateAuthStates(data);
+          authResult.Session && setAuthState('session', authResult.Session);
+        } else if (authResult.AuthenticationResult && typeof expiresAt === 'number')
+          updateAuthStates({
+            AccessToken: authResult.AuthenticationResult.AccessToken,
+            IdToken: authResult.AuthenticationResult.IdToken,
+            ExpiresIn: authResult.AuthenticationResult.ExpiresIn,
+            expiresAt,
+          });
       },
       onError(error) {
         setErrMessage(error.message);
