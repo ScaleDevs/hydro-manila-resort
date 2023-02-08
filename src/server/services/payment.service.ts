@@ -180,6 +180,21 @@ class Service {
       return;
     }
 
+    const isBookingDateTaken = await BookingRepository.checkIfScheduleTaken({
+      startDate: parsed.data.startSession,
+      endDate: parsed.data.endSession,
+    });
+
+    const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
+      startDate: parsed.data.startSession,
+      endDate: parsed.data.endSession,
+    });
+
+    if (isBookingDateTaken || isEventSchedTaken) {
+      console.log('MUST SEND EMAIL HERE');
+      return;
+    }
+
     const bookingRecord = await BookingService.createBooking({
       ...parsed.data,
       paymentIntentId: paymentIntentRecord.id,
