@@ -19,7 +19,7 @@ export default function Layout({ children }: any) {
           <VStack w='100%'>
             <HStack w='100%' justifyContent='right'>
               <Heading>ADMIN</Heading>
-              <Avatar name='Dan Abrahmov' src='https://bit.ly/dan-abramov' />
+              <Avatar />
             </HStack>
             <br />
             {children}
