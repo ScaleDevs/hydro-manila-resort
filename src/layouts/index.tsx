@@ -19,7 +19,7 @@ export default function Layout({ children }: any) {
           left='50%'
           transform='translateX(-50%)'
         >
-          <Image src='/logo_white.png' alt='Hydro Resort Logo' width={200} height={200} />
+          <Image src='/logo_white.png' alt='Hydro Resort Logo' width={200} height={200} priority />
         </Stack>
       </Box>
       <Box w='100%' maxW={{ lg: 'container.xl' }} mx='auto'>

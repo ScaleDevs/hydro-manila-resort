@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
-import { Center, Stack, HStack, Image, Text } from '@chakra-ui/react';
+import Image from 'next/image';
+import { Center, Stack, HStack, Text } from '@chakra-ui/react';
 
 const PaymentMethodWrapper = ({
   children,
@@ -42,15 +43,15 @@ export default function SelectPaymentMethod({ paymentMethod, setPaymentMethod }:
   return (
     <Stack mt='20px' direction={{ base: 'column', md: 'row' }}>
       <PaymentMethodWrapper title='gcash' active={paymentMethod} onClick={handleClick}>
-        <Center w='100px' h='100%'>
-          <Image alt='gcash logo' src='/gcash.webp' />
+        <Center w='100px' h='100%' position='relative'>
+          <Image alt='gcash logo' src='/gcash.webp' priority style={{ objectFit: 'contain' }} fill />
         </Center>
       </PaymentMethodWrapper>
       <PaymentMethodWrapper title='card' active={paymentMethod} onClick={handleClick}>
         <Center w='100px' h='100%'>
           <Stack>
-            <Image alt='gcash logo' src='/visacard.png' />
-            <Image alt='gcash logo' src='/mastercard.png' />
+            <Image alt='visa logo' src='/visacard.png' width={90} height={70} priority />
+            <Image alt='gcash logo' src='/mastercard.png' width={90} height={70} priority />
           </Stack>
         </Center>
       </PaymentMethodWrapper>
