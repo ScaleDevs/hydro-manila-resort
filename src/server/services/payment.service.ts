@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
+import { v4 } from 'uuid';
 
 import { IBooking } from '@/utils/types';
 import {
@@ -14,7 +15,13 @@ import { TRPCError } from '@trpc/server';
 import { constants } from '../constants';
 import { BookingService } from '@/svc/booking.service';
 import { ProductService } from '@/svc/product.service';
-import { sendBookingSuccessEmail, sendRefundEmail } from '@/server/repository/mailersend.repo';
+import {
+  notifyAdminDbInsertionError,
+  sendBookingSuccessEmail,
+  sendRefundEmailConflictBooking,
+  sendRefundEmailProcessing,
+  sendRefundEmailSuccess,
+} from '@/server/repository/mailersend.repo';
 import { BookingRefundRepository } from '@/server/repository/bookingrefund.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
@@ -124,8 +131,13 @@ class Service {
             bookingId: bookingRecord.id,
           });
 
-          console.log('SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND');
-          // both customer and hydro manila will receive email for awareness
+          // SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND - due to balance issue
+          await sendRefundEmailProcessing({
+            recipientEmail: bookingRecord.email,
+            customer_name: bookingRecord.name,
+            ref_no: bookingRecord.ref_no,
+            amount: bookingRecord.receipt.total,
+          });
 
           return {
             status: 'MANUAL_PROCESSING',
@@ -191,7 +203,13 @@ class Service {
     });
 
     if (isBookingDateTaken || isEventSchedTaken) {
-      console.log('MUST SEND EMAIL HERE');
+      // SEND EMAIL REGARDING MANUAL PROCESSING OF Refund/Reschedule - due to conflict booking at the same time
+      await sendRefundEmailConflictBooking({
+        recipientEmail: parsed.data.email,
+        customer_name: parsed.data.name,
+        amount: parsed.data.receipt.total,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+      });
       return;
     }
 
@@ -203,22 +221,31 @@ class Service {
       endSession: new Date(parsed.data.endSession),
     });
 
+    const ref_no_holder = bookingRecord.ref_no || v4();
+
     if (!bookingRecord) {
-      console.log('send email to hydro regarding booking not stored on db but successful in payment');
+      // notify hydro support if booking record was not added (so they can add manually on their end)
+      await notifyAdminDbInsertionError({
+        customer_name: parsed.data.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+        ref_no: ref_no_holder,
+        startSession: dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A'),
+        endSession: dayjs(parsed.data.endSession).format('MMM DD, YYYY hh:mm:ss A'),
+      });
     }
 
     console.log('SUCCESSFULLY ADDED BOOKING');
 
-    const product = await ProductService.findProductById(bookingRecord.productId);
+    const product = await ProductService.findProductById(parsed.data.productId);
 
     await sendBookingSuccessEmail({
-      recipientEmail: bookingRecord.email,
-      customer_name: bookingRecord.name,
+      recipientEmail: parsed.data.email,
+      customer_name: parsed.data.name,
       product_type: product?.name || '',
-      booking_date: `${dayjs(bookingRecord.startSession).format('MMM DD, YYYY hh:mm:ss A')} - ${dayjs(
-        bookingRecord.endSession,
+      booking_date: `${dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A')} - ${dayjs(
+        parsed.data.endSession,
       ).format('MMM DD, YYYY hh:mm:ss A')}`,
-      ref_no: bookingRecord.ref_no,
+      ref_no: ref_no_holder,
     });
 
     console.log('EMAIL SUCCESSFULLY SENT');
@@ -257,10 +284,11 @@ class Service {
           paymongoRefundId: refundId,
           status: 'SUCCESS',
         });
-        await sendRefundEmail({
+        await sendRefundEmailSuccess({
           recipientEmail: bookingRecord.email,
           customer_name: bookingRecord.name,
           ref_no: bookingRecord.ref_no,
+          amount: bookingRecord.receipt.total,
         });
 
         console.log('EMAIL SUCCESSFULLY SENT');
@@ -278,10 +306,11 @@ class Service {
         bookingId: bookingRecord.id,
       });
 
-      await sendRefundEmail({
+      await sendRefundEmailSuccess({
         recipientEmail: bookingRecord.email,
         customer_name: bookingRecord.name,
         ref_no: bookingRecord.ref_no,
+        amount: bookingRecord.receipt.total,
       });
 
       console.log('EMAIL SUCCESSFULLY SENT');
