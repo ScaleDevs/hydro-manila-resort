@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import {
   TableContainer,
   Table,
@@ -24,6 +25,7 @@ import ModalFilter from './ModalFilter';
 const FilterIcon = chakra(BsFilterCircleFill);
 
 export default function TableBookingRecords() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [refNo, setRefNo] = useState<undefined | string>(undefined);
   const { isOpen, onToggle } = useDisclosure();
@@ -35,6 +37,10 @@ export default function TableBookingRecords() {
 
   const handlePageChange = (pageNumber: number) => {
     setPage(pageNumber);
+  };
+
+  const goToBookingDetails = (refNo: string) => {
+    router.push('/admin/bookings/' + refNo);
   };
 
   return (
@@ -94,7 +100,7 @@ export default function TableBookingRecords() {
                 </Tr>
               ) : (
                 data?.records.map((v, i) => (
-                  <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
+                  <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} onClick={() => goToBookingDetails(v.ref_no)}>
                     <Td>{v.ref_no}</Td>
                     <Td>{v.name}</Td>
                     <Td>

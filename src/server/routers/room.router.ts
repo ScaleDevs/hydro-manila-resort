@@ -77,6 +77,7 @@ export const roomRouter = router({
     return RoomService.deleteRoom(input);
   }),
   getRoomById: procedure.input(z.string()).query(({ input }) => {
+    if (input === '') return null;
     return RoomService.findRoomById(input);
   }),
   getRooms: procedure

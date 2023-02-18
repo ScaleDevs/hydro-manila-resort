@@ -17,6 +17,9 @@ export const bookingRouter = router({
   getBookingById: procedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingById(input);
   }),
+  getBookingByRefNo: procedure.input(z.string()).query(({ input }) => {
+    return BookingService.findBookingByReferenceNo(input);
+  }),
   getAllBookingsByDates: procedure
     .input(
       z.object({
