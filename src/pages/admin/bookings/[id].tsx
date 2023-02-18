@@ -13,6 +13,18 @@ function Component({ id }: Props) {
   const { data, isLoading } = trpc.booking.getBookingByRefNo.useQuery(id);
   const { data: roomData } = trpc.room.getRoomById.useQuery((data?.roomId as string) || '');
 
+  const getConvenienceFee = () => {
+    if (!data?.receipt) return 0;
+
+    let total = 0;
+
+    total += data.receipt.productPrice;
+    total += data.receipt.roomPrice || 0;
+    total += data.receipt.additionalHeadsPrice || 0;
+
+    return (data.receipt.bookingFee / 100) * total;
+  };
+
   return (
     <Layout>
       <Head>
@@ -132,7 +144,7 @@ function Component({ id }: Props) {
 
               <Stack spacing={0} direction='row' justifyContent='space-between'>
                 <Text>CONVENIENCE FEE:</Text>
-                <Text>{PHpeso.format((data.receipt.bookingFee / 100) * data.receipt.total)}</Text>
+                <Text>{PHpeso.format(getConvenienceFee())}</Text>
               </Stack>
 
               <Divider borderColor='gray.400' />

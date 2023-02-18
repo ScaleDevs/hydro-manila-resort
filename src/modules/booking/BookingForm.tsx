@@ -38,8 +38,8 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
   const [productActiveVersion, setProductActiveVersion] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<IRoom | undefined>(undefined);
-  const [isSchedAvailable, setIsSchedAvailable] = useState(true);
   const [roomActiveVersion, setRoomActiveVersion] = useState(0);
+  const [isSchedAvailable, setIsSchedAvailable] = useState(true);
 
   const { setWholeBookingState } = useBookingStoreTrack();
 
@@ -81,7 +81,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     let total = 0;
 
     total += productDetails.price;
-    if (selectedRoom) total += productDetails.price;
+    if (selectedRoom) total += selectedRoom.details[roomActiveVersion].price;
     if (data.guests && data.guests > bookingSetting.minPax)
       total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
