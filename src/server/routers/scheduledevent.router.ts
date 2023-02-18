@@ -13,11 +13,7 @@ export const scheduledEventRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      return ScheduledEventService.createScheduledEvent({
-        ...input,
-        startSession: dayjs.utc(input.startSession).toISOString() as any,
-        endSession: dayjs.utc(input.endSession).toISOString() as any,
-      });
+      return ScheduledEventService.createScheduledEvent(input);
     }),
   deleteScheduledEvent: procedure.input(z.string()).mutation(async ({ input }) => {
     return ScheduledEventService.deleteScheduledEvent(input);

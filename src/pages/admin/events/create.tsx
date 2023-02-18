@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import dayjs from 'dayjs';
 import { Box, Button, Stack, Heading, Alert, AlertIcon, SlideFade } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
@@ -32,11 +33,18 @@ function CreateScheduledEvent() {
   });
 
   const addScheduledEvent = (data: FormSchemaType) => {
-    mutate(data, {
-      onSuccess() {
-        reset();
+    mutate(
+      {
+        ...data,
+        startSession: dayjs.tz(data.startSession).toISOString(),
+        endSession: dayjs.tz(data.endSession).toISOString(),
       },
-    });
+      {
+        onSuccess() {
+          reset();
+        },
+      },
+    );
   };
 
   return (

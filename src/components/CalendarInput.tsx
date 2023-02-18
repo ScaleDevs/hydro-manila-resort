@@ -18,20 +18,23 @@ const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: 
   const isDateBeforeToday = dayjs(key1).unix() < dayjs().unix();
   if (product) {
     const productDetails = product.details[product.activeVersion - 1];
-    const startDate = dayjs(`${key1} ${productDetails.scheduleStart}`).unix();
-    const endDate = dayjs(`${key1} ${productDetails.scheduleEnd}`)
+    const startDate = dayjs
+      .tz(dayjs(`${key1} ${productDetails.scheduleStart}`).format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
+      .unix();
+    const endDate = dayjs
+      .tz(dayjs(`${key1} ${productDetails.scheduleEnd}`).format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
       .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
       .unix();
     if (!isDateBeforeToday && data && (data.bookedDates[key1] || data.bookedDates[key2])) {
       if (data.bookedDates[key1])
         for (const check of data.bookedDates[key1]) {
-          if (startDate >= check.start && startDate <= check.end) return true;
-          if (endDate >= check.start && startDate <= check.end) return true;
+          if (startDate >= check.start && startDate < check.end) return true;
+          if (endDate > check.start && endDate <= check.end) return true;
           if (startDate < check.start && endDate > check.end) return true;
         }
       if (data.bookedDates[key2])
         for (const check of data.bookedDates[key2]) {
-          if (startDate >= check.start && startDate <= check.end) return true;
+          if (startDate >= check.start && startDate < check.end) return true;
           if (endDate >= check.start && startDate <= check.end) return true;
           if (startDate < check.start && endDate > check.end) return true;
         }

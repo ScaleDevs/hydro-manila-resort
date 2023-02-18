@@ -5,7 +5,10 @@ export type IRoom = Room;
 export type IBooking = Booking;
 export type IBookingSetting = BookingSetting;
 export type IBookingRefund = BookingRefund;
-export type IScheduledEvent = ScheduledEvent;
+export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & {
+  startSession: string;
+  endSession: string;
+};
 
 // inputs
 export type IPaginationInputs = {

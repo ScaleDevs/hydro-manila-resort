@@ -102,5 +102,5 @@ export const getCitiesOptions = (province: string) => {
 };
 
 export const tableFormatTimeDisplay = (timeString: string) => {
-  return dayjs.tz(timeString, process.env.NEXT_PUBLIC_TIMEZONE).format('MMM DD, YYYY hh:mm A');
+  return dayjs.utc(timeString).tz(process.env.NEXT_PUBLIC_TIMEZONE).format('MMM DD, YYYY hh:mm A');
 };

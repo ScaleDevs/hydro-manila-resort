@@ -69,8 +69,8 @@ class Service {
         const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
         const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
         const value = {
-          start: dayjs(record.startSession).unix(),
-          end: dayjs(record.endSession).unix(),
+          start: dayjs.utc(record.startSession).unix(),
+          end: dayjs.utc(record.endSession).unix(),
         };
         if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
         if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];

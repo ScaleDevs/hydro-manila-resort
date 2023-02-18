@@ -19,9 +19,10 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { BsFillTrashFill, BsFilterCircleFill } from 'react-icons/bs';
+import dayjs from 'dayjs';
 
-import { trpc } from '@/utils/trpc';
 import { tableFormatTimeDisplay } from '../utils/helper';
+import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
 import ModalFilter, { SessionFilter } from './ModalFilter';
 
@@ -30,7 +31,10 @@ const FilterIcon = chakra(BsFilterCircleFill);
 export default function TableScheduledEvent() {
   const toast = useToast();
   const [page, setPage] = useState(1);
-  const [startSessionFilter, setStartSessionFilter] = useState<undefined | SessionFilter>();
+  const [startSessionFilter, setStartSessionFilter] = useState<undefined | SessionFilter>({
+    startDate: dayjs.utc().startOf('day').toISOString(),
+    endDate: dayjs.utc().endOf('month').toISOString(),
+  });
   const [endSessionFilter, setEndSessionFilter] = useState<undefined | SessionFilter>();
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.scheduledevent.getManyScheduledEvent.useQuery({
@@ -45,13 +49,16 @@ export default function TableScheduledEvent() {
   const deleteScheduledEvent = (id: string) => {
     mutate(id, {
       onSuccess() {
-        utils.scheduledevent.getManyScheduledEvent.setData({ page, limit: 5 }, (rec: any) => {
-          const newRecords = rec?.records.filter((value: { scheduledEventId: string }) => value.scheduledEventId !== id);
-          return {
-            pageCount: rec?.pageCount,
-            records: newRecords,
-          };
-        });
+        utils.scheduledevent.getManyScheduledEvent.setData(
+          { page, limit: 5, startSession: startSessionFilter, endSession: endSessionFilter },
+          (rec: any) => {
+            const newRecords = rec?.records.filter((value: { scheduledEventId: string }) => value.scheduledEventId !== id);
+            return {
+              pageCount: rec?.pageCount,
+              records: newRecords,
+            };
+          },
+        );
 
         toast({
           title: 'scheduled event deleted.',
