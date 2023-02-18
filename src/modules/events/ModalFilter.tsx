@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
+import dayjs from 'dayjs';
 import {
   Modal,
   ModalOverlay,
@@ -58,17 +59,25 @@ export default function ModalFilter({ isOpen, onClose, setStartSessionFilter, se
 
   const applyFilter = (data: FormSchemaType) => {
     if (
-      (!data.startSession?.startDate || data.startSession.startDate !== '') &&
-      (!data.startSession?.endDate || data.startSession.endDate !== '')
+      !!data.startSession &&
+      (!!data.startSession.startDate || data.startSession.startDate !== '') &&
+      (!!data.startSession.endDate || data.startSession.endDate !== '')
     ) {
-      setStartSessionFilter(data.startSession);
+      setStartSessionFilter({
+        startDate: dayjs.tz(data.startSession.startDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
+        endDate: dayjs.tz(data.startSession.endDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
+      });
     }
 
     if (
-      (!data.endSession?.startDate || data.endSession.startDate !== '') &&
-      (!data.endSession?.endDate || data.endSession.endDate !== '')
+      !!data.endSession &&
+      (!!data.endSession.startDate || data.endSession.startDate !== '') &&
+      (!!data.endSession.endDate || data.endSession.endDate !== '')
     ) {
-      setEndSessionFilter(data.endSession);
+      setEndSessionFilter({
+        startDate: dayjs.tz(data.endSession?.startDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
+        endDate: dayjs.tz(data.endSession?.endDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
+      });
     }
 
     onClose();
