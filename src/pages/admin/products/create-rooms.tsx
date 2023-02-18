@@ -13,7 +13,7 @@ import { trpc } from '@/utils/trpc';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
 
 const schema = z.object({
-  roomNumber: z.number({ invalid_type_error: 'Must be a number' }),
+  roomIdentityName: z.string().min(1, 'Required'),
   description: z.string().optional(),
   price: z.number({
     invalid_type_error: 'Must be a number',
@@ -44,10 +44,10 @@ function Admin() {
   });
 
   const createAddOnSubmit = (data: FormSchemaType) => {
-    const { roomNumber, description, ...rest } = data;
+    const { roomIdentityName, description, ...rest } = data;
 
     const payload = {
-      roomNumber,
+      roomIdentityName,
       details: {
         ...rest,
         description: description ? description : null,
@@ -95,9 +95,9 @@ function Admin() {
                 <Stack direction={{ base: 'column', md: 'row' }}>
                   <NumberField
                     register={register}
-                    property='roomNumber'
-                    placeholder='Room Number'
-                    errMsg={errors.roomNumber?.message}
+                    property='roomIdentityName'
+                    placeholder='Room ID'
+                    errMsg={errors.roomIdentityName?.message}
                   />
                   <TextField
                     register={register}

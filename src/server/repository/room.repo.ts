@@ -3,7 +3,7 @@ import { IPaginationInputs, IRoom } from '@/utils/types';
 import { Prisma } from '@prisma/client';
 
 export type IFindManyroomInput = {
-  roomNumber?: number;
+  roomIdentityName?: string;
 } & IPaginationInputs;
 
 class Respository {
@@ -15,16 +15,16 @@ class Respository {
     return prisma.room.findFirst({ where: { roomId: id } });
   }
 
-  public async findManyRoom({ page, limit, roomNumber }: IFindManyroomInput) {
+  public async findManyRoom({ page, limit, roomIdentityName }: IFindManyroomInput) {
     const whereFilter: Prisma.RoomWhereInput = {
-      roomNumber: {
-        equals: roomNumber,
+      roomIdentityName: {
+        equals: roomIdentityName,
       },
     };
 
     const result = await prisma.room.findMany({
       where: whereFilter,
-      orderBy: { roomNumber: 'asc' },
+      orderBy: { roomId: 'asc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });

@@ -249,13 +249,13 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   property='roomId'
                   value={watch('roomId')}
                   placeholder='ROOM RENTAL(optional)'
-                  options={roomsData?.records.map((v) => ({ label: `ROOM ${v.roomNumber}`, value: v.roomId })) || []}
+                  options={roomsData?.records.map((v) => ({ label: `${v.roomIdentityName}`, value: v.roomId })) || []}
                   errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
                 >
                   {!!selectedRoom ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        ROOM {selectedRoom.roomNumber} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
+                        {selectedRoom.roomIdentityName} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
                         bathroom
                       </Text>
                       <Text fontSize='14px' color='white'>

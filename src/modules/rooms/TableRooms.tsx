@@ -14,7 +14,7 @@ export default function TableRoom({}: ITableRoomProps) {
   const { mutate } = trpc.room.deleteRoom.useMutation();
   const utils = trpc.useContext();
 
-  const deleteRoomRecord = (roomNumber: number, id: string) => {
+  const deleteRoomRecord = (roomIdentityName: string, id: string) => {
     mutate(id, {
       onSuccess() {
         utils.room.getRooms.setData({ page, limit: 5 }, (rec: any) => {
@@ -26,7 +26,7 @@ export default function TableRoom({}: ITableRoomProps) {
         });
 
         toast({
-          title: `Room ${roomNumber} deleted.`,
+          title: `Room ${roomIdentityName} deleted.`,
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -88,12 +88,12 @@ export default function TableRoom({}: ITableRoomProps) {
             ) : (
               data?.records.map((v, i) => (
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td>ROOM {v.roomNumber}</Td>
+                  <Td>{v.roomIdentityName}</Td>
                   <Td>{v.details[(v.activeVersion || 1) - 1].guests}</Td>
                   <Td>{v.details[(v.activeVersion || 1) - 1].withBathroom ? 'AVAILABLE' : 'N/A'}</Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                  <Td>₱{v.details[(v.activeVersion || 1) - 1].price}</Td>
                   <Td>
-                    <Button borderRadius='sm' onClick={() => deleteRoomRecord(v.roomNumber, v.roomId)}>
+                    <Button borderRadius='sm' onClick={() => deleteRoomRecord(v.roomIdentityName, v.roomId)}>
                       <BsFillTrashFill />
                     </Button>
                   </Td>

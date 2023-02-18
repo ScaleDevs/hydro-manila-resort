@@ -54,10 +54,10 @@ model Product {
 }
 
 model Room {
-  roomId        String        @id @default(auto()) @map("_id") @db.ObjectId
-  roomNumber    Int
-  activeVersion Int           @default(1)
-  details       RoomDetails[]
+  roomId           String        @id @default(auto()) @map("_id") @db.ObjectId
+  roomIdentityName String
+  activeVersion    Int           @default(1)
+  details          RoomDetails[]
 }
 
 model Booking {

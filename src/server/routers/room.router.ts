@@ -8,7 +8,7 @@ export const roomRouter = router({
   create: procedure
     .input(
       z.object({
-        roomNumber: z.number(),
+        roomIdentityName: z.string(),
         details: z.object({
           price: z.number(),
           description: z.string().nullable(),

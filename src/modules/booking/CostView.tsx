@@ -37,7 +37,7 @@ export default function CostView({ product, room, guests }: ICostViewProps) {
         )}
         {room ? (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL ROOM (ROOM {room.roomNumber})</Text>
+            <Text>ADDITIONAL ROOM ({room.roomIdentityName})</Text>
             <Text>{PHpeso.format(room.details[room.activeVersion - 1].price)}</Text>
           </HStack>
         ) : (
