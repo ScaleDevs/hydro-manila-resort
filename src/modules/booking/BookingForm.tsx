@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Box, Stack, Text, HStack, VStack, Button, Heading, Alert, AlertIcon } from '@chakra-ui/react';
+import { Box, Stack, Text, HStack, VStack, Button, Heading, Alert, AlertIcon, chakra } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,8 @@ import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { NumberField } from '@/components/NumberField';
 import CostView from './CostView';
+
+const NavLink = chakra(Link);
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -297,15 +299,15 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
         </Stack>
       </form>
       <br />
-      <Stack direction='column' w={{ base: '95%', md: '100%', lg: '90%' }} mx='auto' alignItems='left'>
+      <Stack direction='column' w={{ base: '95%', md: '100%', lg: '90%' }} mx='auto' alignItems='flex-start'>
         <Text color='primary.1' fontFamily='primary.1' fontSize='xl' fontWeight='semibold'>
           Want to cancel a Booking?
         </Text>
-        <Link href='/booking/cancel'>
+        <NavLink href='/booking/cancel' bg='gray.100' w='auto'>
           <Button w='300px' bg='red.500' _hover={{ bg: 'red.400' }}>
             Cancel your booking here
           </Button>
-        </Link>
+        </NavLink>
       </Stack>
     </Box>
   );
