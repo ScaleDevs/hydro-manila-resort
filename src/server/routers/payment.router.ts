@@ -26,11 +26,7 @@ export const paymentRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return PaymentService.initiatePaymentSessionForBooking({
-        ...input,
-        startSession: new Date(input.startSession),
-        endSession: new Date(input.endSession),
-      });
+      return PaymentService.initiatePaymentSessionForBooking(input);
     }),
   attachPaymentMethodToIntent: procedure
     .input(

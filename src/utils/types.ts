@@ -1,14 +1,16 @@
 import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent } from '@prisma/client';
 
-export type IProduct = Product;
-export type IRoom = Room;
-export type IBooking = Booking;
-export type IBookingSetting = BookingSetting;
-export type IBookingRefund = BookingRefund;
-export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & {
+type DateSession = {
   startSession: string;
   endSession: string;
 };
+
+export type IProduct = Product;
+export type IRoom = Room;
+export type IBooking = Omit<Booking, 'startSession' | 'endSession'> & DateSession;
+export type IBookingSetting = BookingSetting;
+export type IBookingRefund = BookingRefund;
+export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & DateSession;
 
 // inputs
 export type IPaginationInputs = {

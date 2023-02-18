@@ -91,8 +91,18 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       name: data.name,
       email: data.email,
       phoneNumber: data.phoneNumber,
-      startSession: new Date(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).toString(),
-      endSession: new Date(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).toString(),
+      startSession: dayjs
+        .tz(
+          dayjs(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).format('YYYY-MM-DDTHH:mm'),
+          process.env.NEXT_PUBLIC_TIMEZONE,
+        )
+        .toISOString(),
+      endSession: dayjs
+        .tz(
+          dayjs(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).format('YYYY-MM-DDTHH:mm'),
+          process.env.NEXT_PUBLIC_TIMEZONE,
+        )
+        .toISOString(),
       guests: data.guests,
       roomId: data.roomId === '' || !data.roomId ? null : data.roomId,
       roomVersion: selectedRoom?.activeVersion || 1,
@@ -152,11 +162,9 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
               BOOK THE PLACE!
             </Heading>
             {!isSchedAvailable || isError ? (
-              <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary'>
+              <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
                 <AlertIcon />
-                {!isSchedAvailable
-                  ? 'Schedule has just been booked by another customer'
-                  : 'Something went wrong, Kindly Try Again'}
+                {!isSchedAvailable ? 'Schedule is not available' : 'Something went wrong, Kindly Try Again'}
               </Alert>
             ) : (
               ''

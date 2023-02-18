@@ -217,8 +217,8 @@ class Service {
       ...parsed.data,
       paymentIntentId: paymentIntentRecord.id,
       paymentId: paymentIntentRecord.attributes.payments[0].id || '',
-      startSession: new Date(parsed.data.startSession),
-      endSession: new Date(parsed.data.endSession),
+      startSession: parsed.data.startSession,
+      endSession: parsed.data.endSession,
     });
 
     const ref_no_holder = bookingRecord.ref_no || v4();
