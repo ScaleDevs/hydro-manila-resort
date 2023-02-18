@@ -13,9 +13,6 @@ export const scheduledEventRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      console.log('=HERE=');
-      console.log(input.startSession);
-      console.log(dayjs.utc(input.startSession).toISOString());
       return ScheduledEventService.createScheduledEvent({
         ...input,
         startSession: dayjs.utc(input.startSession).toISOString() as any,
@@ -33,9 +30,48 @@ export const scheduledEventRouter = router({
       z.object({
         page: z.number(),
         limit: z.number(),
+        startSession: z
+          .object({
+            startDate: z.string(),
+            endDate: z.string(),
+          })
+          .optional(),
+        endSession: z
+          .object({
+            startDate: z.string(),
+            endDate: z.string(),
+          })
+          .optional(),
       }),
     )
     .query(({ input }) => {
-      return ScheduledEventService.findManyScheduledEvent(input);
+      const inputRefine: typeof input = {
+        page: input.page,
+        limit: input.limit,
+      };
+
+      if (
+        input.startSession &&
+        (!!input.startSession?.startDate || input.startSession.startDate !== '') &&
+        (!!input.startSession?.endDate || input.startSession.endDate !== '')
+      ) {
+        inputRefine['startSession'] = {
+          startDate: dayjs.utc(input.startSession.startDate).toISOString() as any,
+          endDate: dayjs.utc(input.startSession.endDate).toISOString() as any,
+        };
+      }
+
+      if (
+        input.endSession &&
+        (!!input.endSession?.startDate || input.endSession.startDate !== '') &&
+        (!!input.endSession?.endDate || input.endSession.endDate !== '')
+      ) {
+        inputRefine['endSession'] = {
+          startDate: dayjs.utc(input.endSession.startDate).toISOString() as any,
+          endDate: dayjs.utc(input.endSession.endDate).toISOString() as any,
+        };
+      }
+
+      return ScheduledEventService.findManyScheduledEvent(inputRefine);
     }),
 });

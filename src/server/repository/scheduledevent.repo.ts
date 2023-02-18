@@ -2,6 +2,11 @@ import prisma from './prisma.client';
 import { IPaginationInputs, IScheduledEvent, DatesInput } from '@/utils/types';
 import { Prisma } from '@prisma/client';
 
+export type DateFilters = {
+  startSession?: DatesInput;
+  endSession?: DatesInput;
+};
+
 class Respository {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
     return prisma.scheduledEvent.create({ data: { ...data } });
@@ -11,14 +16,37 @@ class Respository {
     return prisma.scheduledEvent.findFirst({ where: { scheduledEventId } });
   }
 
-  public async findManyScheduledEvent({ page, limit }: IPaginationInputs) {
+  public async findManyScheduledEvent({ page, limit, startSession, endSession }: IPaginationInputs & DateFilters) {
+    const orFilters = [];
+
+    if (startSession)
+      orFilters.push({
+        startSession: {
+          gte: startSession.startDate,
+          lte: startSession.endDate,
+        },
+      });
+
+    if (endSession)
+      orFilters.push({
+        endSession: {
+          gte: endSession.startDate,
+          lte: endSession.endDate,
+        },
+      });
+
+    const whereFilter: Prisma.ScheduledEventWhereInput = {
+      OR: orFilters,
+    };
+
     const result = await prisma.scheduledEvent.findMany({
+      where: whereFilter,
       orderBy: { createdAt: 'desc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
 
-    const totalCount = await prisma.scheduledEvent.count();
+    const totalCount = await prisma.scheduledEvent.count({ where: whereFilter });
 
     return {
       pageCount: Math.ceil(totalCount / limit),

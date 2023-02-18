@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { IPaginationInputs, IScheduledEvent } from '@/utils/types';
-import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
+import { DateFilters, ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 
 class Service {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
@@ -36,7 +36,7 @@ class Service {
     }
   }
 
-  public async findManyScheduledEvent(input: IPaginationInputs) {
+  public async findManyScheduledEvent(input: IPaginationInputs & DateFilters) {
     try {
       return ScheduledEventRepository.findManyScheduledEvent(input);
     } catch (err) {
