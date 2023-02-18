@@ -6,9 +6,40 @@ import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
+import { IBookingDates } from '@/server/repository/booking.repo';
 
 const LeftArrowIcon = chakra(BsChevronLeft);
 const RightArrowIcon = chakra(BsChevronRight);
+
+const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: IBookingDates }, product?: IProduct) => {
+  const dayjsInstance = dayjs().add(month, 'M');
+  const key1 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
+  const key2 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay + 1}` : currentDay + 1}`;
+  const isDateBeforeToday = dayjs(key1).unix() < dayjs().unix();
+  if (product) {
+    const productDetails = product.details[product.activeVersion - 1];
+    const startDate = dayjs(`${key1} ${productDetails.scheduleStart}`).unix();
+    const endDate = dayjs(`${key1} ${productDetails.scheduleEnd}`)
+      .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
+      .unix();
+    if (!isDateBeforeToday && data && (data.bookedDates[key1] || data.bookedDates[key2])) {
+      if (data.bookedDates[key1])
+        for (const check of data.bookedDates[key1]) {
+          if (startDate >= check.start && startDate <= check.end) return true;
+          if (endDate >= check.start && startDate <= check.end) return true;
+          if (startDate < check.start && endDate > check.end) return true;
+        }
+      if (data.bookedDates[key2])
+        for (const check of data.bookedDates[key2]) {
+          if (startDate >= check.start && startDate <= check.end) return true;
+          if (endDate >= check.start && startDate <= check.end) return true;
+          if (startDate < check.start && endDate > check.end) return true;
+        }
+    } else if (isDateBeforeToday) return true;
+  } else if (isDateBeforeToday) return true;
+
+  return false;
+};
 
 const CalCell = ({ children }: { children: any }) => {
   return (
@@ -118,29 +149,8 @@ export default function CalenderInput({ setValue, product, errMsg }: ICalenderIn
             {Array(dayjs().add(month, 'M').daysInMonth())
               .fill(1)
               .map((item, i) => {
-                let pass = false;
-                const currentDay = i + item;
-                const dayjsInstance = dayjs().add(month, 'M');
-                const key1 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
-                const key2 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay + 1}` : currentDay + 1}`;
-                const ifDateAfterToday = dayjs(key1).unix() > dayjs().unix();
-
-                if (product) {
-                  const productDetails = product.details[product.activeVersion - 1];
-                  const startDate = dayjs(`${key1} ${productDetails.scheduleStart}`).unix();
-                  const endDate = dayjs(`${key1} ${productDetails.scheduleEnd}`)
-                    .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
-                    .unix();
-
-                  if (ifDateAfterToday && data && (data.bookedDates[key1] || data.bookedDates[key2])) {
-                    if (data.bookedDates[key1])
-                      for (const check of data.bookedDates[key1]) if (endDate < check.start || startDate > check.end) pass = true;
-                    if (data.bookedDates[key2])
-                      for (const check of data.bookedDates[key2]) if (endDate < check.start || startDate > check.end) pass = true;
-                  } else if (ifDateAfterToday) pass = true;
-                } else if (ifDateAfterToday) pass = true;
-
-                if (!pass)
+                const currentDay = item + i;
+                if (isDateBlocked(currentDay, month, data, product))
                   return (
                     <GridItem
                       key={i}

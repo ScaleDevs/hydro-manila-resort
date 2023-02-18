@@ -8,7 +8,7 @@ import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 import dayjs from 'dayjs';
 
 import { createPaymentMethod } from '../fetch-calls';
-import { getCitiesOptions, getProvincesOptions, RegexValidations } from '@/utils/helper';
+import { getCitiesOptions, getProvincesOptions, RegexValidations } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
 import { TextField } from '@/components/TextField';
 import { SelectNumberField } from '@/components/SelectNumberField';

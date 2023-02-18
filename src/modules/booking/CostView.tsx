@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { HStack, Box, Text } from '@chakra-ui/react';
 import { IProduct, IRoom } from '@/utils/types';
-import { PHpeso } from '@/utils/helper';
+import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 
 export interface ICostViewProps {

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, useToast, Button, ScaleFade } from '@chakra-ui/react';
-import dayjs from 'dayjs';
 import { BsFillTrashFill } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
+import { tableFormatTimeDisplay } from '../utils/helper';
 import Paginator from '@/components/Paginator';
 
 export default function TableScheduledEvent() {
@@ -84,8 +84,8 @@ export default function TableScheduledEvent() {
             ) : (
               data?.records.map((v, i) => (
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td>{dayjs(v.startSession).format('MMM DD, YYYY hh:mm A')}</Td>
-                  <Td>{dayjs(v.endSession).format('MMM DD, YYYY hh:mm A')}</Td>
+                  <Td>{tableFormatTimeDisplay(v.startSession)}</Td>
+                  <Td>{tableFormatTimeDisplay(v.endSession)}</Td>
                   <Td>{v.description}</Td>
                   <Td>
                     <Button borderRadius='sm' onClick={() => deleteScheduledEvent(v.scheduledEventId)}>

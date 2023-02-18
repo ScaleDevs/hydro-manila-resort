@@ -1,6 +1,6 @@
 import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
-import { RegexValidations } from '@/utils/helper';
+import { RegexValidations } from '@/modules/utils/helper';
 
 export interface INumberFieldProps {
   register: UseFormRegister<any>;

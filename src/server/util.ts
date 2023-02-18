@@ -1,4 +1,5 @@
 import * as trpc from '@trpc/server';
+import genString from 'randomstring';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { JwtExpiredError } from 'aws-jwt-verify/error';
 import { TRPCError } from '@trpc/server';
@@ -62,4 +63,39 @@ export const decodeToken = async (token: string) => {
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
+};
+
+export const createTempPassword = () => {
+  return (
+    genString.generate({
+      length: 2,
+      charset: 'alphanumeric',
+    }) +
+    genString.generate({
+      length: 2,
+      charset: 'numeric',
+    }) +
+    genString.generate({
+      length: 1,
+      charset: '!@#$%^&*()_+~`|}{[]:;?><,./-=\\',
+    }) +
+    genString.generate({
+      length: 2,
+      charset: 'numeric',
+    }) +
+    genString.generate({
+      length: 2,
+      charset: 'alphabetic',
+      capitalization: 'uppercase',
+    }) +
+    genString.generate({
+      length: 1,
+      charset: '!@#$%^&*()_+~`|}{[]:;?><,./-=\\',
+    }) +
+    genString.generate({
+      length: 2,
+      charset: 'alphabetic',
+      capitalization: 'lowercase',
+    })
+  );
 };

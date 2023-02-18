@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { BsCheck, BsX } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
-import { RegexValidations } from '@/utils/helper';
+import { RegexValidations } from '@/modules/utils/helper';
 import useLogin from '@/hooks/useLogin.hook';
 import { PasswordInput } from '@/components/PasswordInput';
 import { ErrorAlert } from '@/components/ErrorAlert';

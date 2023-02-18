@@ -21,7 +21,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { BsPencilSquare, BsX } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
-import { PHpeso } from '@/utils/helper';
+import { PHpeso } from '@/modules/utils/helper';
 import { NumberField } from '@/components/NumberField';
 
 const PencilIcon = chakra(BsPencilSquare);

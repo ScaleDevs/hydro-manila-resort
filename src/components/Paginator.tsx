@@ -50,9 +50,6 @@ export default function Paginator({ currentPage, pageCount, handlePageChange }: 
       if (pageForHigherLimit % 5 !== 0) pageForHigherLimit += 1;
     } while (pageForHigherLimit % 5 !== 0);
 
-    console.log(pageForLowerLimit === 0 ? pageForLowerLimit + 1 : pageForLowerLimit);
-    console.log(pageForHigherLimit);
-
     setLowerLimit(pageForLowerLimit + 1);
     setHigherLimit(pageForHigherLimit);
   }, [currentPage]);

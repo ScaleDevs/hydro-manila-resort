@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { BroadcastChannel } from 'broadcast-channel';
 import useAuthStoreTrack, { AuthStates } from '@/store/auth.store';
-import { isPublicRoute } from '@/utils/helper';
+import { isPublicRoute } from '@/modules/utils/helper';
 
 export declare type Message = { action: 'LOGIN' | 'LOGOUT'; data?: string };
 const options = { webWorkerSupport: true };

@@ -18,6 +18,7 @@ class Service {
 
       return ScheduledEventRepository.createScheduledEvent(data);
     } catch (err: any) {
+      console.log(err);
       if (err.message === 'Record already exist :: Conflict Schedule')
         throw new TRPCError({
           code: 'BAD_REQUEST',

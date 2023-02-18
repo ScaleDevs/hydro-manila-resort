@@ -12,8 +12,7 @@ import { ChallengeNameType, InitiateAuthCommandOutput } from '@aws-sdk/client-co
 import { CognitoAccessTokenPayload } from 'aws-jwt-verify/jwt-model';
 
 import { sendUserInvite } from '@/server/repository/mailersend.repo';
-import { createTempPassword } from '@/utils/helper';
-import { decodeToken } from '../util';
+import { decodeToken, createTempPassword } from '../util';
 
 class Service {
   private setReplyCookies(

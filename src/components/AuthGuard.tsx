@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Spinner, Center } from '@chakra-ui/react';
 
-import { getCurrentTimestamp, isPublicRoute, publicRoutes } from '@/utils/helper';
+import { getCurrentTimestamp, isPublicRoute, publicRoutes } from '@/modules/utils/helper';
 import useRefreshToken from '@/modules/hooks/useRefreshToken.hook';
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import { useRefreshTokenJob } from '@/modules/hooks/useRefreshTokenJob';

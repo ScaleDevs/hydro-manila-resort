@@ -6,7 +6,9 @@ import { bookingRouter } from './booking.router';
 import { paymentRouter } from './payment.router';
 import { bookingSettingRouter } from './booksetting.router';
 import { scheduledEventRouter } from './scheduledevent.router';
-
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
 /**
  * Create your application's root router
  * If you want to use SSG, you need export this

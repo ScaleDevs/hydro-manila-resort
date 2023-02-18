@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import useAuthStoreTrack from '@/store/auth.store';
 import { InitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
 import { trpc } from '@/utils/trpc';
-import { publicRoutes } from '@/utils/helper';
+import { publicRoutes } from '@/modules/utils/helper';
 import { useSyncTabs } from './useSyncTabs';
 
 export default function useRefreshToken() {

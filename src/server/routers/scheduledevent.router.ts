@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import dayjs from 'dayjs';
 import { procedure, router } from '../trpc';
 import { ScheduledEventService } from '@/svc/scheduledevent.service';
 
@@ -12,10 +13,13 @@ export const scheduledEventRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
+      console.log('=HERE=');
+      console.log(input.startSession);
+      console.log(dayjs.utc(input.startSession).toISOString());
       return ScheduledEventService.createScheduledEvent({
         ...input,
-        startSession: new Date(input.startSession),
-        endSession: new Date(input.endSession),
+        startSession: dayjs.utc(input.startSession).toISOString() as any,
+        endSession: dayjs.utc(input.endSession).toISOString() as any,
       });
     }),
   deleteScheduledEvent: procedure.input(z.string()).mutation(async ({ input }) => {
