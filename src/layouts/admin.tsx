@@ -11,7 +11,7 @@ export default function Layout({ children }: any) {
         <AdminNav />
         <Box
           h='100%'
-          w={{ base: '100%', md: '95%', lg: '100%' }}
+          w={{ base: '100%', md: '95%', xl: '100%' }}
           px={{ base: '20px', sm: '20px', md: '40px', lg: '50px', xl: '90px' }}
           pt='80px'
           position='relative'

@@ -1,12 +1,9 @@
 import Head from 'next/head';
-import { Box, chakra } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import Layout from '@/layouts/admin';
-import { IoSettingsOutline } from 'react-icons/io5';
-import BookingSetting from '@/modules/booking/BookingSettingForm';
+import TableBookingRecords from '@/modules/booking/TableBookingRecords';
 
-const SettingIcon = chakra(IoSettingsOutline);
-
-function Admin() {
+function Bookings() {
   return (
     <Layout>
       <Head>
@@ -15,13 +12,11 @@ function Admin() {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <Box w='100%' mx='auto'>
-        <SettingIcon h='30px' w='30px' _hover={{ cursor: 'pointer', color: 'teal.500' }} transition='color 0.25s' />
-        <br />
-        <BookingSetting />
+      <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
+        <TableBookingRecords />
       </Box>
     </Layout>
   );
 }
 
-export default Admin;
+export default Bookings;

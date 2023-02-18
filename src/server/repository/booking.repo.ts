@@ -3,10 +3,7 @@ import { Prisma } from '@prisma/client';
 import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 
 export type IFindManyBookingInput = {
-  name?: string;
-  email?: string;
-  startDate?: string;
-  endDate?: string;
+  ref_no?: string;
 } & IPaginationInputs;
 
 export type IBookingDates = {
@@ -33,12 +30,9 @@ class Respository {
     return prisma.booking.findFirst({ where: { paymentIntentId } });
   }
 
-  public async findManyBooking({ page, limit, startDate, endDate }: IFindManyBookingInput) {
+  public async findManyBooking({ page, limit, ref_no }: IFindManyBookingInput) {
     const whereFilter: Prisma.BookingWhereInput = {
-      startSession: {
-        gte: startDate,
-        lte: endDate,
-      },
+      ref_no,
     };
 
     const result = await prisma.booking.findMany({
@@ -94,7 +88,7 @@ class Respository {
     return totalCount > 0;
   }
 
-  public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput) {
+  public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput & DatesInput) {
     const whereFilter: Prisma.BookingWhereInput = {
       startSession: {
         gte: startDate,

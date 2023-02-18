@@ -6,10 +6,7 @@ export const bookingRouter = router({
   getManyBooking: procedure
     .input(
       z.object({
-        name: z.string().min(3).optional(),
-        email: z.string().min(3).optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
+        ref_no: z.string().optional(),
         page: z.number().optional().default(1),
         limit: z.number().optional().default(10),
       }),

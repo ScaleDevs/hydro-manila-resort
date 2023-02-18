@@ -6,6 +6,9 @@ export type AppStates = {
   sideNavOpen: boolean;
 
   productsLinksOpen: boolean;
+  bookingLinksOpen: boolean;
+
+  setToggleState: (label: keyof Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'>) => void;
 
   setAppState: (label: keyof Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'>, value: any) => void;
 
@@ -14,14 +17,25 @@ export type AppStates = {
   resetAppState: () => void;
 };
 
-const initState: Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState'> = {
+const initState: Omit<AppStates, 'setAppState' | 'resetAppState' | 'setWholeAppState' | 'setToggleState'> = {
   sideNavOpen: true,
 
   productsLinksOpen: false,
+
+  bookingLinksOpen: false,
 };
 
 const stateStore = devtools((set) => ({
   ...initState,
+
+  setToggleState: (label) => {
+    set((state) => {
+      return {
+        ...state,
+        [`${label}`]: !state[label],
+      };
+    });
+  },
 
   setAppState: (label, value) => set({ [`${label}`]: value }),
 

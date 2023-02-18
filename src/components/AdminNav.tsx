@@ -8,6 +8,7 @@ import { BiLogOut } from 'react-icons/bi';
 import { FaSwimmingPool } from 'react-icons/fa';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import { BsCalendarEvent } from 'react-icons/bs';
+import { IconType } from 'react-icons/lib';
 
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import useAppStoreTrack from '@/store/app.store';
@@ -18,50 +19,39 @@ const ChakraLink = chakra(Link);
 const HamburgerIcon = chakra(RxHamburgerMenu);
 const CalendarIcon = chakra(BsCalendarEvent);
 
-const ParentLink = () => {
+interface IParentLinkProps {
+  Icon: IconType;
+  appStateName: 'productsLinksOpen' | 'bookingLinksOpen';
+  isOpen: boolean;
+  headTitle: string;
+  links: {
+    path: string;
+    title: string;
+  }[];
+}
+
+const ParentLink = ({ Icon, appStateName, isOpen, links, headTitle }: IParentLinkProps) => {
   const router = useRouter();
-  const { productsLinksOpen, setAppState } = useAppStoreTrack();
+  const { setToggleState } = useAppStoreTrack();
 
   const onToggle = () => {
-    setAppState('productsLinksOpen', !productsLinksOpen);
+    setToggleState(appStateName);
   };
 
   return (
     <>
-      <Button
-        fontWeight='normal'
-        fontSize='20px'
-        w='100%'
-        justifyContent='left'
-        leftIcon={<FaSwimmingPool />}
-        onClick={() => onToggle()}
-      >
-        PRODUCTS
+      <Button fontWeight='normal' fontSize='20px' w='100%' justifyContent='left' leftIcon={<Icon />} onClick={() => onToggle()}>
+        {headTitle}
       </Button>
-      <Collapse in={productsLinksOpen} animateOpacity>
+      <Collapse in={isOpen} animateOpacity>
         <VStack borderLeft='1px solid' borderColor='gray.200' pl='10px'>
-          <ChakraLink href='/admin/products/schedules' w='100%'>
-            <Button
-              fontWeight='normal'
-              fontSize='md'
-              w='100%'
-              justifyContent='left'
-              isActive={router.pathname === '/admin/products/schedules'}
-            >
-              SCHEDULES
-            </Button>
-          </ChakraLink>
-          <ChakraLink href='/admin/products/rooms' w='100%'>
-            <Button
-              fontWeight='normal'
-              fontSize='md'
-              w='100%'
-              justifyContent='left'
-              isActive={router.pathname === '/admin/products/rooms'}
-            >
-              ROOMS
-            </Button>
-          </ChakraLink>
+          {links.map((val, index) => (
+            <ChakraLink key={index} href={val.path} w='100%'>
+              <Button fontWeight='normal' fontSize='md' w='100%' justifyContent='left' isActive={router.pathname === val.path}>
+                {val.title}
+              </Button>
+            </ChakraLink>
+          ))}
         </VStack>
       </Collapse>
     </>
@@ -70,7 +60,7 @@ const ParentLink = () => {
 
 export default function AdminNav() {
   const router = useRouter();
-  const { sideNavOpen, setAppState } = useAppStoreTrack();
+  const { sideNavOpen, setAppState, productsLinksOpen, bookingLinksOpen } = useAppStoreTrack();
   const { signOutWithMutate } = useLogout();
 
   const onToggle = () => {
@@ -118,18 +108,16 @@ export default function AdminNav() {
             <Divider borderColor='gray' w='100%' />
 
             <VStack h='100%' w='90%' mx='auto' mt='20px'>
-              <ChakraLink href='/admin/bookings' w='100%'>
-                <Button
-                  fontWeight='normal'
-                  fontSize='20px'
-                  w='100%'
-                  justifyContent='left'
-                  leftIcon={<BsBook />}
-                  isActive={router.pathname === '/admin/bookings'}
-                >
-                  BOOKINGS
-                </Button>
-              </ChakraLink>
+              <ParentLink
+                isOpen={bookingLinksOpen}
+                headTitle='BOOKINGS'
+                appStateName='bookingLinksOpen'
+                links={[
+                  { path: '/admin/bookings', title: 'RECORDS' },
+                  { path: '/admin/bookings/settings', title: 'SETTINGS' },
+                ]}
+                Icon={BsBook}
+              />
 
               <ChakraLink href='/admin/events' w='100%'>
                 <Button
@@ -144,7 +132,16 @@ export default function AdminNav() {
                 </Button>
               </ChakraLink>
 
-              <ParentLink />
+              <ParentLink
+                isOpen={productsLinksOpen}
+                headTitle='PRODUCT'
+                appStateName='productsLinksOpen'
+                links={[
+                  { path: '/admin/products/schedules', title: 'SCHEDULES' },
+                  { path: '/admin/products/rooms', title: 'ROOMS' },
+                ]}
+                Icon={FaSwimmingPool}
+              />
 
               <Button
                 fontWeight='normal'
