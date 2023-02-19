@@ -238,14 +238,21 @@ class Service {
 
     const product = await ProductService.findProductById(parsed.data.productId);
 
+    const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
+    const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
+
     await sendBookingSuccessEmail({
       recipientEmail: parsed.data.email,
-      customer_name: parsed.data.name,
-      product_type: product?.name || '',
-      booking_date: `${dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A')} - ${dayjs(
-        parsed.data.endSession,
-      ).format('MMM DD, YYYY hh:mm:ss A')}`,
       ref_no: ref_no_holder,
+      date: bookedDate.format('MMM DD, YYYY'),
+      guest_name: parsed.data.name,
+      guest_phone: parsed.data.phoneNumber,
+      checkin_date: bookedDate.format('MMM DD, YYYY'),
+      checkin_time: bookedDate.format('hh:mm A'),
+      checkout_date: checkOutDate.format('MMM DD, YYYY'),
+      checkout_time: checkOutDate.format('hh:mm A'),
+      number_of_guests: `${parsed.data.guests}`,
+      type_of_schedule: product?.name || '',
     });
 
     console.log('EMAIL SUCCESSFULLY SENT');

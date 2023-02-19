@@ -35,7 +35,7 @@ const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: 
       if (data.bookedDates[key2])
         for (const check of data.bookedDates[key2]) {
           if (startDate >= check.start && startDate < check.end) return true;
-          if (endDate >= check.start && startDate <= check.end) return true;
+          if (endDate > check.start && startDate <= check.end) return true;
           if (startDate < check.start && endDate > check.end) return true;
         }
     } else if (isDateBeforeToday) return true;

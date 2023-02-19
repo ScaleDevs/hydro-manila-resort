@@ -79,12 +79,12 @@ class Respository {
             lte: startDate,
           },
           endSession: {
-            gte: startDate,
+            gt: startDate,
           },
         },
         {
           startSession: {
-            lte: endDate,
+            lt: endDate,
           },
           endSession: {
             gte: endDate,
@@ -92,10 +92,10 @@ class Respository {
         },
         {
           startSession: {
-            gte: startDate,
+            gt: startDate,
           },
           endSession: {
-            lte: endDate,
+            lt: endDate,
           },
         },
       ],

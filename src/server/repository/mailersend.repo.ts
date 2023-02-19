@@ -49,27 +49,26 @@ export const sendTemplateEmail = async ({ templateId, recipientEmail, variables,
 
 type SendBookingEmailInput = {
   recipientEmail: string;
-  customer_name: string;
-  product_type: string;
-  booking_date: string;
   ref_no: string;
+  date: string;
+  guest_name: string;
+  guest_phone: string;
+  checkin_date: string;
+  checkin_time: string;
+  checkout_date: string;
+  checkout_time: string;
+  number_of_guests: string;
+  type_of_schedule: string;
 };
 
-export const sendBookingSuccessEmail = async ({
-  recipientEmail,
-  customer_name,
-  product_type,
-  booking_date,
-  ref_no,
-}: SendBookingEmailInput) => {
+export const sendBookingSuccessEmail = async (params: SendBookingEmailInput) => {
+  const { recipientEmail, ...rest } = params;
+
   await sendTemplateEmail({
     templateId: constants.mailerSend.bookingConfirmationTempId,
     recipientEmail,
     variables: {
-      customer_name,
-      product_type,
-      booking_date,
-      ref_no,
+      ...rest,
     },
     subject: 'Hydro Resort Manila Customer Booking Confirmation',
   });
@@ -88,9 +87,8 @@ export const sendRefundEmailSuccess = async ({ recipientEmail, customer_name, re
     recipientEmail,
     variables: {
       title_of_message: 'Booking Refund Confirmation',
-      subtitle_of_message: 'We received your request for a refund',
       greetings: 'Hi ' + customer_name + ',',
-      message: `Your booking of reference #${ref_no} with the amount of ₱${amount} has been successfuly refunded.`,
+      message_body: `We received your request for a refund. Your booking of reference #${ref_no} with the amount of ₱${amount} has been successfuly refunded.`,
     },
     subject: 'Hydro Resort Manila Customer Refund Confirmation',
   });
@@ -114,21 +112,19 @@ export const sendRefundEmailProcessing = async ({
     recipientEmail,
     variables: {
       title_of_message: 'Booking Refund Request',
-      subtitle_of_message: 'We received your request for a refund',
       greetings: 'Hi ' + customer_name + ',',
-      message: `Your request for a refund on your booking with reference #${ref_no} with the amount of ₱${amount} is now being process. Please give our team time to process your refund this will take 2-3 weeks of processing and atmost a month thank you.`,
+      message_body: `Your request for a refund on your booking with reference #${ref_no} with the amount of ₱${amount} is now being process. Please give our team time to process your refund this will take 2-3 weeks of processing and atmost a month thank you.`,
     },
     subject: 'Hydro Resort Manila Customer Refund Request',
   });
 
   await sendTemplateEmail({
     templateId: constants.mailerSend.reusableTempId,
-    recipientEmail: constants.mailerSend.fromEmail || 'hydroresort.manila@gmail.com',
+    recipientEmail: constants.mailerSend.supportEmail,
     variables: {
-      title_of_message: 'Booking Refund Request (Manual)',
-      subtitle_of_message: `${customer_name} has requested for a refund`,
+      title_of_message: 'Booking Refund Request (Requires Manual Processing)',
       greetings: 'Hi Hydro Support,',
-      message: `A customer has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.`,
+      message_body: `A customer named ${customer_name} has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.`,
     },
     subject: 'Hydro Resort Manila Customer Refund Request',
   });
@@ -149,12 +145,11 @@ export const sendRefundEmailConflictBooking = async ({
 }: SendRefundEmailConflictBookingInput) => {
   await sendTemplateEmail({
     templateId: constants.mailerSend.reusableTempId,
-    recipientEmail: constants.mailerSend.fromEmail || 'hydroresort.manila@gmail.com',
+    recipientEmail: constants.mailerSend.supportEmail,
     variables: {
-      title_of_message: 'Booking Failed due to conflict',
-      subtitle_of_message: 'This is to notify that you must process a refund for the customer or reschedule failed booking',
+      title_of_message: 'Booking Failed due to conflict of schedules (Kindly Review)',
       greetings: 'Hi Hydro Support,',
-      message: `The booking for customer ${customer_name} has failed due to booking with another customer at the same time. Kindly process his/her refund or help resched booking by contacting the customer.`,
+      message_body: `The booking for customer ${customer_name} has failed due to booking schedule already being filled. Kindly process his/her refund or help resched booking by contacting the customer.`,
     },
     subject: 'Hydro Resort Manila Customer Booking Failed',
   });
@@ -163,10 +158,9 @@ export const sendRefundEmailConflictBooking = async ({
     templateId: constants.mailerSend.reusableTempId,
     recipientEmail,
     variables: {
-      title_of_message: 'Booking Failed due to conflict',
-      subtitle_of_message: 'You may request for refund or reschedule booking',
+      title_of_message: 'Booking Failed due to conflict of schedules',
       greetings: 'Hi ' + customer_name + ',',
-      message: `Your booking request has failed due to another booking and we have already notified our team to process the refund or contact you if you want to reschedule your booking. For the processing of your refund with the amount of ₱${amount}, this may take 2-3 weeks and atmost a month. Kindly Take Note of your payment ID of "${payment_id}". Kindly reach our team with the contact details below if you have questions`,
+      message_body: `Your booking request has failed due to another booking and we have already notified our team to process the refund or contact you if you want to reschedule your booking. For the processing of your refund with the amount of ₱${amount}, this may take 2-3 weeks and atmost a month. Kindly Take Note of your payment ID of "${payment_id}". Kindly reach our team with the contact details below if you have questions`,
     },
     subject: 'Hydro Resort Manila Customer Booking Failed',
   });
@@ -189,12 +183,11 @@ export const notifyAdminDbInsertionError = async ({
 }: NotifyAdminDbInsertionErrorInput) => {
   await sendTemplateEmail({
     templateId: constants.mailerSend.reusableTempId,
-    recipientEmail: constants.mailerSend.fromEmail || 'hydroresort.manila@gmail.com',
+    recipientEmail: constants.mailerSend.supportEmail,
     variables: {
       title_of_message: 'Booking Record Failed to be added in database',
-      subtitle_of_message: 'This is to notify that you must manually reserve the schedule the customer booked',
       greetings: 'Hi Hydro Support,',
-      message: `The booking for customer ${customer_name} with booking reference ${ref_no} has been paid with payment_id ${payment_id} has not been added to your records so kindly added the schedule manually on your end. The schedule to be added is ${startSession} - ${endSession}`,
+      message_body: `The booking for customer ${customer_name} with booking reference ${ref_no} has been paid with payment_id ${payment_id} has not been added to your records so kindly add the schedule manually on your end. The schedule to be added is ${startSession} - ${endSession}`,
     },
     subject: 'Hydro Resort Manila Booking Record Not Added',
   });
