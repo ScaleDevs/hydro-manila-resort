@@ -12,6 +12,7 @@ export const sendTemplateEmail = async ({ templateId, recipientEmail, variables,
   const recipients = {
     from: {
       email: constants.mailerSend.fromEmail,
+      name: constants.mailerSend.fromName,
     },
     to: [{ email: recipientEmail }],
   };

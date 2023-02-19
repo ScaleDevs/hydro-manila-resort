@@ -17,7 +17,7 @@ export const constants = {
     bookingConfirmationTempId: process.env.MAILER_SEND_BOOKING_CONFIRMATION_TEMPLATE_ID || '',
     supportEmail: process.env.MAILER_SEND_HYDRO_SUPPORT_EMAIL || 'hydroresort.manila@gmail.com',
     fromEmail: process.env.MAILER_SEND_FROM_EMAIL,
-    fromName: process.env.MAILER_SEND_FROM_NAME,
+    fromName: process.env.MAILER_SEND_FROM_NAME || 'Hydro Resort Manila Team',
     apiKey: process.env.MAILER_SEND_API_KEY,
   },
 
