@@ -50,7 +50,17 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
               </Heading>
             </Box>
           )}
-          {data?.attributes.status === 'succeeded' && <Text mt='10px'>Check your email for booking confirmation</Text>}
+          {data?.attributes.status === 'succeeded' && (
+            <Box w='90%'>
+              <Text mt='10px' textAlign='center'>
+                You should receive an email within a few minutes regarding your booking confirmation.
+              </Text>
+              <Text mt='5px' textAlign='center'>
+                If you have not receive any email after waiting long then kindly contact our team at hydroresort.manila@gmail.com
+                to confirm your booking schedule.
+              </Text>
+            </Box>
+          )}
         </VStack>
       </Box>
     </>
