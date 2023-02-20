@@ -157,7 +157,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
         <Stack direction='column' w={{ base: '95%', md: '100%' }} mx='auto' alignItems='center'>
           <Box w={{ base: '95%', sm: '100%', lg: '90%' }}>
             <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
-              BOOK THE PLACE!
+              BOOK A DATE!
             </Heading>
             {!isSchedAvailable || isError ? (
               <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
