@@ -29,7 +29,6 @@ const XIcon = chakra(BsX);
 
 const schema = z
   .object({
-    bookingFee: z.number({ invalid_type_error: 'must be a number' }),
     maxPax: z.number({ invalid_type_error: 'must be a number' }),
     minPax: z.number({ invalid_type_error: 'must be a number' }),
     extraHeadFee: z.number({ invalid_type_error: 'must be a number' }),
@@ -61,7 +60,6 @@ export default function BookingSetting({}: IBookingSettingProps) {
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
-      bookingFee: data?.bookingFee,
       maxPax: data?.maxPax,
       minPax: data?.minPax,
       extraHeadFee: data?.extraHeadFee,
@@ -69,17 +67,23 @@ export default function BookingSetting({}: IBookingSettingProps) {
   });
 
   const updateOrCreateSetting = (data: FormSchemaType) => {
-    mutate(data, {
-      onSuccess() {
-        toast({
-          title: 'Update Success',
-          status: 'success',
-          duration: 9000,
-          isClosable: true,
-        });
-        refetch();
+    mutate(
+      {
+        ...data,
+        bookingFee: 0,
       },
-    });
+      {
+        onSuccess() {
+          toast({
+            title: 'Update Success',
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+          });
+          refetch();
+        },
+      },
+    );
   };
 
   return (
@@ -111,17 +115,6 @@ export default function BookingSetting({}: IBookingSettingProps) {
         <Fade in>
           <form onSubmit={handleSubmit(updateOrCreateSetting)}>
             <Stack spacing={5}>
-              <Stack spacing={0}>
-                <Text>Booking Fee:</Text>
-                <NumberField
-                  placeholder='In Percentage'
-                  register={register}
-                  property='bookingFee'
-                  errMsg={errors.bookingFee?.message}
-                  defaultvalue={data?.bookingFee}
-                />
-              </Stack>
-
               <Stack spacing={0}>
                 <Text>Minimum Pax:</Text>
                 <NumberField
@@ -171,12 +164,6 @@ export default function BookingSetting({}: IBookingSettingProps) {
       ) : data ? (
         <SlideFade in>
           <Stack spacing={2}>
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Booking Fee:</Text>
-              <Text>{data?.bookingFee}%</Text>
-            </Stack>
-            <Divider borderColor='gray.400' />
-
             <Stack spacing={0} direction='row' justifyContent='space-between'>
               <Text>Minimum Pax:</Text>
               <Text>{data?.minPax}</Text>
