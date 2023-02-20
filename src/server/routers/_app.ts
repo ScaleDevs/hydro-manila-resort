@@ -9,11 +9,13 @@ import { scheduledEventRouter } from './scheduledevent.router';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
+
 /**
  * Create your application's root router
  * If you want to use SSG, you need export this
  * @link https://trpc.io/docs/ssg
  * @link https://trpc.io/docs/router
+ * Apply auth routes
  */
 export const appRouter = router({
   health: procedure.query(() => {
