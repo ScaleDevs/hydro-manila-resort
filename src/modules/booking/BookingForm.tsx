@@ -85,8 +85,6 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     if (data.guests && data.guests > bookingSetting.minPax)
       total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
-    total += (bookingSetting.bookingFee / 100) * total;
-
     const payload = {
       name: data.name,
       email: data.email,
@@ -115,7 +113,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
           data.guests && data.guests > bookingSetting.minPax
             ? (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee
             : 0,
-        bookingFee: bookingSetting.bookingFee,
+        bookingFee: 0,
         total,
       },
     };

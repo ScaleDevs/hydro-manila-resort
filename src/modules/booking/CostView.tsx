@@ -52,19 +52,10 @@ export default function CostView({ product, room, guests }: ICostViewProps) {
           ''
         )}
 
-        {bookingSetting && (product || guests || room) ? (
-          <HStack justifyContent='space-between'>
-            <Text>Convenience Fee ({bookingSetting.bookingFee}%)</Text>
-            <Text>{PHpeso.format((bookingSetting.bookingFee / 100) * getTotal())}</Text>
-          </HStack>
-        ) : (
-          ''
-        )}
-
         {bookingSetting ? (
           <Box w='100%' fontSize='18px' bg='primary.1' mt='20px' p='10px'>
             <Text fontWeight='bold' color='white' textAlign='center'>
-              TOTAL: {PHpeso.format(getTotal() + (bookingSetting.bookingFee / 100) * getTotal())}
+              TOTAL: {PHpeso.format(getTotal())}
             </Text>
           </Box>
         ) : (
