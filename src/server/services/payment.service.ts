@@ -24,7 +24,10 @@ import {
 } from '@/server/repository/mailersend.repo';
 import { BookingRefundRepository } from '@/server/repository/bookingrefund.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
+import { BookingSettingRepository } from '@/server/repository/bookingsetting.repo';
+import { RoomRepository } from '@/server/repository/room.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
+import { PHpeso } from '../util';
 
 const bookingDataSchema = z.object({
   name: z.string(),
@@ -159,7 +162,7 @@ class Service {
     }
   }
 
-  public async handlePaymentPaidEvent(paymentIntentId: string) {
+  public async handlePaymentPaidEvent(paymentIntentId: string, paymentType: string) {
     if (!paymentIntentId) {
       console.log('No Payment Intent Id!');
       return;
@@ -237,22 +240,45 @@ class Service {
     console.log('SUCCESSFULLY ADDED BOOKING');
 
     const product = await ProductService.findProductById(parsed.data.productId);
+    const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
+    const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
+    const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
+    const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
+
+    const productDetails = product?.details[product.activeVersion - 1];
+    const room2Details = room2?.details[room2.activeVersion - 1];
+    const room1Details = room1?.details[room1.activeVersion - 1];
+
+    const isRoom2 = () => parsed.data.roomId === room2?.roomId;
+    const isRoom1 = () => parsed.data.roomId === room1?.roomId;
 
     const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
     const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
 
     await sendBookingSuccessEmail({
       recipientEmail: parsed.data.email,
-      ref_no: ref_no_holder,
-      date: bookedDate.format('MMM DD, YYYY'),
       guest_name: parsed.data.name,
-      guest_phone: parsed.data.phoneNumber,
-      checkin_date: bookedDate.format('MMM DD, YYYY'),
-      checkin_time: bookedDate.format('hh:mm A'),
-      checkout_date: checkOutDate.format('MMM DD, YYYY'),
-      checkout_time: checkOutDate.format('hh:mm A'),
-      number_of_guests: `${parsed.data.guests}`,
-      type_of_schedule: product?.name || '',
+      reference_number: ref_no_holder,
+      booking_type: product?.name || '',
+      number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
+      number_of_guest: parsed.data.guests,
+      room_type: !!productDetails?.withRooms ? 'ALL ROOMS' : '-',
+      checkin_datetime: bookedDate.format('MMM DD, YYYY / hh:mm A'),
+      checkout_datetime: checkOutDate.format('MMM DD, YYYY / hh:mm A'),
+      booking_type_rate: 'BEST AVAILABLE RATE',
+      product_price: PHpeso.format(parsed.data.receipt.productPrice),
+      extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',
+      extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
+      extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
+      room2_rate: room2Details ? PHpeso.format(room2Details.price) : 'N/A',
+      room2_qty: isRoom2() ? 1 : 0,
+      room2_total: PHpeso.format(isRoom2() ? parsed.data.receipt.roomPrice : 0),
+      room1_rate: room1Details ? PHpeso.format(room1Details.price) : 'N/A',
+      room1_qty: isRoom1() ? 1 : 0,
+      room1_total: PHpeso.format(isRoom1() ? parsed.data.receipt.roomPrice : 0),
+      addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
+      type_payment: paymentType,
+      total_payment: PHpeso.format(parsed.data.receipt.total),
     });
 
     console.log('EMAIL SUCCESSFULLY SENT');

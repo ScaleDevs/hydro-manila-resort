@@ -11,7 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
-  if (eventType === 'payment.paid') await PaymentService.handlePaymentPaidEvent(paymentIntentId);
+  if (eventType === 'payment.paid') {
+    const paymentType = response.data?.attributes?.data?.attributes?.source.type;
+    await PaymentService.handlePaymentPaidEvent(paymentIntentId, paymentType);
+  }
 
   if (eventType === 'payment.refunded')
     await PaymentService.handleRefundPaymentEvent(paymentIntentId, response.data?.attributes.data.attributes.refunds[0].id);

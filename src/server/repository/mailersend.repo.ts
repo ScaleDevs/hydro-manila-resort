@@ -50,16 +50,28 @@ export const sendTemplateEmail = async ({ templateId, recipientEmail, variables,
 
 type SendBookingEmailInput = {
   recipientEmail: string;
-  ref_no: string;
-  date: string;
   guest_name: string;
-  guest_phone: string;
-  checkin_date: string;
-  checkin_time: string;
-  checkout_date: string;
-  checkout_time: string;
-  number_of_guests: string;
-  type_of_schedule: string;
+  reference_number: string;
+  booking_type: string;
+  number_of_rooms: number;
+  number_of_guest: number;
+  room_type: string;
+  checkin_datetime: string;
+  booking_type_rate: string;
+  checkout_datetime: string;
+  product_price: string;
+  extra_person_rate: string;
+  extra_person_qty: number;
+  extra_person_total: string;
+  room2_rate: string;
+  room2_qty: number;
+  room2_total: string;
+  room1_rate: string;
+  room1_qty: number;
+  room1_total: string;
+  addon_total: string;
+  type_payment: string;
+  total_payment: string;
 };
 
 export const sendBookingSuccessEmail = async (params: SendBookingEmailInput) => {
