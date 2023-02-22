@@ -101,7 +101,7 @@ export const sendRefundEmailSuccess = async ({ recipientEmail, customer_name, re
     variables: {
       title_of_message: 'Booking Refund Confirmation',
       greetings: 'Hi ' + customer_name + ',',
-      message_body: `We received your request for a refund. Your booking of reference #${ref_no} with the amount of ₱${amount} has been successfuly refunded.`,
+      message_body: `We received your request for a refund. Your booking of reference #${ref_no} with the amount of ₱${amount} has been successfuly refunded. You should have the refund reflected in your account within the day for eWallets, and within 30 days`,
     },
     subject: 'Hydro Resort Manila Customer Refund Confirmation',
   });
