@@ -11,7 +11,6 @@ interface Props {
 
 function Component({ id }: Props) {
   const { data, isLoading } = trpc.booking.getBookingByRefNo.useQuery(id);
-  const { data: roomData } = trpc.room.getRoomById.useQuery((data?.roomId as string) || '');
 
   const getConvenienceFee = () => {
     if (!data?.receipt) return 0;
@@ -70,6 +69,13 @@ function Component({ id }: Props) {
               <Divider borderColor='gray.400' />
 
               <Stack spacing={0} direction='row' justifyContent='space-between'>
+                <Text>Schedule Type:</Text>
+                <Text>{data?.product.name}</Text>
+              </Stack>
+
+              <Divider borderColor='gray.400' />
+
+              <Stack spacing={0} direction='row' justifyContent='space-between'>
                 <Text>Start Schedule:</Text>
                 <Text>{tableFormatTimeDisplay(data?.startSession as string)}</Text>
               </Stack>
@@ -92,7 +98,10 @@ function Component({ id }: Props) {
 
               <Stack spacing={0} direction='row' justifyContent='space-between'>
                 <Text>ROOM:</Text>
-                <Text>{roomData?.roomIdentityName || 'N/A'}</Text>
+                <Text>
+                  {data?.room?.roomIdentityName ||
+                    (data?.product.details[data.product.activeVersion - 1].withRooms ? 'ALL ROOMS' : 'N/A')}
+                </Text>
               </Stack>
 
               <Divider borderColor='gray.400' />

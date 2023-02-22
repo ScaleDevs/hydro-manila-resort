@@ -1,9 +1,11 @@
 import { v4 } from 'uuid';
-import { IBooking } from '@/utils/types';
 import dayjs from 'dayjs';
-import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
 import { TRPCError } from '@trpc/server';
+import { IBooking, IProduct, IRoom } from '@/utils/types';
+import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
+import { ProductRepository } from '@/server/repository/product.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
+import { RoomRepository } from '../repository/room.repo';
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'ref_no'>) {
@@ -27,7 +29,25 @@ class Service {
 
   public async findBookingByReferenceNo(refNo: string) {
     try {
-      return BookingRepository.findBookingByReferenceNo(refNo);
+      const booking = await BookingRepository.findBookingByReferenceNo(refNo);
+
+      if (!booking) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No Booking Record Found' });
+
+      const product = await ProductRepository.findProductById(booking.productId);
+
+      if (!product) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No Product Record Found' });
+
+      const bookingResult: typeof booking & { product: IProduct } & { room?: IRoom } = {
+        ...booking,
+        product,
+      };
+
+      if (booking.roomId) {
+        const room = await RoomRepository.findRoomById(booking.roomId);
+        bookingResult['room'] = room || undefined;
+      }
+
+      return bookingResult;
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
