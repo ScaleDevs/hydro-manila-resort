@@ -89,11 +89,18 @@ export default function CardInputsForm({}: ICardInputsFormProps) {
             clientKey,
             paymentIntentId,
             paymentMethodId: paymentMethod.id,
-            returnUrl: process.env.NEXT_PUBLIC_RETURN_URL || 'http://localhost:3000/booking/status',
+            returnUrl: `${
+              process.env.NEXT_PUBLIC_RETURN_URL || 'http://localhost:3000/booking/status'
+            }?payment_intent_id=${paymentIntentId}`,
           },
           {
             onSuccess({ data }) {
               const status = data.attributes.status;
+
+              if (status === 'awaiting_next_action' && data.attributes.next_action?.redirect?.url) {
+                window.location.href = data.attributes.next_action?.redirect?.url;
+                return;
+              }
 
               if (status === 'succeeded') {
                 router.push(`/booking/status?payment_intent_id=${paymentIntentId}`);
