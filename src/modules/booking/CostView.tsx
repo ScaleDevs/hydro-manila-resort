@@ -46,7 +46,7 @@ export default function CostView({ product, room, guests }: ICostViewProps) {
         {bookingSetting && guests && guests > bookingSetting.minPax ? (
           <HStack justifyContent='space-between'>
             <Text>ADDITIONAL PAX ({guests - bookingSetting.minPax})</Text>
-            <Text>{PHpeso.format((guests - bookingSetting.minPax) * 250)}</Text>
+            <Text>{PHpeso.format((guests - bookingSetting.minPax) * bookingSetting.extraHeadFee)}</Text>
           </HStack>
         ) : (
           ''
