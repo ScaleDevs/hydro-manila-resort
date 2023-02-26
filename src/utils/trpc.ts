@@ -20,22 +20,27 @@ function getBaseUrl() {
 
 export const trpc = createTRPCNext<AppRouter>({
   config() {
+    const links = [];
+
+    if (process.env.NODE_ENV === 'development') links.push(loggerLink());
+
+    links.push(
+      httpBatchLink({
+        /**
+         * If you want to use SSR, you need to use the server's full URL
+         * @link https://trpc.io/docs/ssr
+         **/
+        url: `${getBaseUrl()}/api/trpc`,
+      }),
+    );
+
     return {
       headers() {
         return {
           Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         };
       },
-      links: [
-        loggerLink(),
-        httpBatchLink({
-          /**
-           * If you want to use SSR, you need to use the server's full URL
-           * @link https://trpc.io/docs/ssr
-           **/
-          url: `${getBaseUrl()}/api/trpc`,
-        }),
-      ],
+      links,
       queryClientConfig: {
         defaultOptions: {
           queries: {
