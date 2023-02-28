@@ -224,20 +224,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   }
                   errMsg={!!errors.productId?.message ? 'Required!' : undefined}
                 >
-                  {!!selectedProduct ? (
-                    <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
-                      <Text fontSize='14px' color='white'>
-                        {selectedProduct.name} | {selectedProduct.details[productActiveVersion].price}
-                      </Text>
-                      <Text fontSize='14px' color='white'>
-                        {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
-                        {selectedProduct.details[productActiveVersion].scheduleEnd} |{' '}
-                        {selectedProduct.details[productActiveVersion].withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
-                      </Text>
-                    </Box>
-                  ) : (
-                    ''
-                  )}
+                  ''
                 </SelectField>
 
                 <SelectField
