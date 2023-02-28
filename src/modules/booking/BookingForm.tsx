@@ -227,7 +227,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   {!!selectedProduct ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        {selectedProduct.name} | {PHpeso.format(selectedProduct.details[productActiveVersion].price)}
+                        {selectedProduct.name} | {selectedProduct.details[productActiveVersion].price}
                       </Text>
                       <Text fontSize='14px' color='white'>
                         {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
