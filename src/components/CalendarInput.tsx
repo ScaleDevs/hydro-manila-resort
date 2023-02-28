@@ -22,7 +22,7 @@ const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: 
     console.log('PICK');
     console.log(`${key1} ${productDetails.scheduleStart}`);
     const startDate = dayjs
-      .tz(dayjs('2023-02-24 8:00:00 PM').format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
+      .tz(dayjs('2023-02-24 08:00:00 PM').format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
       .unix();
     // const endDate = dayjs
     //   .tz(dayjs(`${key1} ${productDetails.scheduleEnd}`).format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
