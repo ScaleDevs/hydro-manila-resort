@@ -18,10 +18,8 @@ const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: 
   const isDateBeforeToday = dayjs(key1).unix() < dayjs().unix();
   // try {
   if (product) {
-    const productDetails = product.details[product.activeVersion - 1];
-    const startDate = dayjs
-      .tz(dayjs(`${key1} ${productDetails.scheduleStart}`).format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
-      .unix();
+    // const productDetails = product.details[product.activeVersion - 1];
+    const startDate = dayjs.tz(dayjs().format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE).unix();
     // const endDate = dayjs
     //   .tz(dayjs(`${key1} ${productDetails.scheduleEnd}`).format('YYYY-MM-DDTHH:mm'), process.env.NEXT_PUBLIC_TIMEZONE)
     //   .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
