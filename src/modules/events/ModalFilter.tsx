@@ -1,11 +1,10 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalBody,
-  Text,
   Heading,
   Stack,
   Button,
@@ -20,18 +19,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { DateTimeField } from '@/components/DateTimeField';
 
 const schema = z.object({
-  startSession: z
-    .object({
-      startDate: z.string(),
-      endDate: z.string(),
-    })
-    .optional(),
-  endSession: z
-    .object({
-      startDate: z.string(),
-      endDate: z.string(),
-    })
-    .optional(),
+  startDate: z.string(),
+  endDate: z.string(),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -44,11 +33,11 @@ export type SessionFilter = {
 export interface IModalFilterProps {
   isOpen: boolean;
   onClose: () => void;
-  setStartSessionFilter: Dispatch<SetStateAction<SessionFilter | undefined>>;
-  setEndSessionFilter: Dispatch<SetStateAction<SessionFilter | undefined>>;
+  setDateFilter: Dispatch<SetStateAction<SessionFilter>>;
 }
 
-export default function ModalFilter({ isOpen, onClose, setStartSessionFilter, setEndSessionFilter }: IModalFilterProps) {
+export default function ModalFilter({ isOpen, onClose, setDateFilter }: IModalFilterProps) {
+  const [error, setError] = useState('');
   const {
     handleSubmit,
     register,
@@ -58,27 +47,17 @@ export default function ModalFilter({ isOpen, onClose, setStartSessionFilter, se
   });
 
   const applyFilter = (data: FormSchemaType) => {
-    if (
-      !!data.startSession &&
-      (!!data.startSession.startDate || data.startSession.startDate !== '') &&
-      (!!data.startSession.endDate || data.startSession.endDate !== '')
-    ) {
-      setStartSessionFilter({
-        startDate: dayjs.tz(data.startSession.startDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
-        endDate: dayjs.tz(data.startSession.endDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
-      });
+    const startDate = dayjs.tz(data.startDate, process.env.NEXT_PUBLIC_TIMEZONE);
+    const endDate = dayjs.tz(data.endDate, process.env.NEXT_PUBLIC_TIMEZONE);
+
+    if (startDate.unix() > endDate.unix()) {
+      setError('END date must be greater than START date');
+      return;
     }
 
-    if (
-      !!data.endSession &&
-      (!!data.endSession.startDate || data.endSession.startDate !== '') &&
-      (!!data.endSession.endDate || data.endSession.endDate !== '')
-    ) {
-      setEndSessionFilter({
-        startDate: dayjs.tz(data.endSession?.startDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
-        endDate: dayjs.tz(data.endSession?.endDate, process.env.NEXT_PUBLIC_TIMEZONE).toISOString(),
-      });
-    }
+    setError('');
+
+    setDateFilter({ startDate: startDate.toISOString(), endDate: endDate.toISOString() });
 
     onClose();
   };
@@ -96,51 +75,27 @@ export default function ModalFilter({ isOpen, onClose, setStartSessionFilter, se
 
           <br />
 
-          <Alert status='info'>
-            <AlertIcon />
-            <AlertDescription>You can fillup either start session or end session or both</AlertDescription>
-          </Alert>
+          {error && (
+            <Alert status='error'>
+              <AlertIcon />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <br />
 
           <form onSubmit={handleSubmit(applyFilter)}>
             <Stack w='100%' spacing={5}>
               <Stack>
-                <Text fontSize='2xl'>START SESSION:</Text>
                 <Stack direction={{ base: 'column', md: 'row' }}>
                   <DateTimeField
                     required
                     label='START:'
                     register={register}
-                    property='startSession.startDate'
-                    errMsg={errors.startSession?.startDate?.message}
+                    property='startDate'
+                    errMsg={errors.startDate?.message}
                   />
-                  <DateTimeField
-                    required
-                    label='END:'
-                    register={register}
-                    property='startSession.endDate'
-                    errMsg={errors.startSession?.endDate?.message}
-                  />
-                </Stack>
-              </Stack>
-              <Stack>
-                <Text fontSize='2xl'>END SESSION:</Text>
-                <Stack direction={{ base: 'column', md: 'row' }}>
-                  <DateTimeField
-                    required
-                    label='START:'
-                    register={register}
-                    property='endSession.startDate'
-                    errMsg={errors.endSession?.startDate?.message}
-                  />
-                  <DateTimeField
-                    required
-                    label='END:'
-                    register={register}
-                    property='endSession.endDate'
-                    errMsg={errors.endSession?.endDate?.message}
-                  />
+                  <DateTimeField required label='END:' register={register} property='endDate' errMsg={errors.endDate?.message} />
                 </Stack>
               </Stack>
             </Stack>

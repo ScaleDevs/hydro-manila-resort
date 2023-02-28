@@ -26,48 +26,15 @@ export const scheduledEventRouter = router({
       z.object({
         page: z.number(),
         limit: z.number(),
-        startSession: z
-          .object({
-            startDate: z.string(),
-            endDate: z.string(),
-          })
-          .optional(),
-        endSession: z
-          .object({
-            startDate: z.string(),
-            endDate: z.string(),
-          })
-          .optional(),
+        startDate: z.string(),
+        endDate: z.string(),
       }),
     )
     .query(({ input }) => {
-      const inputRefine: typeof input = {
-        page: input.page,
-        limit: input.limit,
-      };
-
-      if (
-        input.startSession &&
-        (!!input.startSession?.startDate || input.startSession.startDate !== '') &&
-        (!!input.startSession?.endDate || input.startSession.endDate !== '')
-      ) {
-        inputRefine['startSession'] = {
-          startDate: dayjs.utc(input.startSession.startDate).toISOString() as any,
-          endDate: dayjs.utc(input.startSession.endDate).toISOString() as any,
-        };
-      }
-
-      if (
-        input.endSession &&
-        (!!input.endSession?.startDate || input.endSession.startDate !== '') &&
-        (!!input.endSession?.endDate || input.endSession.endDate !== '')
-      ) {
-        inputRefine['endSession'] = {
-          startDate: dayjs.utc(input.endSession.startDate).toISOString() as any,
-          endDate: dayjs.utc(input.endSession.endDate).toISOString() as any,
-        };
-      }
-
-      return ScheduledEventService.findManyScheduledEvent(inputRefine);
+      return ScheduledEventService.findManyScheduledEvent({
+        ...input,
+        startDate: dayjs.utc(input.startDate).toISOString(),
+        endDate: dayjs.utc(input.endDate).toISOString(),
+      });
     }),
 });

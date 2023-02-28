@@ -31,17 +31,16 @@ const FilterIcon = chakra(BsFilterCircleFill);
 export default function TableScheduledEvent() {
   const toast = useToast();
   const [page, setPage] = useState(1);
-  const [startSessionFilter, setStartSessionFilter] = useState<undefined | SessionFilter>({
+  const [dateFilter, setDateFilter] = useState<SessionFilter>({
     startDate: dayjs.utc().startOf('day').toISOString(),
     endDate: dayjs.utc().endOf('month').toISOString(),
   });
-  const [endSessionFilter, setEndSessionFilter] = useState<undefined | SessionFilter>();
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.scheduledevent.getManyScheduledEvent.useQuery({
     page,
     limit: 5,
-    startSession: startSessionFilter,
-    endSession: endSessionFilter,
+    startDate: dateFilter.startDate,
+    endDate: dateFilter.endDate,
   });
   const { mutate } = trpc.scheduledevent.deleteScheduledEvent.useMutation();
   const utils = trpc.useContext();
@@ -50,7 +49,7 @@ export default function TableScheduledEvent() {
     mutate(id, {
       onSuccess() {
         utils.scheduledevent.getManyScheduledEvent.setData(
-          { page, limit: 5, startSession: startSessionFilter, endSession: endSessionFilter },
+          { page, limit: 5, startDate: dateFilter.startDate, endDate: dateFilter.endDate },
           (rec: any) => {
             const newRecords = rec?.records.filter((value: { scheduledEventId: string }) => value.scheduledEventId !== id);
             return {
@@ -76,7 +75,7 @@ export default function TableScheduledEvent() {
 
   return (
     <>
-      <ModalFilter onClose={onToggle} {...{ isOpen, setStartSessionFilter, setEndSessionFilter }} />
+      <ModalFilter onClose={onToggle} {...{ isOpen, setDateFilter }} />
       <HStack justifyContent='space-between'>
         <HStack>
           <Link href='/admin/events/create'>

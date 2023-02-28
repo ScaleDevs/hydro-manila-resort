@@ -2,11 +2,6 @@ import prisma from './prisma.client';
 import { IPaginationInputs, IScheduledEvent, DatesInput } from '@/utils/types';
 import { Prisma } from '@prisma/client';
 
-export type DateFilters = {
-  startSession?: DatesInput;
-  endSession?: DatesInput;
-};
-
 class Respository {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
     return prisma.scheduledEvent.create({ data: { ...data } });
@@ -16,27 +11,22 @@ class Respository {
     return prisma.scheduledEvent.findFirst({ where: { scheduledEventId } });
   }
 
-  public async findManyScheduledEvent({ page, limit, startSession, endSession }: IPaginationInputs & DateFilters) {
-    const orFilters = [];
-
-    if (startSession)
-      orFilters.push({
-        startSession: {
-          gte: startSession.startDate,
-          lte: startSession.endDate,
-        },
-      });
-
-    if (endSession)
-      orFilters.push({
-        endSession: {
-          gte: endSession.startDate,
-          lte: endSession.endDate,
-        },
-      });
-
+  public async findManyScheduledEvent({ page, limit, startDate, endDate }: IPaginationInputs & DatesInput) {
     const whereFilter: Prisma.ScheduledEventWhereInput = {
-      OR: orFilters,
+      OR: [
+        {
+          startSession: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        {
+          endSession: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      ],
     };
 
     const result = await prisma.scheduledEvent.findMany({
