@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import dayjs from 'dayjs';
 import { procedure, router } from '../trpc';
 import { ScheduledEventService } from '@/svc/scheduledevent.service';
 
@@ -33,8 +32,8 @@ export const scheduledEventRouter = router({
     .query(({ input }) => {
       return ScheduledEventService.findManyScheduledEvent({
         ...input,
-        startDate: dayjs.utc(input.startDate).toISOString(),
-        endDate: dayjs.utc(input.endDate).toISOString(),
+        startDate: input.startDate,
+        endDate: input.endDate,
       });
     }),
 });

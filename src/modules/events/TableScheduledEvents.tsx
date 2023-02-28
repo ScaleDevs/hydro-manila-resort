@@ -32,8 +32,8 @@ export default function TableScheduledEvent() {
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [dateFilter, setDateFilter] = useState<SessionFilter>({
-    startDate: dayjs.utc().startOf('day').toISOString(),
-    endDate: dayjs.utc().endOf('month').toISOString(),
+    startDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).startOf('day').toISOString(),
+    endDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).endOf('month').toISOString(),
   });
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.scheduledevent.getManyScheduledEvent.useQuery({
