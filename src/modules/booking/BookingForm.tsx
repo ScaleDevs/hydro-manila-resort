@@ -10,7 +10,7 @@ import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
 import { PHpeso } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
-// import CalenderInput from '@/components/CalendarInput';
+import CalenderInput from '@/components/CalendarInput';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { NumberField } from '@/components/NumberField';
@@ -171,7 +171,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
           <Stack direction='row' w={{ base: '100%', lg: '90%' }} spacing='5'>
             <Box w={{ base: '100%', md: '50%' }} mx={{ base: 'auto', md: '0' }}>
               <Box display={{ base: 'block', md: 'none' }} mt='20px'>
-                {/* <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} /> */}
+                <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} />
               </Box>
 
               <Stack spacing='3' mt='20px'>
@@ -285,7 +285,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
             <Box display={{ base: 'none', md: 'block' }} w={{ base: '100%', md: '50%' }}>
               <Box>
-                {/* <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} /> */}
+                <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} />
               </Box>
 
               <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
