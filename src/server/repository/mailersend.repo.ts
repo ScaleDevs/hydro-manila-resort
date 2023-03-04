@@ -126,7 +126,7 @@ export const sendRefundEmailProcessing = async ({
     variables: {
       title_of_message: 'Booking Refund Request',
       greetings: 'Hi ' + customer_name + ',',
-      message_body: `Your request for a refund on your booking with reference #${ref_no} with the amount of ₱${amount} is now being process. Please give our team time to process your refund this will take 2-3 weeks of processing and atmost a month thank you.`,
+      message_body: `Your request for a refund on your booking with reference #${ref_no} with the amount of ₱${amount} is now being process. Please give our team time to process your refund this will take 3-4 weeks of processing thank you.`,
     },
     subject: 'Hydro Resort Manila Customer Refund Request',
   });
