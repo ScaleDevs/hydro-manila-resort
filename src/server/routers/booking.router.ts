@@ -7,6 +7,12 @@ export const bookingRouter = router({
     .input(
       z.object({
         ref_no: z.string().optional(),
+        dateFilter: z
+          .object({
+            startDate: z.string(),
+            endDate: z.string(),
+          })
+          .optional(),
         page: z.number().optional().default(1),
         limit: z.number().optional().default(10),
       }),

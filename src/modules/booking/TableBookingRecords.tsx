@@ -12,27 +12,34 @@ import {
   Box,
   ScaleFade,
   chakra,
-  HStack,
   useDisclosure,
+  Tag,
+  Text,
+  Stack,
 } from '@chakra-ui/react';
 import { BsFilterCircleFill } from 'react-icons/bs';
+import dayjs from 'dayjs';
 
 import { tableFormatTimeDisplay } from '../utils/helper';
 import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
-import ModalFilter from './ModalFilter';
-
+import ModalFilter, { SessionFilter } from './ModalFilter';
 const FilterIcon = chakra(BsFilterCircleFill);
 
 export default function TableBookingRecords() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [refNo, setRefNo] = useState<undefined | string>(undefined);
+  const [dateFilter, setDateFilter] = useState<undefined | SessionFilter>({
+    startDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).startOf('day').toISOString(),
+    endDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).endOf('month').toISOString(),
+  });
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.booking.getManyBooking.useQuery({
     page,
     limit: 5,
     ref_no: refNo,
+    dateFilter,
   });
 
   const handlePageChange = (pageNumber: number) => {
@@ -45,11 +52,24 @@ export default function TableBookingRecords() {
 
   return (
     <>
-      <ModalFilter isOpen={isOpen} onClose={onToggle} setRefNo={setRefNo} />
+      <ModalFilter {...{ isOpen, setRefNo, setDateFilter, onClose: onToggle }} />
 
-      <HStack justifyContent='space-between'>
+      <Stack spacing={5} direction={{ base: 'column', sm: 'row' }}>
         <FilterIcon h='40px' w='40px' color='primary.1' _hover={{ color: 'teal', cursor: 'pointer' }} onClick={onToggle} />
-      </HStack>
+        {dateFilter && (
+          <Stack direction={{ base: 'column', sm: 'row' }} alignItems='center'>
+            <Tag size='lg' colorScheme='gray' borderRadius='full'>
+              {dayjs(dateFilter?.startDate).format('MMM DD, YYYY hh:mm A')}
+            </Tag>
+            <Text fontWeight='bold' textAlign='center'>
+              -
+            </Text>
+            <Tag size='lg' colorScheme='gray' borderRadius='full'>
+              {dayjs(dateFilter?.endDate).format('MMM DD, YYYY hh:mm A')}
+            </Tag>
+          </Stack>
+        )}
+      </Stack>
 
       <br />
 

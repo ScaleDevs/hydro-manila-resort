@@ -4,6 +4,7 @@ import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 
 export type IFindManyBookingInput = {
   ref_no?: string;
+  dateFilter?: DatesInput;
 } & IPaginationInputs;
 
 export type IBookingDates = {
@@ -30,13 +31,30 @@ class Respository {
     return prisma.booking.findFirst({ where: { paymentIntentId } });
   }
 
-  public async findManyBooking({ page, limit, ref_no }: IFindManyBookingInput) {
+  public async findManyBooking({ page, limit, ref_no, dateFilter }: IFindManyBookingInput) {
     const whereFilter: Prisma.BookingWhereInput = {
       ref_no,
     };
 
+    if (dateFilter)
+      whereFilter['AND'] = [
+        {
+          startSession: {
+            gte: dateFilter.startDate,
+            lte: dateFilter.endDate,
+          },
+        },
+        {
+          endSession: {
+            gte: dateFilter.startDate,
+            lte: dateFilter.endDate,
+          },
+        },
+      ];
+
     const result = await prisma.booking.findMany({
       where: whereFilter,
+      orderBy: [{ startSession: 'asc' }],
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
