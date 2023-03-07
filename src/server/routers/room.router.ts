@@ -1,11 +1,11 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '../trpc';
 import { RoomService } from '@/server/services/room.service';
 import { IRoom } from '@/utils/types';
 
 export const roomRouter = router({
-  create: procedure
+  create: protectedProcedure
     .input(
       z.object({
         roomIdentityName: z.string(),
@@ -31,7 +31,7 @@ export const roomRouter = router({
 
       return RoomService.createRoom(data);
     }),
-  updateRoom: procedure
+  updateRoom: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -45,7 +45,7 @@ export const roomRouter = router({
     .mutation(({ input }) => {
       return RoomService.updateRoom(input.id, input.partialData);
     }),
-  createNewRoomVersion: procedure
+  createNewRoomVersion: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -73,7 +73,7 @@ export const roomRouter = router({
         details: [...currentRoom.details, newRoometails],
       });
     }),
-  deleteRoom: procedure.input(z.string()).mutation(({ input }) => {
+  deleteRoom: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return RoomService.deleteRoom(input);
   }),
   getRoomById: procedure.input(z.string()).query(({ input }) => {

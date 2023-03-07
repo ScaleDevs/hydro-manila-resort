@@ -1,11 +1,11 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { procedure, router } from '../trpc';
+import { procedure, protectedProcedure, router } from '../trpc';
 import { ProductService } from '@/svc/product.service';
 import { IProduct } from '@/utils/types';
 
 export const productRouter = router({
-  create: procedure
+  create: protectedProcedure
     .input(
       z.object({
         name: z.string(),
@@ -53,7 +53,7 @@ export const productRouter = router({
 
       return ProductService.createProduct(productData);
     }),
-  updateProduct: procedure
+  updateProduct: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -66,7 +66,7 @@ export const productRouter = router({
     .mutation(({ input }) => {
       return ProductService.updateProduct(input.id, input.partialData);
     }),
-  createNewProductVersion: procedure
+  createNewProductVersion: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -123,7 +123,7 @@ export const productRouter = router({
         details: [...currentProduct.details, newProductDetails],
       });
     }),
-  deleteProduct: procedure.input(z.string()).mutation(({ input }) => {
+  deleteProduct: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return ProductService.deleteProduct(input);
   }),
   getProductById: procedure.input(z.string()).query(({ input }) => {

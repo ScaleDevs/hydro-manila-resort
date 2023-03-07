@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
 
 export const bookingRouter = router({
-  getManyBooking: procedure
+  getManyBooking: protectedProcedure
     .input(
       z.object({
         ref_no: z.string().optional(),
@@ -20,11 +20,14 @@ export const bookingRouter = router({
     .query(({ input }) => {
       return BookingService.findManyBooking(input);
     }),
-  getBookingById: procedure.input(z.string()).query(({ input }) => {
+  getBookingById: protectedProcedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingById(input);
   }),
-  getBookingByRefNo: procedure.input(z.string()).query(({ input }) => {
+  getBookingByRefNo: protectedProcedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingByReferenceNo(input);
+  }),
+  deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
+    return BookingService.deleteBooking(input);
   }),
   getAllBookingsByDates: procedure
     .input(
@@ -36,7 +39,4 @@ export const bookingRouter = router({
     .query(({ input }) => {
       return BookingService.findAllBookingsByDates(input);
     }),
-  deleteBooking: procedure.input(z.string()).mutation(({ input }) => {
-    return BookingService.deleteBooking(input);
-  }),
 });

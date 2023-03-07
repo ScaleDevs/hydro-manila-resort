@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingSettingService } from '@/svc/bookingsetting.service';
 
 export const bookingSettingRouter = router({
-  upsertBookingSetting: procedure
+  upsertBookingSetting: protectedProcedure
     .input(
       z.object({
         bookingFee: z.number(),

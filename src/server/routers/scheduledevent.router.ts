@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { procedure, router } from '../trpc';
+import { protectedProcedure, router } from '../trpc';
 import { ScheduledEventService } from '@/svc/scheduledevent.service';
 
 export const scheduledEventRouter = router({
-  createScheduledEvent: procedure
+  createScheduledEvent: protectedProcedure
     .input(
       z.object({
         startSession: z.string(),
@@ -14,13 +14,13 @@ export const scheduledEventRouter = router({
     .mutation(async ({ input }) => {
       return ScheduledEventService.createScheduledEvent(input);
     }),
-  deleteScheduledEvent: procedure.input(z.string()).mutation(async ({ input }) => {
+  deleteScheduledEvent: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
     return ScheduledEventService.deleteScheduledEvent(input);
   }),
-  getScheduledEventById: procedure.input(z.string()).query(({ input }) => {
+  getScheduledEventById: protectedProcedure.input(z.string()).query(({ input }) => {
     return ScheduledEventService.findScheduledEventById(input);
   }),
-  getManyScheduledEvent: procedure
+  getManyScheduledEvent: protectedProcedure
     .input(
       z.object({
         page: z.number(),
