@@ -15,8 +15,12 @@ const RightArrowIcon = chakra(BsChevronRight);
 const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: IBookingDates }, product?: IProduct) => {
   const dayjsInstance = dayjs().add(month, 'M');
   const key1 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`;
-  const key2 = `${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay + 1}` : currentDay + 1}`;
+  const key2 = dayjs(`${dayjsInstance.format('YYYY-MM')}-${currentDay < 10 ? `0${currentDay}` : currentDay}`)
+    .add(1, 'd')
+    .format('YYYY-MM-DD');
+
   const isDateBeforeToday = dayjs(key1).unix() < dayjs().unix();
+
   if (product) {
     const productDetails = product.details[product.activeVersion - 1];
     const startDate = dayjs
@@ -32,6 +36,7 @@ const isDateBlocked = (currentDay: number, month: number, data?: { bookedDates: 
       )
       .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'd')
       .unix();
+
     if (!isDateBeforeToday && data && (data.bookedDates[key1] || data.bookedDates[key2])) {
       if (data.bookedDates[key1])
         for (const check of data.bookedDates[key1]) {
