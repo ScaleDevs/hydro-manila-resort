@@ -20,10 +20,10 @@ export const bookingRouter = router({
     .query(({ input }) => {
       return BookingService.findManyBooking(input);
     }),
-  getBookingById: procedure.input(z.string()).query(({ input }) => {
+  getBookingById: protectedProcedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingById(input);
   }),
-  getBookingByRefNo: procedure.input(z.string()).query(({ input }) => {
+  getBookingByRefNo: protectedProcedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingByReferenceNo(input);
   }),
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
