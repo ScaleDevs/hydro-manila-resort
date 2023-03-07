@@ -27,6 +27,7 @@ import { BookingRepository } from '@/server/repository/booking.repo';
 import { BookingSettingRepository } from '@/server/repository/bookingsetting.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
+import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { PHpeso } from '../util';
 
 const bookingDataSchema = z.object({
@@ -242,6 +243,7 @@ class Service {
     const product = await ProductService.findProductById(parsed.data.productId);
     const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
     const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
+    const chosenRoom = room.records.find((v) => v.roomId === parsed.data.roomId);
     const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
     const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
 
@@ -254,6 +256,19 @@ class Service {
 
     const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
     const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
+
+    await GoogleCalendarRepository.createEvent({
+      summary: `${product?.name ?? ''} (${parsed.data.name})`,
+      description: `${parsed.data.guests ?? 0} PAX / ${
+        chosenRoom?.roomIdentityName ?? !!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM'
+      }`,
+      start: {
+        dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+      },
+      end: {
+        dateTime: checkOutDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+      },
+    });
 
     await sendBookingSuccessEmail({
       recipientEmail: parsed.data.email,
