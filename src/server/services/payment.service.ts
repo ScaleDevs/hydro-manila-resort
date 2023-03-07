@@ -244,6 +244,7 @@ class Service {
     const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
     const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
     const chosenRoom = room.records.find((v) => v.roomId === parsed.data.roomId);
+    const bothRooms = room.records.find((v) => v.roomIdentityName === 'ROOM 1 & 2');
     const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
     const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
 
@@ -253,6 +254,7 @@ class Service {
 
     const isRoom2 = () => parsed.data.roomId === room2?.roomId;
     const isRoom1 = () => parsed.data.roomId === room1?.roomId;
+    const isBothRooms = () => parsed.data.roomId === bothRooms?.roomId;
 
     const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
     const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
@@ -286,11 +288,11 @@ class Service {
       extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
       extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
       room2_rate: room2Details ? PHpeso.format(room2Details.price) : 'N/A',
-      room2_qty: isRoom2() ? 1 : 0,
-      room2_total: PHpeso.format(isRoom2() ? parsed.data.receipt.roomPrice : 0),
+      room2_qty: isRoom2() || isBothRooms() ? 1 : 0,
+      room2_total: PHpeso.format(room2Details && (isRoom2() || isBothRooms()) ? room2Details.price : 0),
       room1_rate: room1Details ? PHpeso.format(room1Details.price) : 'N/A',
-      room1_qty: isRoom1() ? 1 : 0,
-      room1_total: PHpeso.format(isRoom1() ? parsed.data.receipt.roomPrice : 0),
+      room1_qty: isRoom1() || isBothRooms() ? 1 : 0,
+      room1_total: PHpeso.format(room1Details && (isRoom1() || isBothRooms()) ? room1Details.price : 0),
       addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
       type_payment: paymentType,
       total_payment: PHpeso.format(parsed.data.receipt.total),
