@@ -17,6 +17,8 @@ import {
   HStack,
   Text,
   useDisclosure,
+  Stack,
+  Tag,
 } from '@chakra-ui/react';
 import { BsFillTrashFill, BsFilterCircleFill } from 'react-icons/bs';
 import dayjs from 'dayjs';
@@ -76,22 +78,29 @@ export default function TableScheduledEvent() {
   return (
     <>
       <ModalFilter onClose={onToggle} {...{ isOpen, setDateFilter }} />
-      <HStack justifyContent='space-between'>
+      <Stack justifyContent='space-between' direction={{ base: 'column', sm: 'row' }}>
         <HStack>
           <Link href='/admin/events/create'>
             <Button borderRadius='full' h='50px' w='50px' fontSize='25px' fontWeight='normal'>
               +
             </Button>
           </Link>
-          <Text fontWeight='semibold' fontSize='18px'>
-            Scheduled Event
-          </Text>
+          <FilterIcon h='50px' w='50px' color='primary.1' _hover={{ color: 'teal', cursor: 'pointer' }} onClick={onToggle} />
         </HStack>
-
-        <HStack>
-          <FilterIcon h='40px' w='40px' color='primary.1' _hover={{ color: 'teal', cursor: 'pointer' }} onClick={onToggle} />
-        </HStack>
-      </HStack>
+        {dateFilter && (
+          <Stack direction={{ base: 'column', sm: 'row' }} alignItems='center'>
+            <Tag size='lg' colorScheme='gray' borderRadius='full'>
+              {dayjs(dateFilter?.startDate).format('MMM DD, YYYY hh:mm A')}
+            </Tag>
+            <Text fontWeight='bold' textAlign='center'>
+              -
+            </Text>
+            <Tag size='lg' colorScheme='gray' borderRadius='full'>
+              {dayjs(dateFilter?.endDate).format('MMM DD, YYYY hh:mm A')}
+            </Tag>
+          </Stack>
+        )}
+      </Stack>
 
       <br />
 

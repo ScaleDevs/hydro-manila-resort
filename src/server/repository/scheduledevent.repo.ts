@@ -31,7 +31,7 @@ class Respository {
 
     const result = await prisma.scheduledEvent.findMany({
       where: whereFilter,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
