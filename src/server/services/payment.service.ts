@@ -143,6 +143,8 @@ class Service {
             amount: bookingRecord.receipt.total,
           });
 
+          if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
+
           return {
             status: 'MANUAL_PROCESSING',
           };
@@ -153,6 +155,8 @@ class Service {
             status: 'FAILED',
           };
       }
+
+      if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
 
       return {
         status: 'AUTOMATIC_PROCESSING',
@@ -217,29 +221,6 @@ class Service {
       return;
     }
 
-    const bookingRecord = await BookingService.createBooking({
-      ...parsed.data,
-      paymentIntentId: paymentIntentRecord.id,
-      paymentId: paymentIntentRecord.attributes.payments[0].id || '',
-      startSession: parsed.data.startSession,
-      endSession: parsed.data.endSession,
-    });
-
-    const ref_no_holder = bookingRecord.ref_no || v4();
-
-    if (!bookingRecord) {
-      // notify hydro support if booking record was not added (so they can add manually on their end)
-      await notifyAdminDbInsertionError({
-        customer_name: parsed.data.name,
-        payment_id: paymentIntentRecord.attributes.payments[0].id,
-        ref_no: ref_no_holder,
-        startSession: dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A'),
-        endSession: dayjs(parsed.data.endSession).format('MMM DD, YYYY hh:mm:ss A'),
-      });
-    }
-
-    console.log('SUCCESSFULLY ADDED BOOKING');
-
     const product = await ProductService.findProductById(parsed.data.productId);
     const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
     const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
@@ -259,10 +240,10 @@ class Service {
     const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
     const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
 
-    await GoogleCalendarRepository.createEvent({
+    const calendarEventId = await GoogleCalendarRepository.createEvent({
       summary: `${product?.name ?? ''} (${parsed.data.name})`,
       description: `${parsed.data.guests ?? 0} PAX / ${
-        chosenRoom?.roomIdentityName ?? !!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM'
+        chosenRoom?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
       }`,
       start: {
         dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
@@ -271,6 +252,30 @@ class Service {
         dateTime: checkOutDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
       },
     });
+
+    const bookingRecord = await BookingService.createBooking({
+      ...parsed.data,
+      paymentIntentId: paymentIntentRecord.id,
+      paymentId: paymentIntentRecord.attributes.payments[0].id || '',
+      startSession: parsed.data.startSession,
+      endSession: parsed.data.endSession,
+      calendarEventId,
+    });
+
+    const ref_no_holder = bookingRecord.ref_no || v4();
+
+    if (!bookingRecord) {
+      // notify hydro support if booking record was not added (so they can add manually on their end)
+      await notifyAdminDbInsertionError({
+        customer_name: parsed.data.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+        ref_no: ref_no_holder,
+        startSession: dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A'),
+        endSession: dayjs(parsed.data.endSession).format('MMM DD, YYYY hh:mm:ss A'),
+      });
+    }
+
+    console.log('SUCCESSFULLY ADDED BOOKING');
 
     await sendBookingSuccessEmail({
       recipientEmail: parsed.data.email,
