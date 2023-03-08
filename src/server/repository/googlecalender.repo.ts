@@ -39,6 +39,24 @@ class Respository {
       return false;
     }
   }
+
+  public async deleteEvent(eventId: string) {
+    try {
+      const authClient = await auth.getClient();
+      google.options({ auth: authClient });
+
+      const response = await calendar.events.delete({
+        calendarId: constants.googleCalendar.calendarId,
+        eventId,
+      });
+
+      if (response.status === 200) return true;
+      return false;
+    } catch (err) {
+      console.log(`Error at inserEvent ---> ${err}`);
+      return false;
+    }
+  }
 }
 
 export const GoogleCalendarRepository = new Respository();
