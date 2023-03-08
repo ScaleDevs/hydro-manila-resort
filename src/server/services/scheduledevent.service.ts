@@ -6,7 +6,7 @@ import { GoogleCalendarRepository } from '@/server/repository/googlecalender.rep
 import { constants } from '../constants';
 
 class Service {
-  public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
+  public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId'>) {
     try {
       const isSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
         startDate: data.startSession,
@@ -19,7 +19,7 @@ class Service {
           message: 'Record already exist :: Conflict Schedule',
         });
 
-      await GoogleCalendarRepository.createEvent({
+      const calendarEventId = await GoogleCalendarRepository.createEvent({
         summary: data.description,
         description: data.description,
         start: {
@@ -30,7 +30,10 @@ class Service {
         },
       });
 
-      return ScheduledEventRepository.createScheduledEvent(data);
+      return ScheduledEventRepository.createScheduledEvent({
+        ...data,
+        calendarEventId,
+      });
     } catch (err: any) {
       console.log(err);
       if (err.message === 'Record already exist :: Conflict Schedule')
@@ -58,9 +61,11 @@ class Service {
     }
   }
 
-  public async deleteScheduledEvent(scheduledEventId: string) {
+  public async deleteScheduledEvent(scheduledEventId: string, calendarEventId: string | null) {
     try {
-      return ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
+      const result = await ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
+      if (calendarEventId) await GoogleCalendarRepository.deleteEvent(calendarEventId);
+      return result;
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }

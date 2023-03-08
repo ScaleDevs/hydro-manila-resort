@@ -32,11 +32,11 @@ class Respository {
         },
       });
 
-      if (response.status === 200) return true;
-      return false;
+      if (response.status === 200 && response.data.id) return response.data.id;
+      return null;
     } catch (err) {
       console.log(`Error at inserEvent ---> ${err}`);
-      return false;
+      return null;
     }
   }
 

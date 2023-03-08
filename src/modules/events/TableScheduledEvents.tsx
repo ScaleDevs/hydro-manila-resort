@@ -47,28 +47,36 @@ export default function TableScheduledEvent() {
   const { mutate } = trpc.scheduledevent.deleteScheduledEvent.useMutation();
   const utils = trpc.useContext();
 
-  const deleteScheduledEvent = (id: string) => {
-    mutate(id, {
-      onSuccess() {
-        utils.scheduledevent.getManyScheduledEvent.setData(
-          { page, limit: 5, startDate: dateFilter.startDate, endDate: dateFilter.endDate },
-          (rec: any) => {
-            const newRecords = rec?.records.filter((value: { scheduledEventId: string }) => value.scheduledEventId !== id);
-            return {
-              pageCount: rec?.pageCount,
-              records: newRecords,
-            };
-          },
-        );
-
-        toast({
-          title: 'scheduled event deleted.',
-          status: 'error',
-          duration: 9000,
-          isClosable: true,
-        });
+  const deleteScheduledEvent = (scheduleEventId: string, calendarEventId: string | null) => {
+    mutate(
+      {
+        scheduleEventId,
+        calendarEventId,
       },
-    });
+      {
+        onSuccess() {
+          utils.scheduledevent.getManyScheduledEvent.setData(
+            { page, limit: 5, startDate: dateFilter.startDate, endDate: dateFilter.endDate },
+            (rec: any) => {
+              const newRecords = rec?.records.filter(
+                (value: { scheduledEventId: string }) => value.scheduledEventId !== scheduleEventId,
+              );
+              return {
+                pageCount: rec?.pageCount,
+                records: newRecords,
+              };
+            },
+          );
+
+          toast({
+            title: 'scheduled event deleted.',
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+          });
+        },
+      },
+    );
   };
 
   const handlePageChange = (pageNumber: number) => {
@@ -153,7 +161,7 @@ export default function TableScheduledEvent() {
                     <Td>{tableFormatTimeDisplay(v.endSession)}</Td>
                     <Td>{v.description}</Td>
                     <Td>
-                      <Button borderRadius='sm' onClick={() => deleteScheduledEvent(v.scheduledEventId)}>
+                      <Button borderRadius='sm' onClick={() => deleteScheduledEvent(v.scheduledEventId, v.calendarEventId)}>
                         <BsFillTrashFill />
                       </Button>
                     </Td>

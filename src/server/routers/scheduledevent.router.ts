@@ -14,9 +14,16 @@ export const scheduledEventRouter = router({
     .mutation(async ({ input }) => {
       return ScheduledEventService.createScheduledEvent(input);
     }),
-  deleteScheduledEvent: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
-    return ScheduledEventService.deleteScheduledEvent(input);
-  }),
+  deleteScheduledEvent: protectedProcedure
+    .input(
+      z.object({
+        scheduleEventId: z.string(),
+        calendarEventId: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return ScheduledEventService.deleteScheduledEvent(input.scheduleEventId, input.calendarEventId);
+    }),
   getScheduledEventById: protectedProcedure.input(z.string()).query(({ input }) => {
     return ScheduledEventService.findScheduledEventById(input);
   }),
