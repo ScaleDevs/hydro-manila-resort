@@ -54,7 +54,7 @@ type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
 class Service {
   public async initiatePaymentSessionForBooking(
-    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no'>,
+    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId'>,
   ) {
     try {
       const isBookingDateTaken = await BookingRepository.checkIfScheduleTaken({
