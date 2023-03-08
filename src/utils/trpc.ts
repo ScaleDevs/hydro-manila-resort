@@ -2,7 +2,12 @@ import { createTRPCNext } from '@trpc/next';
 import { httpBatchLink } from '@trpc/client';
 import { AppRouter } from '@/server/routers/_app';
 import { loggerLink } from '@trpc/client/links/loggerLink';
-import { useAuthStore } from '@/store/auth.store';
+
+let token: string;
+
+export function setToken(newToken: string) {
+  token = newToken;
+}
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')
@@ -31,15 +36,16 @@ export const trpc = createTRPCNext<AppRouter>({
          * @link https://trpc.io/docs/ssr
          **/
         url: `${getBaseUrl()}/api/trpc`,
+
+        headers() {
+          return {
+            Authorization: 'Bearer ' + token,
+          };
+        },
       }),
     );
 
     return {
-      headers() {
-        return {
-          Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        };
-      },
       links,
       queryClientConfig: {
         defaultOptions: {

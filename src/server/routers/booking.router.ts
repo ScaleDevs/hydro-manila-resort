@@ -3,7 +3,7 @@ import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
 
 export const bookingRouter = router({
-  getManyBooking: procedure
+  getManyBooking: protectedProcedure
     .input(
       z.object({
         ref_no: z.string().optional(),

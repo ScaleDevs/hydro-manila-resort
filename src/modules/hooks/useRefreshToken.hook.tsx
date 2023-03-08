@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import useAuthStoreTrack from '@/store/auth.store';
 import { InitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
-import { trpc } from '@/utils/trpc';
+import { setToken, trpc } from '@/utils/trpc';
 import { publicRoutes } from '@/modules/utils/helper';
 import { useSyncTabs } from './useSyncTabs';
 
@@ -31,6 +31,8 @@ export default function useRefreshToken() {
   });
 
   const updateAuthStates = (data: InitiateAuthCommandOutput & { expiresAt: number }) => {
+    if (!data.AuthenticationResult?.AccessToken) return;
+    setToken(data.AuthenticationResult.AccessToken);
     setAuthState('accessToken', data?.AuthenticationResult?.AccessToken);
     setAuthState('idToken', data?.AuthenticationResult?.IdToken);
     setAuthState('expiresIn', data?.AuthenticationResult?.ExpiresIn);

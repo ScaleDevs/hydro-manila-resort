@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { ChallengeNameType } from '@aws-sdk/client-cognito-identity-provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import useAuthStoreTrack from '@/store/auth.store';
-import { trpc } from '@/utils/trpc';
+import { setToken, trpc } from '@/utils/trpc';
 import { useSyncTabs } from './useSyncTabs';
 
 const schema = z.object({
@@ -29,6 +29,8 @@ export default function useLogin() {
   });
 
   const updateAuthStates = (data: { AccessToken?: string; IdToken?: string; ExpiresIn?: number; expiresAt?: number }) => {
+    if (!data.AccessToken) return;
+    setToken(data.AccessToken);
     setAuthState('accessToken', data.AccessToken);
     setAuthState('idToken', data.IdToken);
     setAuthState('expiresIn', data.ExpiresIn);
