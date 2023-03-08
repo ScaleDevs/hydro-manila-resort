@@ -1,6 +1,9 @@
 import { TRPCError } from '@trpc/server';
+import dayjs from 'dayjs';
 import { DatesInput, IPaginationInputs, IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
+import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
+import { constants } from '../constants';
 
 class Service {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
@@ -15,6 +18,17 @@ class Service {
           code: 'BAD_REQUEST',
           message: 'Record already exist :: Conflict Schedule',
         });
+
+      await GoogleCalendarRepository.createEvent({
+        summary: data.description,
+        description: data.description,
+        start: {
+          dateTime: dayjs.utc(data.startSession).tz(constants.general.timezone).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        },
+        end: {
+          dateTime: dayjs.utc(data.endSession).tz(constants.general.timezone).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        },
+      });
 
       return ScheduledEventRepository.createScheduledEvent(data);
     } catch (err: any) {
