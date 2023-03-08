@@ -53,7 +53,7 @@ class Respository {
       if (response.status === 200) return true;
       return false;
     } catch (err) {
-      console.log(`Error at inserEvent ---> ${err}`);
+      console.log(`Error at deleteEvent ---> ${err}`);
       return false;
     }
   }
