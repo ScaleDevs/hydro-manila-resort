@@ -1,3 +1,8 @@
+const GC_PRIVATE_KEY = {
+  development: process.env.GC_PRIVATE_KEY ?? '',
+  production: !!process.env.GC_PRIVATE_KEY ? process.env.GC_PRIVATE_KEY.split(String.raw`\n`).join('\n') : '',
+};
+
 export const constants = {
   UserPoolId: process.env.COGNITO_USER_POOL_ID,
   Region: process.env.AWS_CONFIG_CLIENT_REGION,
@@ -22,7 +27,7 @@ export const constants = {
   },
 
   googleCalendar: {
-    privateKey: process.env.GC_PRIVATE_KEY ?? '',
+    privateKey: GC_PRIVATE_KEY[process.env.NODE_ENV as keyof typeof GC_PRIVATE_KEY],
     clientEmail: process.env.GC_CLIENT_EMAIL ?? '',
     calendarId: process.env.GC_CALENDAR_ID ?? '',
   },
