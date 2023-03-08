@@ -31,7 +31,7 @@ class Respository {
 
     const result = await prisma.scheduledEvent.findMany({
       where: whereFilter,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { startSession: 'asc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
@@ -96,6 +96,13 @@ class Respository {
     });
 
     return totalCount > 0;
+  }
+
+  public async updateScheduledEvent(id: string, partialData: Partial<IScheduledEvent>) {
+    return prisma.scheduledEvent.update({
+      where: { scheduledEventId: id },
+      data: partialData,
+    });
   }
 
   public async deleteScheduledEvent(scheduledEventId: string) {
