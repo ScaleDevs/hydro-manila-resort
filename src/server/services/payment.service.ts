@@ -237,8 +237,8 @@ class Service {
     const isRoom1 = () => parsed.data.roomId === room1?.roomId;
     const isBothRooms = () => parsed.data.roomId === bothRooms?.roomId;
 
-    const bookedDate = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
-    const checkOutDate = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
+    const bookedDate = dayjs.utc(parsed.data.startSession);
+    const checkOutDate = dayjs.utc(parsed.data.endSession);
 
     const calendarEventId = await GoogleCalendarRepository.createEvent({
       summary: `${product?.name ?? ''} (${parsed.data.name})`,
@@ -247,9 +247,11 @@ class Service {
       }`,
       start: {
         dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        timeZone: constants.general.timezone,
       },
       end: {
         dateTime: checkOutDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        timeZone: constants.general.timezone,
       },
     });
 
@@ -285,8 +287,8 @@ class Service {
       number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
       number_of_guest: parsed.data.guests,
       room_type: !!productDetails?.withRooms ? 'ALL ROOMS' : '-',
-      checkin_datetime: bookedDate.format('MMM DD, YYYY / hh:mm A'),
-      checkout_datetime: checkOutDate.format('MMM DD, YYYY / hh:mm A'),
+      checkin_datetime: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+      checkout_datetime: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
       booking_type_rate: 'BEST AVAILABLE RATE',
       product_price: PHpeso.format(parsed.data.receipt.productPrice),
       extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',

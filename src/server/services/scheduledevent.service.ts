@@ -23,10 +23,12 @@ class Service {
         summary: data.description,
         description: data.description,
         start: {
-          dateTime: dayjs.utc(data.startSession).tz(constants.general.timezone).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          dateTime: dayjs.utc(data.startSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          timeZone: constants.general.timezone,
         },
         end: {
-          dateTime: dayjs.utc(data.endSession).tz(constants.general.timezone).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          dateTime: dayjs.utc(data.endSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          timeZone: constants.general.timezone,
         },
       });
 
