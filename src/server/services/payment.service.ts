@@ -241,8 +241,8 @@ class Service {
     const checkOutDate = dayjs.utc(parsed.data.endSession);
 
     const calendarEventId = await GoogleCalendarRepository.createEvent({
-      summary: `${product?.name ?? ''} (${parsed.data.name})`,
-      description: `${parsed.data.guests ?? 0} PAX / ${
+      summary: parsed.data.name,
+      description: `${product?.name} / ${parsed.data.guests ?? 0} PAX / ${
         chosenRoom?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
       }`,
       start: {
