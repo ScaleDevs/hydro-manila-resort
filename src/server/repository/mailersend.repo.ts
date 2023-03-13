@@ -91,17 +91,16 @@ type SendRefundEmailSuccessInput = {
   recipientEmail: string;
   customer_name: string;
   ref_no: string;
-  amount: number;
 };
 
-export const sendRefundEmailSuccess = async ({ recipientEmail, customer_name, ref_no, amount }: SendRefundEmailSuccessInput) => {
+export const sendRefundEmailSuccess = async ({ recipientEmail, customer_name, ref_no }: SendRefundEmailSuccessInput) => {
   await sendTemplateEmail({
     templateId: constants.mailerSend.reusableTempId,
     recipientEmail,
     variables: {
       title_of_message: 'Booking Refund Confirmation',
       greetings: 'Hi ' + customer_name + ',',
-      message_body: `We received your request for a refund. Your booking of reference #${ref_no} with the amount of ₱${amount} has been successfuly refunded. You should have the refund reflected in your account within the day for eWallets, and within 30 days`,
+      message_body: `We received your request for a refund. Your booking of reference #${ref_no} has been successfuly refunded. You should have the refund reflected in your account within the day for eWallets, and within 30 days`,
     },
     subject: 'Hydro Resort Manila Customer Refund Confirmation',
   });
@@ -126,7 +125,7 @@ export const sendRefundEmailProcessing = async ({
     variables: {
       title_of_message: 'Booking Refund Request',
       greetings: 'Hi ' + customer_name + ',',
-      message_body: `Your request for a refund on your booking with reference #${ref_no} with the amount of ₱${amount} is now being process. Please give our team time to process your refund this will take 3-4 weeks of processing thank you.`,
+      message_body: `Your request for a refund on your booking with reference #${ref_no} is now being process. Please give our team time to process your refund this will take 3-4 weeks of processing thank you.`,
     },
     subject: 'Hydro Resort Manila Customer Refund Request',
   });
@@ -147,14 +146,12 @@ type SendRefundEmailConflictBookingInput = {
   recipientEmail: string;
   customer_name: string;
   payment_id: string;
-  amount: number;
 };
 
 export const sendRefundEmailConflictBooking = async ({
   recipientEmail,
   customer_name,
   payment_id,
-  amount,
 }: SendRefundEmailConflictBookingInput) => {
   await sendTemplateEmail({
     templateId: constants.mailerSend.reusableTempId,
@@ -173,7 +170,7 @@ export const sendRefundEmailConflictBooking = async ({
     variables: {
       title_of_message: 'Booking Failed due to conflict of schedules',
       greetings: 'Hi ' + customer_name + ',',
-      message_body: `Your booking request has failed due to another booking and we have already notified our team to process the refund or contact you if you want to reschedule your booking. For the processing of your refund with the amount of ₱${amount}, this may take 2-3 weeks and atmost a month. Kindly Take Note of your payment ID of "${payment_id}". Kindly reach our team with the contact details below if you have questions`,
+      message_body: `Your booking request has failed due to another booking and we have already notified our team to process the refund or contact you if you want to reschedule your booking. For the processing of your refund, this may take 3-4 weeks. Kindly Take Note of your payment ID of "${payment_id}". Kindly reach our team with the contact details below if you have questions`,
     },
     subject: 'Hydro Resort Manila Customer Booking Failed',
   });

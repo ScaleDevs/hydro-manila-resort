@@ -215,7 +215,6 @@ class Service {
       await sendRefundEmailConflictBooking({
         recipientEmail: parsed.data.email,
         customer_name: parsed.data.name,
-        amount: parsed.data.receipt.total,
         payment_id: paymentIntentRecord.attributes.payments[0].id,
       });
       return;
@@ -345,7 +344,6 @@ class Service {
           recipientEmail: bookingRecord.email,
           customer_name: bookingRecord.name,
           ref_no: bookingRecord.ref_no,
-          amount: bookingRecord.receipt.total,
         });
 
         console.log('EMAIL SUCCESSFULLY SENT');
@@ -367,7 +365,6 @@ class Service {
         recipientEmail: bookingRecord.email,
         customer_name: bookingRecord.name,
         ref_no: bookingRecord.ref_no,
-        amount: bookingRecord.receipt.total,
       });
 
       console.log('EMAIL SUCCESSFULLY SENT');
