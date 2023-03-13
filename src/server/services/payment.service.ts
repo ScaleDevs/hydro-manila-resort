@@ -278,31 +278,36 @@ class Service {
 
     console.log('SUCCESSFULLY ADDED BOOKING');
 
-    await sendBookingSuccessEmail({
-      recipientEmail: parsed.data.email,
-      guest_name: parsed.data.name,
-      reference_number: ref_no_holder,
-      booking_type: product?.name || '',
-      number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
-      number_of_guest: parsed.data.guests,
-      room_type: !!productDetails?.withRooms ? 'ALL ROOMS' : '-',
-      checkin_datetime: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
-      checkout_datetime: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
-      booking_type_rate: 'BEST AVAILABLE RATE',
-      product_price: PHpeso.format(parsed.data.receipt.productPrice),
-      extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',
-      extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
-      extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
-      room2_rate: room2Details ? PHpeso.format(room2Details.price) : 'N/A',
-      room2_qty: isRoom2() || isBothRooms() ? 1 : 0,
-      room2_total: PHpeso.format(room2Details && (isRoom2() || isBothRooms()) ? room2Details.price : 0),
-      room1_rate: room1Details ? PHpeso.format(room1Details.price) : 'N/A',
-      room1_qty: isRoom1() || isBothRooms() ? 1 : 0,
-      room1_total: PHpeso.format(room1Details && (isRoom1() || isBothRooms()) ? room1Details.price : 0),
-      addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
-      type_payment: paymentType,
-      total_payment: PHpeso.format(parsed.data.receipt.total),
-    });
+    const sendSuccessEmail = async (email: string) => {
+      await sendBookingSuccessEmail({
+        recipientEmail: email,
+        guest_name: parsed.data.name,
+        reference_number: ref_no_holder,
+        booking_type: product?.name || '',
+        number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
+        number_of_guest: parsed.data.guests,
+        room_type: !!productDetails?.withRooms ? 'ALL ROOMS' : '-',
+        checkin_datetime: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+        checkout_datetime: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+        booking_type_rate: 'BEST AVAILABLE RATE',
+        product_price: PHpeso.format(parsed.data.receipt.productPrice),
+        extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',
+        extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
+        extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
+        room2_rate: room2Details ? PHpeso.format(room2Details.price) : 'N/A',
+        room2_qty: isRoom2() || isBothRooms() ? 1 : 0,
+        room2_total: PHpeso.format(room2Details && (isRoom2() || isBothRooms()) ? room2Details.price : 0),
+        room1_rate: room1Details ? PHpeso.format(room1Details.price) : 'N/A',
+        room1_qty: isRoom1() || isBothRooms() ? 1 : 0,
+        room1_total: PHpeso.format(room1Details && (isRoom1() || isBothRooms()) ? room1Details.price : 0),
+        addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
+        type_payment: paymentType,
+        total_payment: PHpeso.format(parsed.data.receipt.total),
+      });
+    };
+
+    await sendSuccessEmail(parsed.data.email);
+    await sendSuccessEmail(constants.mailerSend.supportEmail);
 
     console.log('EMAIL SUCCESSFULLY SENT');
   }
