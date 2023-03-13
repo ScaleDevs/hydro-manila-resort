@@ -109,3 +109,12 @@ model ScheduledEvent {
   calendarEventId  String?
   createdAt        DateTime @default(now())
 }
+
+model BookingAttempt {
+  bookingAttemptId String   @id @default(auto()) @map("_id") @db.ObjectId
+  startSession     DateTime
+  endSession       DateTime
+  ref_no           String   @unique
+  createdAt        DateTime @default(now())
+  expireAt         DateTime
+}
