@@ -68,3 +68,4 @@ Prereq:
 2. you just need to make sure the env vars are all correct and again refer to the notion or contact scaledevs@gmail.com
 3. make sure you create or enable the paymongo webhook endpoint for this https://{www.hydroresortmnl.com or whatever the domain used is now}/api/paymongo_webhook
 4. every push to the github repo of this project will trigger the ci/cd of this project by vercel to deploy to vercel (deployed under account of ScaleDevs Team)
+5. make sure that BookingAttempt collection has a TTL index configured (this is manual)
