@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
-import { v4 } from 'uuid';
 
 import { IBooking } from '@/utils/types';
 import {
@@ -28,9 +27,11 @@ import { BookingSettingRepository } from '@/server/repository/bookingsetting.rep
 import { RoomRepository } from '@/server/repository/room.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
-import { PHpeso } from '../util';
+import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
+import { createReferenceNumber, PHpeso } from '../util';
 
 const bookingDataSchema = z.object({
+  ref_no: z.string(),
   name: z.string(),
   email: z.string().email(),
   phoneNumber: z.string(),
@@ -53,6 +54,16 @@ const bookingDataSchema = z.object({
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
 class Service {
+  private async createBookingReferenceNo(): Promise<string> {
+    const refNo = createReferenceNumber();
+    const isTaken1 = await BookingAttemptRepository.findBookingAttemptByRefNo(refNo);
+    const isTaken2 = await BookingRepository.findBookingByReferenceNo(refNo);
+
+    if (!!isTaken1 || !!isTaken2) return this.createBookingReferenceNo();
+
+    return refNo;
+  }
+
   public async initiatePaymentSessionForBooking(
     data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId'>,
   ) {
@@ -67,7 +78,21 @@ class Service {
         endDate: data.endSession,
       });
 
-      if (isBookingDateTaken || isEventSchedTaken) return { isSchedAvailable: false };
+      const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
+        startDate: data.startSession,
+        endDate: data.endSession,
+      });
+
+      if (isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken) return { isSchedAvailable: false };
+
+      const ref_no = await this.createBookingReferenceNo();
+
+      await BookingAttemptRepository.createBookingAttempt({
+        startSession: data.startSession,
+        endSession: data.endSession,
+        ref_no,
+        expireAt: dayjs().add(20, 'm').toDate(),
+      });
 
       return createPaymentIntent({
         // in cents formula peso * 100
@@ -82,7 +107,10 @@ class Service {
           },
         },
         metadata: {
-          bookingRecord: JSON.stringify(data),
+          bookingRecord: JSON.stringify({
+            ...data,
+            ref_no,
+          }),
         },
       });
     } catch (err) {
@@ -190,6 +218,7 @@ class Service {
 
     if (!parsed.success) {
       console.log('Invalid Booking Data!');
+      console.log(parsed.error.message);
       return;
     }
 
@@ -263,14 +292,12 @@ class Service {
       calendarEventId,
     });
 
-    const ref_no_holder = bookingRecord.ref_no || v4();
-
     if (!bookingRecord) {
       // notify hydro support if booking record was not added (so they can add manually on their end)
       await notifyAdminDbInsertionError({
         customer_name: parsed.data.name,
         payment_id: paymentIntentRecord.attributes.payments[0].id,
-        ref_no: ref_no_holder,
+        ref_no: parsed.data.ref_no,
         startSession: dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A'),
         endSession: dayjs(parsed.data.endSession).format('MMM DD, YYYY hh:mm:ss A'),
       });
@@ -282,7 +309,7 @@ class Service {
       await sendBookingSuccessEmail({
         recipientEmail: email,
         guest_name: parsed.data.name,
-        reference_number: ref_no_holder,
+        reference_number: parsed.data.ref_no,
         booking_type: product?.name || '',
         number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
         number_of_guest: parsed.data.guests,

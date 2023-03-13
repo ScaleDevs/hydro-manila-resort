@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { DatesInput, IPaginationInputs, IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
+import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { constants } from '../constants';
 
 class Service {
@@ -13,7 +14,12 @@ class Service {
         endDate: data.endSession,
       });
 
-      if (isSchedTaken)
+      const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
+        startDate: data.startSession,
+        endDate: data.endSession,
+      });
+
+      if (isSchedTaken || isBookingAttemptTaken)
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Record already exist :: Conflict Schedule',

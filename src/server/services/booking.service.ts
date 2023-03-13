@@ -1,18 +1,17 @@
-import { v4 } from 'uuid';
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { IBooking, IProduct, IRoom } from '@/utils/types';
 import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
-import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
-import { RoomRepository } from '../repository/room.repo';
+import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
+import { RoomRepository } from '@/server/repository/room.repo';
+import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 
 class Service {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt' | 'ref_no'>) {
+  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
     try {
       return BookingRepository.createBooking({
         ...data,
-        ref_no: v4(),
       });
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
@@ -71,21 +70,21 @@ class Service {
 
   public async findAllBookingsByDates(inputs: { startDate: string; endDate: string }) {
     try {
-      const bookingRecords = await BookingRepository.findAllBookingsByDates({
+      const getRecordsParams = {
         ...inputs,
         page: 1,
         limit: 1000,
-      });
+      };
 
-      const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates({
-        ...inputs,
-        page: 1,
-        limit: 1000,
-      });
+      const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
+
+      const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
+
+      const bookingAttemptRecords = await BookingAttemptRepository.findAllBookingAttemptsByDates(getRecordsParams);
 
       const bookedDates: IBookingDates = {};
 
-      for (const record of [...bookingRecords, ...eventsRecords]) {
+      for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
         const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
         const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
         const value = {
