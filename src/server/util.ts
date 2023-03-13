@@ -1,5 +1,6 @@
 import * as trpc from '@trpc/server';
 import genString from 'randomstring';
+import dayjs from 'dayjs';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { JwtExpiredError } from 'aws-jwt-verify/error';
 import { TRPCError } from '@trpc/server';
@@ -104,3 +105,17 @@ export const PHpeso = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'PHP',
 });
+
+export const createReferenceNumber = () => {
+  const randomString = (length: number) => {
+    return genString.generate({
+      length,
+      capitalization: 'uppercase',
+      charset: 'alphabetic',
+    });
+  };
+
+  const dayjsInstance = dayjs();
+
+  return dayjsInstance.format('MMMDD').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(7) + randomString(2);
+};
