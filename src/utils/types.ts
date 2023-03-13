@@ -1,4 +1,4 @@
-import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent } from '@prisma/client';
+import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent, BookingAttempt } from '@prisma/client';
 
 type DateSession = {
   startSession: string;
@@ -11,6 +11,7 @@ export type IBooking = Omit<Booking, 'startSession' | 'endSession'> & DateSessio
 export type IBookingSetting = BookingSetting;
 export type IBookingRefund = BookingRefund;
 export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & DateSession;
+export type IBookingAttempt = Omit<BookingAttempt, 'startSession' | 'endSession'> & DateSession;
 
 // inputs
 export type IPaginationInputs = {
@@ -27,7 +28,6 @@ export type DatesInput = {
 export type IPHGeo = [{ name: string; region: string; key: string }, { name: string; province: string; city?: boolean }[]][];
 
 // payment repo
-
 export type PaymentMethodTypes = 'gcash' | 'card' | 'dob' | 'paymaya' | 'billease';
 
 export type PaymongoWebhookEventType = 'source.chargeable' | 'payment.paid' | 'payment.failed' | 'payment.refunded';
