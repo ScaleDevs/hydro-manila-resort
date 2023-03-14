@@ -337,6 +337,12 @@ class Service {
     await sendSuccessEmail(constants.mailerSend.supportEmail);
 
     console.log('EMAIL SUCCESSFULLY SENT');
+
+    console.log('CLEANUP BOOKING ATTEMP RECORD');
+
+    await BookingAttemptRepository.deleteBookingAttemptWithRefNo(parsed.data.ref_no);
+
+    console.log('DONE');
   }
 
   public async handleRefundPaymentEvent(paymentIntentId: string, refundId: string) {

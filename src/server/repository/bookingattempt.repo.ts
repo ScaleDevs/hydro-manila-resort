@@ -65,8 +65,8 @@ class Respository {
     return records;
   }
 
-  public async deleteBookingAttempt(bookingAttemptId: string) {
-    return prisma.bookingAttempt.delete({ where: { bookingAttemptId } });
+  public async deleteBookingAttemptWithRefNo(ref_no: string) {
+    return prisma.bookingAttempt.delete({ where: { ref_no } });
   }
 }
 
