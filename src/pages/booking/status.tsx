@@ -1,15 +1,48 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Heading, VStack, Text, Image, Box, Button, Spinner, Stack } from '@chakra-ui/react';
+import {
+  Heading,
+  VStack,
+  Text,
+  Image,
+  Box,
+  Button,
+  Spinner,
+  Stack,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@chakra-ui/react';
+import dayjs from 'dayjs';
+
 import { trpc } from '@/utils/trpc';
+import { IBooking } from '@/utils/types';
 
 const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
+  const [booking, setBooking] = useState<IBooking | null>(null);
+  const [productId, setProductId] = useState('');
+
   const { data, isLoading } = trpc.payment.getPaymentIntentSession.useQuery({ paymentIntentId: payment_intent_id as string });
+  const { data: productData } = trpc.product.getProductById.useQuery(productId);
 
   const retryPayment = () => {
     if (data && data.attributes.next_action?.redirect?.url) window.location.href = data.attributes.next_action.redirect.url;
   };
+
+  useEffect(() => {
+    const result = data?.attributes as any;
+    if (result && result.metadata) {
+      const bookingData = JSON.parse(result.metadata.bookingRecord);
+      console.log(bookingData);
+      setBooking(bookingData);
+      setProductId(bookingData.productId);
+    }
+  }, [data]);
 
   return (
     <>
@@ -44,11 +77,45 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
           )}
 
           {data?.attributes.status === 'succeeded' && (
-            <Box bg='primary.1' p='20px' borderRadius='sm'>
-              <Heading color='white' as='h1'>
-                PAYMENT COMPLETE!
-              </Heading>
-            </Box>
+            <>
+              <TableContainer>
+                <Table size='sm' variant='simple' fontFamily='primary'>
+                  <Thead>
+                    <Tr>
+                      <Th textAlign='center' fontWeight='bold'>
+                        TYPE
+                      </Th>
+                      <Th textAlign='center' fontWeight='bold'>
+                        INFO
+                      </Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    <Tr>
+                      <Td fontWeight='semibold'>REFERENCE</Td>
+                      <Td>{booking?.ref_no}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td fontWeight='semibold'>NAME</Td>
+                      <Td>{booking?.name}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td fontWeight='semibold'>DATE</Td>
+                      <Td>{booking ? dayjs(booking.startSession).format('MMM DD, YYYY hh:mm A') : 'N/A'}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td fontWeight='semibold'>SCHEDULE</Td>
+                      <Td>{productData?.name || ''}</Td>
+                    </Tr>
+                  </Tbody>
+                </Table>
+              </TableContainer>
+              <Box bg='primary.1' p='20px' borderRadius='sm'>
+                <Heading color='white' as='h1'>
+                  PAYMENT COMPLETE!
+                </Heading>
+              </Box>
+            </>
           )}
           {data?.attributes.status === 'succeeded' && (
             <Box w='90%'>

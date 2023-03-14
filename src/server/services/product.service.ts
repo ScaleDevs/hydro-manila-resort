@@ -13,6 +13,7 @@ class Service {
 
   public async findProductById(id: string) {
     try {
+      if (id === '') return null;
       return ProductRepository.findProductById(id);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
