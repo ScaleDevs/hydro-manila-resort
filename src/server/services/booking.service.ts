@@ -6,6 +6,7 @@ import { ProductRepository } from '@/server/repository/product.repo';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
+import { BookingRefundRepository } from '../repository/bookingrefund.repo';
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
@@ -85,6 +86,11 @@ class Service {
       const bookedDates: IBookingDates = {};
 
       for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
+        if ('id' in record) {
+          const refundRecord = await BookingRefundRepository.findBookingRefundByBookingId(record.id);
+          if (!!refundRecord) continue;
+        }
+
         const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
         const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
         const value = {
