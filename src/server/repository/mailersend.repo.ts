@@ -104,6 +104,17 @@ export const sendRefundEmailSuccess = async ({ recipientEmail, customer_name, re
     },
     subject: 'Hydro Resort Manila Customer Refund Confirmation',
   });
+
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Booking Refund Processed (Automatic)',
+      greetings: 'Hi Hydro Support,',
+      message_body: `Customer ${customer_name} refunded his/her booking of reference #${ref_no} has been successfuly refunded.`,
+    },
+    subject: 'Hydro Resort Manila Customer Refund Confirmation',
+  });
 };
 
 type SendRefundEmailProcessingInput = {
