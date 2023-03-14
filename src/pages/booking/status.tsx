@@ -80,16 +80,6 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
             <>
               <TableContainer>
                 <Table size='sm' variant='simple' fontFamily='primary'>
-                  <Thead>
-                    <Tr>
-                      <Th textAlign='center' fontWeight='bold'>
-                        TYPE
-                      </Th>
-                      <Th textAlign='center' fontWeight='bold'>
-                        INFO
-                      </Th>
-                    </Tr>
-                  </Thead>
                   <Tbody>
                     <Tr>
                       <Td fontWeight='semibold'>REFERENCE</Td>
