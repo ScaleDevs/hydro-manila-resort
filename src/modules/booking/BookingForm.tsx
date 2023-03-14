@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
-import { PHpeso } from '@/modules/utils/helper';
+import { getISOFormatFromSchedule, PHpeso } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
 import CalenderInput from '@/components/CalendarInput';
 import { SelectField } from '@/components/SelectField';
@@ -91,13 +91,17 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       phoneNumber: data.phoneNumber,
       startSession: dayjs
         .tz(
-          dayjs(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`).format('YYYY-MM-DDTHH:mm'),
+          dayjs(
+            getISOFormatFromSchedule(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`),
+          ).format('YYYY-MM-DDTHH:mm'),
           process.env.NEXT_PUBLIC_TIMEZONE,
         )
         .toISOString(),
       endSession: dayjs
         .tz(
-          dayjs(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`).format('YYYY-MM-DDTHH:mm'),
+          dayjs(getISOFormatFromSchedule(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`)).format(
+            'YYYY-MM-DDTHH:mm',
+          ),
           process.env.NEXT_PUBLIC_TIMEZONE,
         )
         .toISOString(),
