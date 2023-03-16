@@ -10,14 +10,14 @@ class Respository {
     return prisma.bookingRefund.findFirst({ where: { bookingRefundId } });
   }
 
-  public async findManyRefundByBooking({ page, limit }: IPaginationInputs) {
+  public async findManyRefundRecords({ page, limit }: IPaginationInputs) {
     const result = await prisma.bookingRefund.findMany({
       orderBy: { createdAt: 'desc' },
       skip: page > 0 ? (page - 1) * limit : 0,
       take: limit,
     });
 
-    const totalCount = await prisma.bookingSetting.count();
+    const totalCount = await prisma.bookingRefund.count();
 
     return {
       pageCount: Math.ceil(totalCount / limit),
