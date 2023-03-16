@@ -103,7 +103,12 @@ class Respository {
       where: whereFilter,
     });
 
-    return result;
+    if (result.length === 0) return false;
+
+    for (const booking of result) {
+      if (!!booking.refundId) return false;
+      return true;
+    }
   }
 
   public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput & DatesInput) {

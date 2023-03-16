@@ -4,11 +4,17 @@ import { DatesInput, IPaginationInputs, IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
+import { BookingRepository } from '@/server/repository/booking.repo';
 import { constants } from '../constants';
 
 class Service {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId'>) {
     try {
+      const isBookingDateTaken = await BookingRepository.findBookingConflicts({
+        startDate: data.startSession,
+        endDate: data.endSession,
+      });
+
       const isSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
         startDate: data.startSession,
         endDate: data.endSession,
@@ -19,7 +25,7 @@ class Service {
         endDate: data.endSession,
       });
 
-      if (isSchedTaken || isBookingAttemptTaken)
+      if (isBookingDateTaken || isSchedTaken || isBookingAttemptTaken)
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Record already exist :: Conflict Schedule',
