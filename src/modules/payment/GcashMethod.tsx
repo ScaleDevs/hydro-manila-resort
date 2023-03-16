@@ -1,13 +1,15 @@
-import * as React from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { Button, useToast } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
 import { createPaymentMethod } from '../fetch-calls';
 import useBookingStoreTrack from '@/store/booking.store';
 
-export interface IGcashMethodProps {}
+export interface IGcashMethodProps {
+  setIsTaken: Dispatch<SetStateAction<boolean>>;
+}
 
-export default function GcashMethod({}: IGcashMethodProps) {
+export default function GcashMethod({ setIsTaken }: IGcashMethodProps) {
   const { clientKey, paymentIntentId } = useBookingStoreTrack();
   const { mutate } = trpc.payment.attachPaymentMethodToIntent.useMutation();
   const toast = useToast();
@@ -26,6 +28,10 @@ export default function GcashMethod({}: IGcashMethodProps) {
           },
           {
             onSuccess({ data }) {
+              if (!data) {
+                setIsTaken(true);
+                return;
+              }
               if (data.attributes.next_action?.redirect) window.location.href = data.attributes.next_action.redirect.url;
             },
           },

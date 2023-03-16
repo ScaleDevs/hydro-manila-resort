@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Dispatch, SetStateAction } from 'react';
 import { useRouter } from 'next/router';
 import { Box, Button, Stack, chakra, Text, Heading, useToast } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
@@ -45,9 +45,11 @@ const schema = z.object({
 
 type FormSchemaType = z.infer<typeof schema>;
 
-export interface ICardInputsFormProps {}
+export interface ICardInputsFormProps {
+  setIsTaken: Dispatch<SetStateAction<boolean>>;
+}
 
-export default function CardInputsForm({}: ICardInputsFormProps) {
+export default function CardInputsForm({ setIsTaken }: ICardInputsFormProps) {
   const toast = useToast();
   const router = useRouter();
   const { clientKey, paymentIntentId } = useBookingStoreTrack();
@@ -95,6 +97,11 @@ export default function CardInputsForm({}: ICardInputsFormProps) {
           },
           {
             onSuccess({ data }) {
+              if (!data) {
+                setIsTaken(true);
+                return;
+              }
+
               const status = data.attributes.status;
 
               if (status === 'awaiting_next_action' && data.attributes.next_action?.redirect?.url) {
