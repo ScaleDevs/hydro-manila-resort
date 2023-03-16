@@ -54,59 +54,35 @@ const bookingDataSchema = z.object({
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
 class Service {
-  private async createBookingReferenceNo(): Promise<string> {
-    const refNo = createReferenceNumber();
-    const isTaken1 = await BookingAttemptRepository.findBookingAttemptByRefNo(refNo);
-    const isTaken2 = await BookingRepository.findBookingByReferenceNo(refNo);
-
-    if (!!isTaken1 || !!isTaken2) return this.createBookingReferenceNo();
-
-    return refNo;
-  }
-
-  private async checkIfBookingSchedIsTaken({ startDate, endDate }: { startDate: string; endDate: string }) {
-    const records = await BookingRepository.findBookingConflicts({
+  private async checkIfBookingDateIsAvailable({ startDate, endDate }: { startDate: string; endDate: string }) {
+    const isBookingDateTaken = await BookingRepository.findBookingConflicts({
       startDate,
       endDate,
     });
 
-    if (records.length === 0) return false;
+    const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
+      startDate,
+      endDate,
+    });
 
-    for (const booking of records) {
-      if (!!booking.refundId) return false;
-      return true;
-    }
+    const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
+      startDate,
+      endDate,
+    });
+
+    return isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken;
   }
 
   public async initiatePaymentSessionForBooking(
     data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId' | 'refundId'>,
   ) {
     try {
-      const isBookingDateTaken = await this.checkIfBookingSchedIsTaken({
+      const isTaken = await this.checkIfBookingDateIsAvailable({
         startDate: data.startSession,
         endDate: data.endSession,
       });
 
-      const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
-        startDate: data.startSession,
-        endDate: data.endSession,
-      });
-
-      const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
-        startDate: data.startSession,
-        endDate: data.endSession,
-      });
-
-      if (isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken) return { isSchedAvailable: false };
-
-      const ref_no = await this.createBookingReferenceNo();
-
-      await BookingAttemptRepository.createBookingAttempt({
-        startSession: data.startSession,
-        endSession: data.endSession,
-        ref_no,
-        expireAt: dayjs().add(20, 'm').toDate(),
-      });
+      if (isTaken) return { isSchedAvailable: false };
 
       return createPaymentIntent({
         // in cents formula peso * 100
@@ -123,7 +99,7 @@ class Service {
         metadata: {
           bookingRecord: JSON.stringify({
             ...data,
-            ref_no,
+            ref_no: createReferenceNumber(),
           }),
         },
       });
@@ -134,6 +110,23 @@ class Service {
 
   public async attachPaymentMethodToIntent(data: AttachPaymentMethodToIntentAttr) {
     try {
+      const result = await this.getPaymentIntentSession(data.paymentIntentId);
+      const bookingRecord = JSON.parse(result.attributes.metadata.bookingRecord) as IBooking;
+
+      const isTaken = await this.checkIfBookingDateIsAvailable({
+        startDate: bookingRecord.startSession,
+        endDate: bookingRecord.endSession,
+      });
+
+      if (isTaken) return { data: null };
+
+      await BookingAttemptRepository.createBookingAttempt({
+        startSession: bookingRecord.startSession,
+        endSession: bookingRecord.endSession,
+        ref_no: bookingRecord.ref_no,
+        expireAt: dayjs().add(25, 'm').toDate(),
+      });
+
       return attachPaymentMethodToIntent(data);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
@@ -244,7 +237,7 @@ class Service {
       return;
     }
 
-    const isBookingDateTaken = await this.checkIfBookingSchedIsTaken({
+    const isBookingDateTaken = await BookingRepository.findBookingConflicts({
       startDate: parsed.data.startSession,
       endDate: parsed.data.endSession,
     });
@@ -354,7 +347,7 @@ class Service {
 
     console.log('EMAIL SUCCESSFULLY SENT');
 
-    console.log('CLEANUP BOOKING ATTEMP RECORD');
+    console.log('CLEANUP BOOKING ATTEMP RECORD ...');
 
     await BookingAttemptRepository.deleteBookingAttemptWithRefNo(parsed.data.ref_no);
 
