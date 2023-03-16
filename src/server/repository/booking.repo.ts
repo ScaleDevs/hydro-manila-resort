@@ -69,7 +69,7 @@ class Respository {
     };
   }
 
-  public async checkIfScheduleTaken({ startDate, endDate }: DatesInput) {
+  public async findBookingConflicts({ startDate, endDate }: DatesInput) {
     const whereFilter: Prisma.BookingWhereInput = {
       OR: [
         {
@@ -99,11 +99,11 @@ class Respository {
       ],
     };
 
-    const totalCount = await prisma.booking.count({
+    const result = await prisma.booking.findMany({
       where: whereFilter,
     });
 
-    return totalCount > 0;
+    return result;
   }
 
   public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput & DatesInput) {

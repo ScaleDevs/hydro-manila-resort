@@ -64,11 +64,26 @@ class Service {
     return refNo;
   }
 
+  private async checkIfBookingSchedIsTaken({ startDate, endDate }: { startDate: string; endDate: string }) {
+    const records = await BookingRepository.findBookingConflicts({
+      startDate,
+      endDate,
+    });
+
+    if (records.length === 0) return false;
+
+    for (const booking of records) {
+      const result = await BookingRefundRepository.findBookingRefundByBookingId(booking.id);
+      if (!!result) return false;
+      return true;
+    }
+  }
+
   public async initiatePaymentSessionForBooking(
     data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId'>,
   ) {
     try {
-      const isBookingDateTaken = await BookingRepository.checkIfScheduleTaken({
+      const isBookingDateTaken = await this.checkIfBookingSchedIsTaken({
         startDate: data.startSession,
         endDate: data.endSession,
       });
@@ -229,7 +244,7 @@ class Service {
       return;
     }
 
-    const isBookingDateTaken = await BookingRepository.checkIfScheduleTaken({
+    const isBookingDateTaken = await this.checkIfBookingSchedIsTaken({
       startDate: parsed.data.startSession,
       endDate: parsed.data.endSession,
     });
