@@ -79,7 +79,7 @@ class Service {
   }
 
   public async initiatePaymentSessionForBooking(
-    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId'>,
+    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId' | 'refundId'>,
   ) {
     try {
       const isBookingDateTaken = await this.checkIfBookingSchedIsTaken({
