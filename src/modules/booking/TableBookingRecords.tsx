@@ -90,6 +90,9 @@ export default function TableBookingRecords() {
                 <Th fontSize='md' fontFamily='primary'>
                   GUESTS
                 </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  STATUS
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -110,11 +113,14 @@ export default function TableBookingRecords() {
                       <Td>
                         <Skeleton height='20px' />
                       </Td>
+                      <Td>
+                        <Skeleton height='20px' />
+                      </Td>
                     </Tr>
                   ))
               ) : data?.records.length === 0 ? (
                 <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td colSpan={4} textAlign='center' fontSize='lg'>
+                  <Td colSpan={5} textAlign='center' fontSize='lg'>
                     No Records Found
                   </Td>
                 </Tr>
@@ -127,6 +133,7 @@ export default function TableBookingRecords() {
                       {tableFormatTimeDisplay(v.startSession)} - {tableFormatTimeDisplay(v.endSession)}
                     </Td>
                     <Td>{v.guests}</Td>
+                    <Td>{v.refundId ? 'REFUNDED' : 'BOOKED'}</Td>
                   </Tr>
                 ))
               )}

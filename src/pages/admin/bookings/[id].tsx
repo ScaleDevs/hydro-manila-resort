@@ -48,6 +48,13 @@ function Component({ id }: Props) {
               <Divider borderColor='gray.400' />
 
               <Stack spacing={0} direction='row' justifyContent='space-between'>
+                <Text>Status:</Text>
+                <Text>{data?.refundId ? 'REFUNDED' : 'BOOKED'}</Text>
+              </Stack>
+
+              <Divider borderColor='gray.400' />
+
+              <Stack spacing={0} direction='row' justifyContent='space-between'>
                 <Text>Name:</Text>
                 <Text>{data?.name}</Text>
               </Stack>

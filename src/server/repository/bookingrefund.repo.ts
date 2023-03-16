@@ -10,10 +10,6 @@ class Respository {
     return prisma.bookingRefund.findFirst({ where: { bookingRefundId } });
   }
 
-  public async findBookingRefundByBookingId(bookingId: string) {
-    return prisma.bookingRefund.findFirst({ where: { bookingId } });
-  }
-
   public async findManyRefundByBooking({ page, limit }: IPaginationInputs) {
     const result = await prisma.bookingRefund.findMany({
       orderBy: { createdAt: 'desc' },

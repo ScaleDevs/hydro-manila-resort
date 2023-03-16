@@ -73,8 +73,7 @@ class Service {
     if (records.length === 0) return false;
 
     for (const booking of records) {
-      const result = await BookingRefundRepository.findBookingRefundByBookingId(booking.id);
-      if (!!result) return false;
+      if (!!booking.refundId) return false;
       return true;
     }
   }
@@ -170,13 +169,14 @@ class Service {
 
       if ('error' in result) {
         if (result.error === 'available_balance_insufficient') {
-          await BookingRefundRepository.createBookingRefund({
+          const refundRecord = await BookingRefundRepository.createBookingRefund({
             paymongoRefundId: null,
             type: 'MANUAL',
             reason: reason,
             status: 'PROCESSING',
-            bookingId: bookingRecord.id,
           });
+
+          await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
 
           // SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND - due to balance issue
           await sendRefundEmailProcessing({
@@ -305,6 +305,7 @@ class Service {
       startSession: parsed.data.startSession,
       endSession: parsed.data.endSession,
       calendarEventId,
+      refundId: null,
     });
 
     if (!bookingRecord) {
@@ -386,33 +387,36 @@ class Service {
         return;
       }
 
-      const bookingRefundRecord = await BookingRefundRepository.findBookingRefundByBookingId(bookingRecord.id);
+      if (bookingRecord.refundId) {
+        const bookingRefundRecord = await BookingRefundRepository.findBookingRefundById(bookingRecord.refundId);
 
-      if (!!bookingRefundRecord && bookingRefundRecord.status === 'PROCESSING' && bookingRefundRecord.type === 'MANUAL') {
-        await BookingRefundRepository.updateBookinRefund(bookingRefundRecord.bookingRefundId, {
-          paymongoRefundId: refundId,
-          status: 'SUCCESS',
-        });
-        await sendRefundEmailSuccess({
-          recipientEmail: bookingRecord.email,
-          customer_name: bookingRecord.name,
-          ref_no: bookingRecord.ref_no,
-        });
+        if (!!bookingRefundRecord && bookingRefundRecord.status === 'PROCESSING' && bookingRefundRecord.type === 'MANUAL') {
+          await BookingRefundRepository.updateBookinRefund(bookingRefundRecord.bookingRefundId, {
+            paymongoRefundId: refundId,
+            status: 'SUCCESS',
+          });
+          await sendRefundEmailSuccess({
+            recipientEmail: bookingRecord.email,
+            customer_name: bookingRecord.name,
+            ref_no: bookingRecord.ref_no,
+          });
 
-        console.log('EMAIL SUCCESSFULLY SENT');
-        return;
-      } else if (!!bookingRefundRecord && bookingRefundRecord.status === 'SUCCESS') {
-        console.log('Booking record already refunded');
-        return;
+          console.log('EMAIL SUCCESSFULLY SENT');
+          return;
+        } else if (!!bookingRefundRecord && bookingRefundRecord.status === 'SUCCESS') {
+          console.log('Booking record already refunded');
+          return;
+        }
       }
 
-      await BookingRefundRepository.createBookingRefund({
+      const refundRecord = await BookingRefundRepository.createBookingRefund({
         paymongoRefundId: refundId,
         type: 'AUTOMATIC',
         reason: refundResource.attributes.metadata.reason || '',
         status: 'SUCCESS',
-        bookingId: bookingRecord.id,
       });
+
+      await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
 
       await sendRefundEmailSuccess({
         recipientEmail: bookingRecord.email,

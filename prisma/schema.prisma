@@ -77,6 +77,7 @@ model Booking {
   receipt         Receipt
   paymentIntentId String   @unique
   paymentId       String
+  refundId        String?
   calendarEventId String?
   createdAt       DateTime @default(now())
 }
@@ -97,7 +98,6 @@ model BookingRefund {
   reason           String
   status           BookingRefundStatus
   type             BookingRefundType
-  bookingId        String              @unique
   createdAt        DateTime            @default(now())
 }
 
