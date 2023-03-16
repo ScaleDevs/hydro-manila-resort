@@ -117,5 +117,5 @@ export const createReferenceNumber = () => {
 
   const dayjsInstance = dayjs();
 
-  return dayjsInstance.format('MMMDD').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(7) + randomString(2);
+  return dayjsInstance.format('MMMDDYY').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(6) + randomString(2);
 };
