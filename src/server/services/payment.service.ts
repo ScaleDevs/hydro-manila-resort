@@ -82,7 +82,7 @@ class Service {
         endDate: data.endSession,
       });
 
-      if (isTaken) return { isSchedAvailable: false };
+      if (isTaken) throw new TRPCError({ code: 'CONFLICT', message: 'Schedule is not available' });
 
       return createPaymentIntent({
         // in cents formula peso * 100

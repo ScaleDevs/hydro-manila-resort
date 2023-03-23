@@ -4,11 +4,10 @@ import { Box, Stack, Text, HStack, VStack, Button, Heading, Alert, AlertIcon, ch
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import dayjs from 'dayjs';
 
-import { getISOFormatFromSchedule } from '@/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
+import { RoomDetails, ProductDetails } from '@prisma/client';
 import { PHpeso } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
 import CalenderInput from '@/components/CalendarInput';
@@ -37,10 +36,9 @@ export interface IBookingFormProps {
 
 export default function BookingForm({ setStep }: IBookingFormProps) {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
-  const [productActiveVersion, setProductActiveVersion] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<IRoom | undefined>(undefined);
-  const [roomActiveVersion, setRoomActiveVersion] = useState(0);
-  const [isSchedAvailable, setIsSchedAvailable] = useState(true);
+  const [productDetails, setProductDetails] = useState<ProductDetails | undefined>();
+  const [roomDetails, setRoomDetails] = useState<RoomDetails | undefined>();
 
   const { setWholeBookingState } = useBookingStoreTrack();
 
@@ -50,7 +48,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   });
   const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate, isError } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+  const { mutate, isError, error } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
 
   const {
     register,
@@ -75,67 +73,27 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     if (!bookingSetting) return;
     if (!selectedProduct) return;
 
-    const productDetails = selectedProduct.details[productActiveVersion];
-    const endDate = dayjs(data.bookingDate)
-      .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
-      .format('YYYY-MM-DD');
-    let total = 0;
-
-    total += productDetails.price;
-    if (selectedRoom) total += selectedRoom.details[roomActiveVersion].price;
-    if (data.guests && data.guests > bookingSetting.minPax)
-      total += (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
-
     const payload = {
       name: data.name,
       email: data.email,
       phoneNumber: data.phoneNumber,
-      startSession: dayjs
-        .tz(
-          dayjs(
-            getISOFormatFromSchedule(`${data.bookingDate} ${selectedProduct?.details[productActiveVersion].scheduleStart}`),
-          ).format('YYYY-MM-DDTHH:mm'),
-          process.env.NEXT_PUBLIC_TIMEZONE,
-        )
-        .toISOString(),
-      endSession: dayjs
-        .tz(
-          dayjs(getISOFormatFromSchedule(`${endDate} ${selectedProduct?.details[productActiveVersion].scheduleEnd}`)).format(
-            'YYYY-MM-DDTHH:mm',
-          ),
-          process.env.NEXT_PUBLIC_TIMEZONE,
-        )
-        .toISOString(),
+      bookingDate: data.bookingDate,
       guests: data.guests,
       roomId: data.roomId === '' || !data.roomId ? null : data.roomId,
-      roomVersion: selectedRoom?.activeVersion || 1,
+      roomVersion: selectedRoom?.activeVersion ? selectedRoom?.activeVersion - 1 : 0,
       productId: data.productId,
-      productVersion: selectedProduct?.activeVersion || 1,
-      receipt: {
-        productPrice: selectedProduct?.details[productActiveVersion].price || 0,
-        roomPrice: selectedRoom?.details[roomActiveVersion].price || 0,
-        additionalHeadsPrice:
-          data.guests && data.guests > bookingSetting.minPax
-            ? (data.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee
-            : 0,
-        bookingFee: 0,
-        total,
-      },
+      productVersion: selectedProduct?.activeVersion ? selectedProduct?.activeVersion - 1 : 0,
     };
 
     mutate(payload, {
       onSuccess(data) {
-        if ('isSchedAvailable' in data) {
-          setIsSchedAvailable(data.isSchedAvailable);
-          return;
-        }
-
-        setIsSchedAvailable(true);
+        const bookingState = data.bookingState;
+        const paymentIntentResource = data.paymentIntentResource;
 
         setWholeBookingState({
-          ...payload,
-          clientKey: data.data.attributes.client_key,
-          paymentIntentId: data.data.id,
+          ...bookingState,
+          clientKey: paymentIntentResource.data.attributes.client_key,
+          paymentIntentId: paymentIntentResource.data.id,
         });
         reset();
         setStep(2);
@@ -144,7 +102,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   };
 
   useEffect(() => {
-    if (selectedProduct) setProductActiveVersion(selectedProduct.activeVersion - 1);
+    if (selectedProduct) setProductDetails(selectedProduct?.details[selectedProduct.activeVersion - 1]);
 
     if (selectedProduct?.details[selectedProduct.activeVersion - 1].withRooms) {
       setValue('roomId', '');
@@ -153,7 +111,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   }, [selectedProduct, setValue]);
 
   useEffect(() => {
-    if (selectedRoom) setRoomActiveVersion(selectedRoom.activeVersion - 1);
+    if (selectedRoom) setRoomDetails(selectedRoom.details[selectedRoom.activeVersion - 1]);
   }, [selectedRoom]);
 
   return (
@@ -164,10 +122,10 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
             <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
               BOOK A DATE!
             </Heading>
-            {!isSchedAvailable || isError ? (
+            {isError ? (
               <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
                 <AlertIcon />
-                {!isSchedAvailable ? 'Schedule is not available' : 'Something went wrong, Kindly Try Again'}
+                {error.message}
               </Alert>
             ) : (
               ''
@@ -229,15 +187,14 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   }
                   errMsg={!!errors.productId?.message ? 'Required!' : undefined}
                 >
-                  {!!selectedProduct ? (
+                  {!!selectedProduct && productDetails ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        {selectedProduct.name} | {PHpeso.format(selectedProduct.details[productActiveVersion].price)}
+                        {selectedProduct.name} | {PHpeso.format(productDetails.price)}
                       </Text>
                       <Text fontSize='14px' color='white'>
-                        {selectedProduct.details[productActiveVersion].scheduleStart} -{' '}
-                        {selectedProduct.details[productActiveVersion].scheduleEnd} |{' '}
-                        {selectedProduct.details[productActiveVersion].withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
+                        {productDetails.scheduleStart} - {productDetails.scheduleEnd} |{' '}
+                        {productDetails.withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
                       </Text>
                     </Box>
                   ) : (
@@ -255,15 +212,13 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   options={roomsData?.records.map((v) => ({ label: `${v.roomIdentityName}`, value: v.roomId })) || []}
                   errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
                 >
-                  {!!selectedRoom ? (
+                  {!!selectedRoom && roomDetails ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        {selectedRoom.roomIdentityName} | {selectedRoom.details[roomActiveVersion].withBathroom ? 'w/' : 'w/o'}{' '}
-                        bathroom
+                        {selectedRoom.roomIdentityName} | {roomDetails.withBathroom ? 'w/' : 'w/o'} bathroom
                       </Text>
                       <Text fontSize='14px' color='white'>
-                        ROOM {selectedRoom.details[roomActiveVersion].guests} PAX | ADDITIONAL{' '}
-                        {PHpeso.format(selectedRoom.details[roomActiveVersion].price)}
+                        ROOM {roomDetails.guests} PAX | ADDITIONAL {PHpeso.format(roomDetails.price)}
                       </Text>
                     </Box>
                   ) : (
