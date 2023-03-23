@@ -33,10 +33,7 @@ export const bookingRouter = router({
     .input(
       z.object({
         bookingId: z.string(),
-        data: z.object({
-          startSession: z.string(),
-          endSession: z.string(),
-        }),
+        data: z.string(),
       }),
     )
     .mutation(({ input }) => {
