@@ -79,9 +79,6 @@ export default function TableBookingRecords() {
             <Thead>
               <Tr>
                 <Th fontSize='md' fontFamily='primary'>
-                  REFERENCE
-                </Th>
-                <Th fontSize='md' fontFamily='primary'>
                   NAME
                 </Th>
                 <Th fontSize='md' fontFamily='primary'>
@@ -89,6 +86,9 @@ export default function TableBookingRecords() {
                 </Th>
                 <Th fontSize='md' fontFamily='primary'>
                   GUESTS
+                </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  REFERENCE
                 </Th>
                 <Th fontSize='md' fontFamily='primary'>
                   STATUS
@@ -127,12 +127,12 @@ export default function TableBookingRecords() {
               ) : (
                 data?.records.map((v, i) => (
                   <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} onClick={() => goToBookingDetails(v.ref_no)}>
-                    <Td>{v.ref_no}</Td>
                     <Td>{v.name}</Td>
                     <Td>
                       {tableFormatTimeDisplay(v.startSession)} - {tableFormatTimeDisplay(v.endSession)}
                     </Td>
                     <Td>{v.guests}</Td>
+                    <Td>{v.ref_no}</Td>
                     <Td>{v.refundId ? 'REFUNDED' : 'BOOKED'}</Td>
                   </Tr>
                 ))
