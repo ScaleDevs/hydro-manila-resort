@@ -6,23 +6,27 @@ import { GoogleCalendarRepository } from '@/server/repository/googlecalender.rep
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
 import { constants } from '../constants';
+import { dateToIsoString } from '@/utils/helper';
 
 class Service {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId'>) {
     try {
+      const startSession = dateToIsoString(data.startSession);
+      const endSession = dateToIsoString(data.endSession);
+
       const isBookingDateTaken = await BookingRepository.findBookingConflicts({
-        startDate: data.startSession,
-        endDate: data.endSession,
+        startDate: startSession,
+        endDate: endSession,
       });
 
       const isSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
-        startDate: data.startSession,
-        endDate: data.endSession,
+        startDate: startSession,
+        endDate: endSession,
       });
 
       const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
-        startDate: data.startSession,
-        endDate: data.endSession,
+        startDate: startSession,
+        endDate: endSession,
       });
 
       if (isBookingDateTaken || isSchedTaken || isBookingAttemptTaken)
@@ -35,17 +39,19 @@ class Service {
         summary: data.description,
         description: data.description,
         start: {
-          dateTime: dayjs.utc(data.startSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          dateTime: dayjs.utc(startSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
           timeZone: constants.general.timezone,
         },
         end: {
-          dateTime: dayjs.utc(data.endSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+          dateTime: dayjs.utc(endSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
           timeZone: constants.general.timezone,
         },
       });
 
       return ScheduledEventRepository.createScheduledEvent({
         ...data,
+        startSession,
+        endSession,
         calendarEventId,
       });
     } catch (err: any) {
