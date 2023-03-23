@@ -7,7 +7,7 @@ import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
 import { IBookingDates } from '@/server/repository/booking.repo';
-import { getISOFormatFromSchedule } from '@/modules/utils/helper';
+import { getISOFormatFromSchedule } from '@/utils/helper';
 
 const LeftArrowIcon = chakra(BsChevronLeft);
 const RightArrowIcon = chakra(BsChevronRight);
