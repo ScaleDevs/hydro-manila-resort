@@ -37,7 +37,7 @@ export default function TableBookingRecords() {
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.booking.getManyBooking.useQuery({
     page,
-    limit: 5,
+    limit: 10,
     ref_no: refNo,
     dateFilter,
   });
