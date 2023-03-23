@@ -1,6 +1,6 @@
 import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent, BookingAttempt } from '@prisma/client';
 
-type DateSession = {
+export type DateSession = {
   startSession: string;
   endSession: string;
 };

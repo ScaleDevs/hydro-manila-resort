@@ -29,6 +29,19 @@ export const bookingRouter = router({
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return BookingService.deleteBooking(input);
   }),
+  rescheduleBooking: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.string(),
+        data: z.object({
+          startSession: z.string(),
+          endSession: z.string(),
+        }),
+      }),
+    )
+    .mutation(({ input }) => {
+      return BookingService.rescheduleBooking(input.bookingId, input.data);
+    }),
   getAllBookingsByDates: procedure
     .input(
       z.object({

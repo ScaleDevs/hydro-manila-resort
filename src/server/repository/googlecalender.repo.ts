@@ -40,6 +40,35 @@ class Respository {
     }
   }
 
+  public async updateEvent(eventId: string, event: calendar_v3.Schema$Event) {
+    try {
+      const authClient = await auth.getClient();
+      google.options({ auth: authClient });
+
+      const response = await calendar.events.update({
+        calendarId: constants.googleCalendar.calendarId,
+        eventId,
+        requestBody: {
+          ...event,
+          start: {
+            dateTime: event.start?.dateTime,
+            timeZone: constants.general.timezone,
+          },
+          end: {
+            dateTime: event.end?.dateTime,
+            timeZone: constants.general.timezone,
+          },
+        },
+      });
+
+      if (response.status === 200 && response.data.id) return response.data.id;
+      return null;
+    } catch (err) {
+      console.log(`Error at updateEvent ---> ${err}`);
+      return null;
+    }
+  }
+
   public async deleteEvent(eventId: string) {
     try {
       const authClient = await auth.getClient();

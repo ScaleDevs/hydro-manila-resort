@@ -6,6 +6,9 @@ import { ProductRepository } from '@/server/repository/product.repo';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
+import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
+import { constants } from '../constants';
+import { tzSchedToDate } from '../util';
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
@@ -101,6 +104,45 @@ class Service {
       }
 
       return { bookedDates };
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    }
+  }
+
+  public async rescheduleBooking(id: string, bookingDate: string) {
+    try {
+      const bookingRecord = await BookingService.findBookingById(id);
+      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record not found' });
+
+      const selectedProduct = await ProductRepository.findProductById(bookingRecord.productId);
+      if (!selectedProduct) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+
+      const productDetails = selectedProduct.details[selectedProduct.activeVersion - 1];
+      const endDate = dayjs(bookingDate)
+        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .format('YYYY-MM-DD');
+
+      const startDateSession = tzSchedToDate(bookingDate, productDetails.scheduleStart);
+      const endDateSession = tzSchedToDate(endDate, productDetails.scheduleEnd);
+
+      const updateBooking = await BookingRepository.updateBooking(id, {
+        startSession: startDateSession.toISOString(),
+        endSession: endDateSession.toISOString(),
+      });
+
+      if (bookingRecord.calendarEventId)
+        await GoogleCalendarRepository.updateEvent(bookingRecord.calendarEventId, {
+          start: {
+            dateTime: dayjs.utc(startDateSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+            timeZone: constants.general.timezone,
+          },
+          end: {
+            dateTime: dayjs.utc(endDateSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+            timeZone: constants.general.timezone,
+          },
+        });
+
+      return updateBooking;
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
