@@ -34,6 +34,14 @@ type Receipt {
   total                Float
 }
 
+type BookingUpdateLog {
+  updatedBy    String
+  fieldUpdated String
+  fromValue    String
+  toValue      String
+  createdAt    DateTime @default(now())
+}
+
 enum BookingRefundStatus {
   FAILED
   PROCESSING
@@ -61,25 +69,26 @@ model Room {
 }
 
 model Booking {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  ref_no          String   @unique
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  ref_no          String            @unique
   name            String
   email           String
   phoneNumber     String
   startSession    DateTime
   endSession      DateTime
   guests          Int
-  roomId          String?  @db.ObjectId
+  roomId          String?           @db.ObjectId
   roomVersion     Int
-  product         Product  @relation(fields: [productId], references: [productId])
-  productId       String   @db.ObjectId
+  product         Product           @relation(fields: [productId], references: [productId])
+  productId       String            @db.ObjectId
   productVersion  Int
   receipt         Receipt
-  paymentIntentId String   @unique
+  updateLog       BookingUpdateLog?
+  paymentIntentId String            @unique
   paymentId       String
   refundId        String?
   calendarEventId String?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime          @default(now())
 }
 
 model BookingSetting {

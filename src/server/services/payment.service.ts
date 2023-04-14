@@ -299,6 +299,7 @@ class Service {
       endSession: parsed.data.endSession,
       calendarEventId,
       refundId: null,
+      updateLog: null,
     });
 
     if (!bookingRecord) {
