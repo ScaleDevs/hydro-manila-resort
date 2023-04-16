@@ -29,15 +29,22 @@ export const bookingRouter = router({
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return BookingService.deleteBooking(input);
   }),
-  rescheduleBooking: protectedProcedure
+  updateBooking: protectedProcedure
     .input(
       z.object({
         bookingId: z.string(),
-        data: z.string(),
+        data: z.object({
+          bookingDate: z.string().optional(),
+          guests: z.number().optional(),
+          roomId: z.string().nullable().optional(),
+          roomVersion: z.number().optional(),
+          productId: z.string().optional(),
+          productVersion: z.number().optional(),
+        }),
       }),
     )
     .mutation(({ input }) => {
-      return BookingService.rescheduleBooking(input.bookingId, input.data);
+      return BookingService.updateBooking(input.bookingId, input.data);
     }),
   getAllBookingsByDates: procedure
     .input(

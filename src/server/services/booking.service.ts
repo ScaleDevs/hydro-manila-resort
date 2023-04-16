@@ -9,6 +9,7 @@ import { BookingAttemptRepository } from '@/server/repository/bookingattempt.rep
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { constants } from '../constants';
 import { tzSchedToDate } from '../util';
+import { BookingUpdateLog } from '@prisma/client';
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
@@ -109,48 +110,90 @@ class Service {
     }
   }
 
-  public async rescheduleBooking(id: string, bookingDate: string) {
+  public async updateBooking(
+    id: string,
+    data: {
+      bookingDate?: string | undefined;
+      guests?: number | undefined;
+      roomId?: string | null | undefined;
+      roomVersion?: number | undefined;
+      productId?: string | undefined;
+      productVersion?: number | undefined;
+    },
+  ) {
     try {
       const bookingRecord = await BookingService.findBookingById(id);
       if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record not found' });
 
-      const selectedProduct = await ProductRepository.findProductById(bookingRecord.productId);
-      if (!selectedProduct) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+      const entries = Object.entries(data);
+      const updateLog: Omit<BookingUpdateLog, 'createdAt'>[] = [];
+      const updateData = { ...data } as any;
+      let startSession: dayjs.Dayjs | undefined;
+      let endSession: dayjs.Dayjs | undefined;
+      delete updateData.bookingDate;
 
-      const productDetails = selectedProduct.details[selectedProduct.activeVersion - 1];
-      const endDate = dayjs(bookingDate)
-        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
-        .format('YYYY-MM-DD');
+      if (data.bookingDate) {
+        const productDetails = await ProductRepository.getProductDetails(
+          data.productId || bookingRecord.productId,
+          data.productVersion,
+        );
+        const endDate = dayjs(data.bookingDate)
+          .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+          .format('YYYY-MM-DD');
 
-      const startDateSession = tzSchedToDate(bookingDate, productDetails.scheduleStart);
-      const endDateSession = tzSchedToDate(endDate, productDetails.scheduleEnd);
+        startSession = tzSchedToDate(data.bookingDate, productDetails.scheduleStart);
+        endSession = tzSchedToDate(endDate, productDetails.scheduleEnd);
+      }
 
-      const updateBooking = await BookingRepository.updateBooking(id, {
-        startSession: startDateSession.toISOString(),
-        endSession: endDateSession.toISOString(),
+      for (const entry of entries) {
+        const fieldUpdated = entry[0] as keyof typeof data;
+
+        if (fieldUpdated === 'bookingDate' && startSession && endSession) {
+          updateLog.push({
+            updatedBy: 'ADMIN',
+            fieldUpdated: 'startSession',
+            fromValue: `${bookingRecord.startSession}`,
+            toValue: startSession.toISOString(),
+          });
+
+          updateLog.push({
+            updatedBy: 'ADMIN',
+            fieldUpdated: 'endSession',
+            fromValue: `${bookingRecord.endSession}`,
+            toValue: endSession.toISOString(),
+          });
+
+          continue;
+        }
+
+        if (fieldUpdated !== 'bookingDate')
+          updateLog.push({
+            updatedBy: 'ADMIN',
+            fieldUpdated,
+            fromValue: `${bookingRecord[fieldUpdated]}`,
+            toValue: `${entry[1]}`,
+          });
+      }
+
+      const updateBooking = await BookingRepository.updateBooking(bookingRecord.id, {
+        ...updateData,
+        startSession: startSession?.toISOString(),
+        endSession: endSession?.toISOString(),
       });
 
-      if (bookingRecord.calendarEventId)
+      if (bookingRecord.calendarEventId && !!startSession && !!endSession)
         await GoogleCalendarRepository.updateEvent(bookingRecord.calendarEventId, {
           start: {
-            dateTime: dayjs.utc(startDateSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+            dateTime: dayjs.utc(startSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
             timeZone: constants.general.timezone,
           },
           end: {
-            dateTime: dayjs.utc(endDateSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+            dateTime: dayjs.utc(endSession).format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
             timeZone: constants.general.timezone,
           },
         });
 
       return updateBooking;
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async updateBooking(id: string, partialData: Partial<IBooking>) {
-    try {
-      return BookingRepository.updateBooking(id, partialData);
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
