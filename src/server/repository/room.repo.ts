@@ -1,6 +1,7 @@
 import prisma from './prisma.client';
 import { IPaginationInputs, IRoom } from '@/utils/types';
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 
 export type IFindManyroomInput = {
   roomIdentityName?: string;
@@ -48,6 +49,12 @@ class Respository {
 
   public async deleteRoom(id: string) {
     return prisma.room.delete({ where: { roomId: id } });
+  }
+
+  public async getRoomDetails(roomId: string, version?: number) {
+    const room = await this.findRoomById(roomId);
+    if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
+    return room.details[version || room.activeVersion];
   }
 }
 

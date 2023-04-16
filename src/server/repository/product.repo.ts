@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server';
 import prisma from './prisma.client';
 import { IPaginationInputs, IProduct } from '@/utils/types';
 
@@ -47,6 +48,12 @@ class Respository {
 
   public async deleteProduct(id: string) {
     return prisma.product.delete({ where: { productId: id } });
+  }
+
+  public async getProductDetails(productId: string, version?: number) {
+    const selectedProduct = await this.findProductById(productId);
+    if (!selectedProduct) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+    return selectedProduct.details[version || selectedProduct.activeVersion - 1];
   }
 }
 
