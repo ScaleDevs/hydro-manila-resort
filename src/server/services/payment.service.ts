@@ -13,7 +13,6 @@ import {
 import { TRPCError } from '@trpc/server';
 import { constants } from '../constants';
 import { BookingService } from '@/svc/booking.service';
-import { ProductService } from '@/svc/product.service';
 import {
   notifyAdminDbInsertionError,
   sendBookingSuccessEmail,
@@ -28,7 +27,8 @@ import { RoomRepository } from '@/server/repository/room.repo';
 import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
-import { createReferenceNumber, PHpeso } from '../util';
+import { ProductRepository } from '@/server/repository/product.repo';
+import { createReferenceNumber, PHpeso, tzSchedToDate } from '../util';
 
 const bookingDataSchema = z.object({
   ref_no: z.string(),
@@ -73,10 +73,64 @@ class Service {
     return isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken;
   }
 
-  public async initiatePaymentSessionForBooking(
-    data: Omit<IBooking, 'id' | 'createdAt' | 'paymentIntentId' | 'paymentId' | 'ref_no' | 'calendarEventId' | 'refundId'>,
-  ) {
+  public async initiatePaymentSessionForBooking(input: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    guests: number;
+    roomId: string | null;
+    roomVersion: number;
+    productId: string;
+    productVersion: number;
+    bookingDate: string;
+  }) {
     try {
+      const productDetails = await ProductRepository.getProductDetails(input.productId, input.productVersion);
+
+      let roomDetails;
+      if (input.roomId) {
+        const room = await RoomRepository.findRoomById(input.roomId);
+        if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
+        roomDetails = room.details[input.roomVersion];
+      }
+
+      const bookingSetting = await BookingSettingRepository.findFirstBookingSetting();
+      if (!bookingSetting)
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong, Kindly Try Again.' });
+
+      const endDate = dayjs(input.bookingDate)
+        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .format('YYYY-MM-DD');
+
+      let total = 0;
+      total += productDetails.price;
+      if (roomDetails) total += roomDetails?.price;
+      if (input.guests && input.guests > bookingSetting.minPax)
+        total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
+
+      const data = {
+        name: input.name,
+        email: input.email,
+        phoneNumber: input.phoneNumber,
+        guests: input.guests,
+        roomId: input.roomId,
+        roomVersion: input.roomVersion,
+        productId: input.productId,
+        productVersion: input.productVersion,
+        startSession: tzSchedToDate(input.bookingDate, productDetails.scheduleStart).toISOString(),
+        endSession: tzSchedToDate(endDate, productDetails.scheduleEnd).toISOString(),
+        receipt: {
+          productPrice: productDetails.price,
+          roomPrice: roomDetails?.price || 0,
+          additionalHeadsPrice:
+            input.guests && input.guests > bookingSetting.minPax
+              ? (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee
+              : 0,
+          bookingFee: 0,
+          total,
+        },
+      };
+
       const isTaken = await this.checkIfBookingDateIsAvailable({
         startDate: data.startSession,
         endDate: data.endSession,
@@ -84,25 +138,28 @@ class Service {
 
       if (isTaken) throw new TRPCError({ code: 'CONFLICT', message: 'Schedule is not available' });
 
-      return createPaymentIntent({
-        // in cents formula peso * 100
-        amount: data.receipt.total * 100,
-        currency: 'PHP',
-        capture_type: 'automatic',
-        statement_descriptor: constants.general.companyName,
-        payment_method_allowed: ['gcash', 'card'],
-        payment_method_options: {
-          card: {
-            request_three_d_secure: 'any',
+      return {
+        paymentIntentResource: await createPaymentIntent({
+          // in cents formula peso * 100
+          amount: data.receipt.total * 100,
+          currency: 'PHP',
+          capture_type: 'automatic',
+          statement_descriptor: constants.general.companyName,
+          payment_method_allowed: ['gcash', 'card'],
+          payment_method_options: {
+            card: {
+              request_three_d_secure: 'any',
+            },
           },
-        },
-        metadata: {
-          bookingRecord: JSON.stringify({
-            ...data,
-            ref_no: createReferenceNumber(),
-          }),
-        },
-      });
+          metadata: {
+            bookingRecord: JSON.stringify({
+              ...data,
+              ref_no: createReferenceNumber(),
+            }),
+          },
+        }),
+        bookingState: data,
+      };
     } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
@@ -257,7 +314,7 @@ class Service {
       return;
     }
 
-    const product = await ProductService.findProductById(parsed.data.productId);
+    const product = await ProductRepository.findProductById(parsed.data.productId);
     const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
     const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
     const chosenRoom = room.records.find((v) => v.roomId === parsed.data.roomId);
@@ -299,7 +356,7 @@ class Service {
       endSession: parsed.data.endSession,
       calendarEventId,
       refundId: null,
-      updateLog: null,
+      updateLog: [],
     });
 
     if (!bookingRecord) {

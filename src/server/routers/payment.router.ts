@@ -1,13 +1,7 @@
-import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import dayjs from 'dayjs';
 
 import { procedure, router } from '../trpc';
-import { tzSchedToDate } from '../util';
 import { PaymentService } from '@/svc/payment.service';
-import { ProductService } from '@/svc/product.service';
-import { RoomService } from '@/svc/room.service';
-import { BookingSettingService } from '@/svc/bookingsetting.service';
 
 export const paymentRouter = router({
   initiatePaymentSessionForBooking: procedure
@@ -25,59 +19,11 @@ export const paymentRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const product = await ProductService.findProductById(input.productId);
-      if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found!' });
-      const productDetails = product.details[input.productVersion];
-
-      let room, roomDetails;
-      if (input.roomId) {
-        room = await RoomService.findRoomById(input.roomId);
-        if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-        roomDetails = room.details[input.roomVersion];
-      }
-
-      const bookingSetting = await BookingSettingService.findFirstBookingSetting();
-      if (!bookingSetting)
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong, Kindly Try Again.' });
-
-      const endDate = dayjs(input.bookingDate)
-        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
-        .format('YYYY-MM-DD');
-
-      let total = 0;
-      total += productDetails.price;
-      if (roomDetails) total += roomDetails?.price;
-      if (input.guests && input.guests > bookingSetting.minPax)
-        total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
-
-      const bookingParam = {
-        name: input.name,
-        email: input.email,
-        phoneNumber: input.phoneNumber,
-        guests: input.guests,
-        roomId: input.roomId,
-        roomVersion: input.roomVersion,
-        productId: input.productId,
-        productVersion: input.productVersion,
-        startSession: tzSchedToDate(input.bookingDate, productDetails.scheduleStart).toISOString(),
-        endSession: tzSchedToDate(endDate, productDetails.scheduleEnd).toISOString(),
-        receipt: {
-          productPrice: productDetails.price,
-          roomPrice: roomDetails?.price || 0,
-          additionalHeadsPrice:
-            input.guests && input.guests > bookingSetting.minPax
-              ? (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee
-              : 0,
-          bookingFee: 0,
-          total,
-        },
-      };
-
-      const paymentIntentResource = await PaymentService.initiatePaymentSessionForBooking(bookingParam);
+      const { paymentIntentResource, bookingState } = await PaymentService.initiatePaymentSessionForBooking(input);
 
       return {
         paymentIntentResource,
-        bookingState: bookingParam,
+        bookingState,
       };
     }),
   attachPaymentMethodToIntent: procedure
