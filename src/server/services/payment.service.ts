@@ -88,11 +88,7 @@ class Service {
       const productDetails = await ProductRepository.getProductDetails(input.productId, input.productVersion);
 
       let roomDetails;
-      if (input.roomId) {
-        const room = await RoomRepository.findRoomById(input.roomId);
-        if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-        roomDetails = room.details[input.roomVersion];
-      }
+      if (input.roomId) roomDetails = await RoomRepository.getRoomDetails(input.roomId, input.roomVersion);
 
       const bookingSetting = await BookingSettingRepository.findFirstBookingSetting();
       if (!bookingSetting)
@@ -316,18 +312,18 @@ class Service {
 
     const product = await ProductRepository.findProductById(parsed.data.productId);
     const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-    const room = await RoomRepository.findManyRoom({ page: 1, limit: 5 });
+    const room = await RoomRepository.findManyRoom({ page: 1, limit: 10 });
     const chosenRoom = room.records.find((v) => v.roomId === parsed.data.roomId);
     const bothRooms = room.records.find((v) => v.roomIdentityName === 'ROOM 1 & 2');
     const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
     const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
 
     const productDetails = product?.details[product.activeVersion - 1];
-    const room2Details = room2?.details[room2.activeVersion - 1];
     const room1Details = room1?.details[room1.activeVersion - 1];
+    const room2Details = room2?.details[room2.activeVersion - 1];
 
-    const isRoom2 = () => parsed.data.roomId === room2?.roomId;
     const isRoom1 = () => parsed.data.roomId === room1?.roomId;
+    const isRoom2 = () => parsed.data.roomId === room2?.roomId;
     const isBothRooms = () => parsed.data.roomId === bothRooms?.roomId;
 
     const bookedDate = dayjs.utc(parsed.data.startSession);
