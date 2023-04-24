@@ -8,9 +8,20 @@ export interface IDateTimeFieldProps {
   onBlur?: () => void;
   label?: string;
   required?: boolean;
+  type?: 'datetime-local' | 'date';
+  defaultValue?: string;
 }
 
-export function DateTimeField({ register, property, errMsg, onBlur, label, required }: IDateTimeFieldProps) {
+export function DateTimeField({
+  register,
+  property,
+  errMsg,
+  onBlur,
+  label,
+  required,
+  type = 'datetime-local',
+  defaultValue,
+}: IDateTimeFieldProps) {
   return (
     <Box w='100%'>
       <Text fontSize='md'>
@@ -27,13 +38,14 @@ export function DateTimeField({ register, property, errMsg, onBlur, label, requi
             onBlur && onBlur();
           },
         })}
-        type='datetime-local'
+        type={type}
         borderColor='primary.1'
         borderRadius='sm'
         _hover={{
           borderColor: 'teal.400',
         }}
         focusBorderColor='teal.400'
+        defaultValue={defaultValue}
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>

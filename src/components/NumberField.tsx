@@ -9,9 +9,20 @@ export interface INumberFieldProps {
   errMsg?: string;
   defaultvalue?: number;
   onBlur?: () => void;
+  label?: string;
+  required?: boolean;
 }
 
-export function NumberField({ register, property, placeholder, errMsg, defaultvalue, onBlur }: INumberFieldProps) {
+export function NumberField({
+  register,
+  property,
+  placeholder,
+  errMsg,
+  defaultvalue,
+  onBlur,
+  label,
+  required,
+}: INumberFieldProps) {
   const setFormValue = (v: string) => {
     if (v === '') return undefined;
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
@@ -19,6 +30,14 @@ export function NumberField({ register, property, placeholder, errMsg, defaultva
 
   return (
     <Box w='100%'>
+      <Text fontSize='md'>
+        {label}
+        {required && (
+          <Text as='span' color='red' pl='1'>
+            *
+          </Text>
+        )}
+      </Text>
       <Input
         {...register(property, {
           setValueAs: setFormValue,
