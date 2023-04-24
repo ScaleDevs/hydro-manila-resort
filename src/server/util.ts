@@ -6,7 +6,6 @@ import { JwtExpiredError } from 'aws-jwt-verify/error';
 import { TRPCError } from '@trpc/server';
 
 import { constants } from './constants';
-import { getISOFormatFromSchedule } from '@/utils/helper';
 
 const verifier = CognitoJwtVerifier.create({
   userPoolId: constants.UserPoolId as string,
@@ -119,11 +118,4 @@ export const createReferenceNumber = () => {
   const dayjsInstance = dayjs();
 
   return dayjsInstance.format('MMMDDYY').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(6) + randomString(2);
-};
-
-export const tzSchedToDate = (bookingDate: string, schedule: string) => {
-  return dayjs.tz(
-    dayjs(getISOFormatFromSchedule(`${bookingDate} ${schedule}`)).format('YYYY-MM-DDTHH:mm'),
-    process.env.NEXT_PUBLIC_TIMEZONE,
-  );
 };

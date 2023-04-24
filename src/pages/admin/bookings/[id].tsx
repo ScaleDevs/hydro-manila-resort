@@ -5,7 +5,7 @@ import { Box, Button, Divider, Heading, SlideFade, Spinner, Stack, Text } from '
 import Layout from '@/layouts/admin';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, tableFormatTimeDisplay } from '@/modules/utils/helper';
-import RescheduleForm from '@/modules/booking/RescheduleForm';
+import AdminEditBookingForm from '@/modules/booking/AdminEditBookingForm';
 
 interface Props {
   id: string;
@@ -36,11 +36,11 @@ function Component({ id }: Props) {
       </Head>
 
       <Stack w='100%' alignItems='flex-end'>
-        <Button onClick={() => setShowReschedForm(!showReschedForm)}>{showReschedForm ? 'BACK' : 'RESCHEDULE'}</Button>
+        <Button onClick={() => setShowReschedForm(!showReschedForm)}>{showReschedForm ? 'BACK' : 'EDIT'}</Button>
       </Stack>
 
       {showReschedForm ? (
-        <RescheduleForm />
+        <AdminEditBookingForm bookingRefNo={id} />
       ) : (
         <>
           <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>

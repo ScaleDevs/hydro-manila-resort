@@ -10,6 +10,10 @@ export const dateToIsoString = (date: string) => {
   return dayjs.tz(date, process.env.NEXT_PUBLIC_TIMEZONE).toISOString();
 };
 
+export const utcDateToTzDayInstance = (date: string | Date) => {
+  return dayjs.utc(date).tz(process.env.NEXT_PUBLIC_TIMEZONE);
+};
+
 export const getISOFormatFromSchedule = (datetime: string) => {
   const strArr = datetime.split(' ');
   const date = strArr[0];
@@ -22,4 +26,15 @@ export const getISOFormatFromSchedule = (datetime: string) => {
   else if (a === 'AM' && time[0].length === 1) newTime = '0' + time[0];
 
   return `${date}T${newTime}:${time[1]}`;
+};
+
+export const tzSchedToDayJsInsance = (bookingDate: string, schedule: string) => {
+  return dayjs.tz(
+    dayjs(getISOFormatFromSchedule(`${bookingDate} ${schedule}`)).format('YYYY-MM-DDTHH:mm'),
+    process.env.NEXT_PUBLIC_TIMEZONE,
+  );
+};
+
+export const buildGoogleCalendarDateTime = (utcDateTime: string | Date) => {
+  return dayjs.utc(utcDateTime).format('YYYY-MM-DDTHH:mm:00.000') + 'Z';
 };

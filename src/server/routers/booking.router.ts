@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
+import { TRPCError } from '@trpc/server';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -43,8 +44,21 @@ export const bookingRouter = router({
         }),
       }),
     )
-    .mutation(({ input }) => {
-      return BookingService.updateBooking(input.bookingId, input.data);
+    .mutation(async ({ input }) => {
+      const bookingRecord = await BookingService.findBookingById(input.bookingId);
+      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
+
+      const { bookingDate, ...data } = input.data;
+
+      const updateLog = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data);
+      const result = await BookingService.updateBookingSchedule(bookingRecord, { bookingDate, ...data });
+
+      return BookingService.updateBooking(input.bookingId, result.product, result.productDetails, {
+        ...data,
+        updateLog: result?.updateLog ? [...updateLog, ...result.updateLog] : [...updateLog],
+        startSession: result?.startSession,
+        endSession: result?.endSession,
+      });
     }),
   getAllBookingsByDates: procedure
     .input(

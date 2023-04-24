@@ -50,14 +50,6 @@ class Respository {
         eventId,
         requestBody: {
           ...event,
-          start: {
-            dateTime: event.start?.dateTime,
-            timeZone: constants.general.timezone,
-          },
-          end: {
-            dateTime: event.end?.dateTime,
-            timeZone: constants.general.timezone,
-          },
         },
       });
 

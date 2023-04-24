@@ -51,9 +51,9 @@ class Respository {
   }
 
   public async getProductDetails(productId: string, version?: number) {
-    const selectedProduct = await this.findProductById(productId);
-    if (!selectedProduct) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
-    return selectedProduct.details[version || selectedProduct.activeVersion - 1];
+    const product = await this.findProductById(productId);
+    if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+    return { productDetails: product.details[version || product.activeVersion - 1], product };
   }
 }
 
