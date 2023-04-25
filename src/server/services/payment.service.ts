@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
 
+import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { IBooking } from '@/utils/types';
 import {
   createPaymentIntent,
@@ -28,7 +29,7 @@ import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
-import { createReferenceNumber, PHpeso, tzSchedToDate } from '../util';
+import { createReferenceNumber, PHpeso } from '../util';
 
 const bookingDataSchema = z.object({
   ref_no: z.string(),
@@ -54,7 +55,7 @@ const bookingDataSchema = z.object({
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
 class Service {
-  private async checkIfBookingDateIsAvailable({ startDate, endDate }: { startDate: string; endDate: string }) {
+  private async checkIfBookingDateIsAvailable({ startDate, endDate }: { startDate: string | Date; endDate: string | Date }) {
     const isBookingDateTaken = await BookingRepository.findBookingConflicts({
       startDate,
       endDate,
@@ -85,7 +86,7 @@ class Service {
     bookingDate: string;
   }) {
     try {
-      const productDetails = await ProductRepository.getProductDetails(input.productId, input.productVersion);
+      const { productDetails } = await ProductRepository.getProductDetails(input.productId, input.productVersion);
 
       let roomDetails;
       if (input.roomId) roomDetails = await RoomRepository.getRoomDetails(input.roomId, input.roomVersion);
@@ -113,8 +114,8 @@ class Service {
         roomVersion: input.roomVersion,
         productId: input.productId,
         productVersion: input.productVersion,
-        startSession: tzSchedToDate(input.bookingDate, productDetails.scheduleStart).toISOString(),
-        endSession: tzSchedToDate(endDate, productDetails.scheduleEnd).toISOString(),
+        startSession: tzSchedToDayJsInsance(input.bookingDate, productDetails.scheduleStart).toISOString(),
+        endSession: tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd).toISOString(),
         receipt: {
           productPrice: productDetails.price,
           roomPrice: roomDetails?.price || 0,
