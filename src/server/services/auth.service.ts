@@ -1,5 +1,4 @@
 import {
-  adminCreateUser,
   adminVerifyEmail,
   initiateAuth,
   refreshTokens,
@@ -10,9 +9,7 @@ import { getCookie, setCookie } from 'cookies-next';
 import { TRPCError } from '@trpc/server';
 import { ChallengeNameType, InitiateAuthCommandOutput } from '@aws-sdk/client-cognito-identity-provider';
 import { CognitoAccessTokenPayload } from 'aws-jwt-verify/jwt-model';
-
-import { sendUserInvite } from '@/server/repository/mailersend.repo';
-import { decodeToken, createTempPassword } from '../util';
+import { decodeToken } from '../util';
 
 class Service {
   private setReplyCookies(
@@ -36,13 +33,6 @@ class Service {
       maxAge: result.cookieAge,
       httpOnly: true,
     });
-  }
-
-  public async createUser(email: string) {
-    const tmpPwd = createTempPassword();
-    const result = await adminCreateUser(email, tmpPwd);
-    await sendUserInvite(email, tmpPwd);
-    return result;
   }
 
   public async signIn(ctx: any, username: string, password: string) {
