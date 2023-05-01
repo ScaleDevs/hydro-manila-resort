@@ -55,9 +55,6 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
       updates[key] = data[key as keyof typeof data];
     });
 
-    console.log('updates');
-    console.log(updates);
-
     mutate(
       {
         bookingId: bookingInfo.id,
@@ -65,7 +62,6 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
       },
       {
         onSuccess(data) {
-          console.log('SUCCESS');
           console.log(data);
         },
       },
