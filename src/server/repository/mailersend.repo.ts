@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import { constants } from '../constants';
+import { IBooking } from '@/utils/types';
 
 type SendTemplateEmailInput = {
   templateId: string;
@@ -211,5 +212,44 @@ export const notifyAdminDbInsertionError = async ({
       message_body: `The booking for customer ${customer_name} with booking reference ${ref_no} has been paid with payment_id ${payment_id} has not been added to your records so kindly add the schedule manually on your end. The schedule to be added is ${startSession} - ${endSession}`,
     },
     subject: 'Hydro Resort Manila Booking Record Not Added',
+  });
+};
+
+export const updateBookingPartialRefundEmail = async (
+  bookingRecord: IBooking,
+  partialRefund: string,
+  variables: {
+    room: string;
+    guests: string;
+    booking_type: string;
+    reference_no: string;
+    check_in_date: string;
+    check_out_date: string;
+    transaction: {
+      name: string;
+      value: string;
+    }[];
+    modification: {
+      name: string;
+      value: string;
+    }[];
+  },
+) => {
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.bookingUpdateTempId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: variables,
+    subject: 'Hydro Resort Manila Customer Booking Update Request',
+  });
+
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: bookingRecord.email,
+    variables: {
+      title_of_message: 'Booking Update Request',
+      greetings: 'Hi ' + bookingRecord.name + ',',
+      message_body: `Your request to update your details regarding your booking is now in progressed. You will receive an email confirmation once your booking details are updated and will also receive a partial refund of ${partialRefund}. Kindly reach our team with the contact details below if you have questions`,
+    },
+    subject: 'Hydro Resort Manila Customer Booking Failed',
   });
 };
