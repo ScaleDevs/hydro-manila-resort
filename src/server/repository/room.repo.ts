@@ -54,7 +54,7 @@ class Respository {
   public async getRoomDetails(roomId: string, version?: number) {
     const room = await this.findRoomById(roomId);
     if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-    return room.details[version || room.activeVersion];
+    return { room, roomDetails: room.details[version || room.activeVersion] };
   }
 }
 

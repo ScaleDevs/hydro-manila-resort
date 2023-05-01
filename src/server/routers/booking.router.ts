@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
 import { TRPCError } from '@trpc/server';
+import { ProductRepository } from '@/server/repository/product.repo';
+import { RoomRepository } from '@/server/repository/room.repo';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -38,9 +40,7 @@ export const bookingRouter = router({
           bookingDate: z.string().optional(),
           guests: z.number().optional(),
           roomId: z.string().nullable().optional(),
-          roomVersion: z.number().optional(),
           productId: z.string().optional(),
-          productVersion: z.number().optional(),
         }),
       }),
     )
@@ -59,6 +59,59 @@ export const bookingRouter = router({
         startSession: result?.startSession,
         endSession: result?.endSession,
       });
+    }),
+  customerUpdateRequest: procedure
+    .input(
+      z.object({
+        bookingRefNo: z.string(),
+        bookingRequestUpdate: z.object({
+          guests: z.number().optional(),
+          bookingDate: z.string().optional(),
+          productId: z.string().optional(),
+          roomId: z.string().optional(),
+        }),
+        customerInfo: z
+          .object({
+            bankType: z.string(),
+            accountNo: z.string(),
+            accountName: z.string(),
+          })
+          .optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
+      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
+
+      const product = input.bookingRequestUpdate.productId
+        ? await ProductRepository.getProductDetails(input.bookingRequestUpdate.productId)
+        : undefined;
+      const room = input.bookingRequestUpdate.roomId
+        ? await RoomRepository.getRoomDetails(input.bookingRequestUpdate.roomId)
+        : undefined;
+
+      const currentTotal = bookingRecord.receipt.total;
+      const newTotal = await BookingService.getBookingDetailsTotal(input.bookingRequestUpdate, { product, room });
+
+      // partial refund
+      if (currentTotal > newTotal && input.customerInfo) {
+        await BookingService.updateBookingPartialRefundCase(
+          bookingRecord,
+          input.bookingRequestUpdate,
+          input.customerInfo,
+          {
+            product,
+            room,
+          },
+          newTotal,
+        );
+      } else if (currentTotal < newTotal) {
+        // create a payment intent for customer to pay the additional amount
+      } else {
+        // just update the details
+      }
+
+      return true;
     }),
   getAllBookingsByDates: procedure
     .input(

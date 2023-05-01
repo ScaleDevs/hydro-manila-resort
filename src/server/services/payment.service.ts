@@ -89,7 +89,10 @@ class Service {
       const { productDetails } = await ProductRepository.getProductDetails(input.productId, input.productVersion);
 
       let roomDetails;
-      if (input.roomId) roomDetails = await RoomRepository.getRoomDetails(input.roomId, input.roomVersion);
+      if (input.roomId) {
+        const { roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId, input.roomVersion);
+        roomDetails = details;
+      }
 
       const bookingSetting = await BookingSettingRepository.findFirstBookingSetting();
       if (!bookingSetting)

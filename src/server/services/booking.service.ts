@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { BookingUpdateLog, ProductDetails } from '@prisma/client';
+import { BookingUpdateLog, ProductDetails, RoomDetails } from '@prisma/client';
 import { calendar_v3 } from 'googleapis';
 
-import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime } from '@/utils/helper';
+import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime, PHpeso } from '@/utils/helper';
 import { IBooking, IProduct, IRoom } from '@/utils/types';
 import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
@@ -11,7 +11,27 @@ import { ScheduledEventRepository } from '@/server/repository/scheduledevent.rep
 import { RoomRepository } from '@/server/repository/room.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
+import { BookingSettingRepository } from '@/server/repository/bookingsetting.repo';
+import { updateBookingPartialRefundEmail } from '@/server/repository/mailersend.repo';
 import { constants } from '../constants';
+
+type CustomerUpdateBookingParams = {
+  guests?: number;
+  bookingDate?: string | Date;
+  productId?: string;
+  roomId?: string;
+};
+
+type ProductRoomDetails = {
+  product?: {
+    product: IProduct;
+    productDetails: ProductDetails;
+  };
+  room?: {
+    room: IRoom;
+    roomDetails: RoomDetails;
+  };
+};
 
 class Service {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
@@ -125,9 +145,7 @@ class Service {
     data: {
       guests?: number | undefined;
       roomId?: string | null | undefined;
-      roomVersion?: number | undefined;
       productId?: string | undefined;
-      productVersion?: number | undefined;
     },
   ) {
     try {
@@ -157,14 +175,10 @@ class Service {
     data: {
       bookingDate?: string | undefined;
       productId?: string | undefined;
-      productVersion?: number | undefined;
     },
   ) {
     try {
-      const { productDetails, product } = await ProductRepository.getProductDetails(
-        data.productId || bookingRecord.productId,
-        data.productVersion,
-      );
+      const { productDetails, product } = await ProductRepository.getProductDetails(data.productId || bookingRecord.productId);
 
       const updateLog: BookingUpdateLog[] = [];
       const bookingDate = data.bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
@@ -176,8 +190,7 @@ class Service {
       const startSession = tzSchedToDayJsInsance(bookingDate, productDetails.scheduleStart).toISOString();
       const endSession = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd).toISOString();
 
-      if (!data.bookingDate && !data.productId && !data.productVersion)
-        return { updateLog, startSession, endSession, product, productDetails };
+      if (!data.bookingDate && !data.productId) return { updateLog, startSession, endSession, product, productDetails };
 
       updateLog.push({
         updatedBy: 'ADMIN',
@@ -197,43 +210,173 @@ class Service {
 
       return { updateLog, startSession, endSession, product, productDetails };
     } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingSchedule' });
     }
   }
 
   public async updateBooking(bookingId: string, product: IProduct, productDetails: ProductDetails, data: Partial<IBooking>) {
-    const updatedBooking = await BookingRepository.updateBooking(bookingId, data);
-    let chosenRoom: IRoom | null = null;
+    try {
+      let chosenRoom: IRoom | null = null;
 
-    if (data.roomId) {
-      chosenRoom = await RoomRepository.findRoomById(data.roomId);
-      if (!chosenRoom) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-    }
+      if (data.roomId) {
+        chosenRoom = await RoomRepository.findRoomById(data.roomId);
+        if (!chosenRoom) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
+      }
 
-    const googleCalendarUpdates: calendar_v3.Schema$Event = {
-      summary: updatedBooking.name,
-      description: `${product?.name} / ${updatedBooking.guests ?? 0} PAX / ${
-        chosenRoom?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
-      }`,
-    };
+      const updatedBooking = await BookingRepository.updateBooking(bookingId, { ...data });
 
-    if (!!data.startSession && !!data.endSession) {
-      console.log(buildGoogleCalendarDateTime(data.startSession));
-      googleCalendarUpdates['start'] = {
-        dateTime: buildGoogleCalendarDateTime(data.startSession),
-        timeZone: constants.general.timezone,
+      const googleCalendarUpdates: calendar_v3.Schema$Event = {
+        summary: updatedBooking.name,
+        description: `${product?.name} / ${updatedBooking.guests ?? 0} PAX / ${
+          chosenRoom?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
+        }`,
       };
 
-      googleCalendarUpdates['end'] = {
-        dateTime: buildGoogleCalendarDateTime(data.endSession),
-        timeZone: constants.general.timezone,
-      };
+      if (!!data.startSession && !!data.endSession) {
+        console.log(buildGoogleCalendarDateTime(data.startSession));
+        googleCalendarUpdates['start'] = {
+          dateTime: buildGoogleCalendarDateTime(data.startSession),
+          timeZone: constants.general.timezone,
+        };
+
+        googleCalendarUpdates['end'] = {
+          dateTime: buildGoogleCalendarDateTime(data.endSession),
+          timeZone: constants.general.timezone,
+        };
+      }
+
+      if (updatedBooking.calendarEventId)
+        await GoogleCalendarRepository.updateEvent(updatedBooking.calendarEventId, googleCalendarUpdates);
+
+      return updatedBooking;
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBooking' });
     }
+  }
 
-    if (updatedBooking.calendarEventId)
-      await GoogleCalendarRepository.updateEvent(updatedBooking.calendarEventId, googleCalendarUpdates);
+  public async getBookingDetailsTotal(
+    bookingRequestUpdate: CustomerUpdateBookingParams,
+    newProductRoomDetails: ProductRoomDetails,
+  ) {
+    try {
+      let newTotal = 0;
+      const { product, room } = newProductRoomDetails;
 
-    return updatedBooking;
+      if (!!bookingRequestUpdate.guests) {
+        const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
+        if (!bookingSettings) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Booking Settings Not Found' });
+        if (bookingRequestUpdate.guests > bookingSettings.minPax)
+          newTotal = (bookingRequestUpdate.guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
+      }
+      if (!!bookingRequestUpdate.productId && product) newTotal += product.productDetails.price;
+      if (!!bookingRequestUpdate.roomId && room) newTotal += room.roomDetails.price;
+
+      return newTotal;
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - getBookingDetailsTotal' });
+    }
+  }
+
+  public async updateBookingPartialRefundCase(
+    bookingRecord: IBooking,
+    bookingRequestUpdate: CustomerUpdateBookingParams,
+    customerInfo: {
+      bankType: string;
+      accountNo: string;
+      accountName: string;
+    },
+    newProductRoomDetails: ProductRoomDetails,
+    newTotal: number,
+  ) {
+    try {
+      const { product: newProduct, room: newRoom } = newProductRoomDetails;
+
+      let currentRoom = 'None';
+      const { product: currentProduct, productDetails: currentProductDetails } = await ProductRepository.getProductDetails(
+        bookingRecord.productId,
+      );
+      const modifications: { name: string; value: string }[] = [];
+
+      if (currentProductDetails.withRooms) currentRoom = 'ALL ROOMS';
+      else if (bookingRecord.roomId) {
+        const result = await RoomRepository.getRoomDetails(bookingRecord.roomId);
+        currentRoom = result.room.roomIdentityName;
+      }
+
+      if (!!bookingRequestUpdate.guests)
+        modifications.push({
+          name: 'No. of Guests',
+          value: `${bookingRequestUpdate.guests}`,
+        });
+
+      if (!!bookingRequestUpdate.roomId && newRoom)
+        modifications.push({
+          name: 'Rooms',
+          value: newRoom.room.roomIdentityName,
+        });
+
+      if ((!!bookingRequestUpdate.productId && newProduct) || bookingRequestUpdate.bookingDate) {
+        const bookingDate =
+          bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
+        const endDate = dayjs(bookingDate)
+          .add(!!newProduct?.productDetails.scheduleEndNextDay || currentProductDetails.scheduleEndNextDay ? 1 : 0, 'day')
+          .format('YYYY-MM-DD');
+
+        modifications.push({
+          name: 'Type of Booking',
+          value: newProduct?.product.name || currentProduct.name,
+        });
+
+        modifications.push({
+          name: 'Check-In Date',
+          value: tzSchedToDayJsInsance(
+            bookingDate as string,
+            newProduct?.productDetails.scheduleStart || currentProductDetails.scheduleStart,
+          ).format('MMM DD, YYYY / hh:mm A'),
+        });
+
+        modifications.push({
+          name: 'Check-Out Date',
+          value: tzSchedToDayJsInsance(
+            endDate,
+            newProduct?.productDetails.scheduleEnd || currentProductDetails.scheduleEnd,
+          ).format('MMM DD, YYYY / hh:mm A'),
+        });
+      }
+
+      // send email to both hydro team & customer
+      await updateBookingPartialRefundEmail(bookingRecord, PHpeso.format(bookingRecord.receipt.total - newTotal), {
+        reference_no: bookingRecord.ref_no,
+        guests: `${bookingRecord.guests}`,
+        booking_type: currentProduct.name,
+        room: currentRoom,
+        check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+        check_out_date: dayjs.utc(bookingRecord.endSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+        modification: modifications,
+        transaction: [
+          {
+            name: 'Total Refund Amount',
+            value: PHpeso.format(bookingRecord.receipt.total - newTotal),
+          },
+          {
+            name: 'Bank',
+            value: customerInfo.bankType,
+          },
+          {
+            name: 'Account No',
+            value: customerInfo.accountNo,
+          },
+          {
+            name: 'Account Name',
+            value: customerInfo.accountName,
+          },
+        ],
+      });
+
+      return true;
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingPartialRefundCase' });
+    }
   }
 }
 
