@@ -20,6 +20,7 @@ export const constants = {
   mailerSend: {
     reusableTempId: process.env.MAILER_SEND_REUSALBE_TEMPLATE_ID ?? '',
     bookingConfirmationTempId: process.env.MAILER_SEND_BOOKING_CONFIRMATION_TEMPLATE_ID ?? '',
+    bookingUpdateTempId: process.env.MAILER_SEND_BOOKING_UPDATE_TEMPLATE_ID ?? '',
     supportEmail: process.env.MAILER_SEND_HYDRO_SUPPORT_EMAIL ?? 'hydroresort.manila@gmail.com',
     fromEmail: process.env.MAILER_SEND_FROM_EMAIL,
     fromName: process.env.MAILER_SEND_FROM_NAME ?? 'Hydro Resort Manila Team',
