@@ -51,10 +51,10 @@ class Respository {
     return prisma.room.delete({ where: { roomId: id } });
   }
 
-  public async getRoomDetails(roomId: string, version?: number) {
+  public async getRoomDetails(roomId: string) {
     const room = await this.findRoomById(roomId);
     if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-    return { room, roomDetails: room.details[version || room.activeVersion] };
+    return { room, roomDetails: room.details[0] };
   }
 }
 
