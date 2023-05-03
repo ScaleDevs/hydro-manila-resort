@@ -90,7 +90,7 @@ class Service {
 
       let roomDetails;
       if (input.roomId) {
-        const { roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId, input.roomVersion);
+        const { roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId);
         roomDetails = details;
       }
 
@@ -104,7 +104,7 @@ class Service {
 
       let total = 0;
       total += productDetails.price;
-      if (roomDetails) total += roomDetails?.price;
+      if (roomDetails) total += roomDetails.price;
       if (input.guests && input.guests > bookingSetting.minPax)
         total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
