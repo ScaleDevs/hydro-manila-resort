@@ -56,7 +56,7 @@ class Service {
     try {
       const booking = await BookingRepository.findBookingByReferenceNo(refNo);
 
-      if (!booking) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No Booking Record Found' });
+      if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
 
       const product = await ProductRepository.findProductById(booking.productId);
 
@@ -73,8 +73,11 @@ class Service {
       }
 
       return bookingResult;
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    } catch (err: any) {
+      const code = err.code || 'INTERNAL_SERVER_ERROR';
+      const message = err.message || 'Something went wrong';
+
+      throw new TRPCError({ code, message });
     }
   }
 
@@ -355,10 +358,6 @@ class Service {
         modification: modifications,
         transaction: [
           {
-            name: 'Total Refund Amount',
-            value: PHpeso.format(bookingRecord.receipt.total - newTotal),
-          },
-          {
             name: 'Bank',
             value: customerInfo.bankType,
           },
@@ -369,6 +368,10 @@ class Service {
           {
             name: 'Account Name',
             value: customerInfo.accountName,
+          },
+          {
+            name: 'Total Refund Amount',
+            value: PHpeso.format(bookingRecord.receipt.total - newTotal),
           },
         ],
       });

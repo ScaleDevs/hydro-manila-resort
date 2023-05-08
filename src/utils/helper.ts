@@ -11,7 +11,7 @@ export const base64Encoding = (str: string) => {
   return result;
 };
 
-export const dateToIsoString = (date: string) => {
+export const dateToIsoString = (date: string | Date) => {
   return dayjs.tz(date, process.env.NEXT_PUBLIC_TIMEZONE).toISOString();
 };
 

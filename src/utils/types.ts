@@ -12,6 +12,14 @@ export type IBookingSetting = BookingSetting;
 export type IBookingRefund = BookingRefund;
 export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & DateSession;
 export type IBookingAttempt = Omit<BookingAttempt, 'startSession' | 'endSession'> & DateSession;
+export type IBookingPublicOnly = {
+  guests: number;
+  startSession: Date | string;
+  endSession: Date | string;
+  productId: string;
+  roomId: string | null;
+  currentTotal: number;
+};
 
 // inputs
 export type IPaginationInputs = {

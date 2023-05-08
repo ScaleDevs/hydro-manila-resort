@@ -1,9 +1,13 @@
 import { z } from 'zod';
+import dayjs from 'dayjs';
+import { TRPCError } from '@trpc/server';
+
 import { protectedProcedure, procedure, router } from '../trpc';
 import { BookingService } from '@/svc/booking.service';
-import { TRPCError } from '@trpc/server';
+import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { ProductRepository } from '@/server/repository/product.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
+import { GlobalService } from '@/server/services/global.service';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -28,6 +32,18 @@ export const bookingRouter = router({
   }),
   getBookingByRefNo: protectedProcedure.input(z.string()).query(({ input }) => {
     return BookingService.findBookingByReferenceNo(input);
+  }),
+  getBookingByRefNoPublic: procedure.input(z.string()).query(async ({ input }) => {
+    const bookingInfo = await BookingService.findBookingByReferenceNo(input);
+
+    return {
+      guests: bookingInfo.guests,
+      startSession: bookingInfo.startSession,
+      endSession: bookingInfo.endSession,
+      productId: bookingInfo.productId,
+      roomId: bookingInfo.roomId,
+      currentTotal: bookingInfo.receipt.total,
+    };
   }),
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return BookingService.deleteBooking(input);
@@ -122,5 +138,28 @@ export const bookingRouter = router({
     )
     .query(({ input }) => {
       return BookingService.findAllBookingsByDates(input);
+    }),
+  checkBookingAvailability: procedure
+    .input(
+      z.object({
+        bookingDate: z.string(),
+        productId: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const product = await ProductRepository.getProductDetails(input.productId);
+      if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Not Found!' });
+
+      const endDate = dayjs(input.bookingDate)
+        .add(!!product.productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .format('YYYY-MM-DD');
+
+      const startSession = tzSchedToDayJsInsance(input.bookingDate, product.productDetails.scheduleStart).toISOString();
+      const endSession = tzSchedToDayJsInsance(endDate, product.productDetails.scheduleEnd).toISOString();
+
+      return GlobalService.checkScheduleAvailability({
+        startDate: startSession,
+        endDate: endSession,
+      });
     }),
 });

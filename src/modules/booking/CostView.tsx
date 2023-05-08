@@ -1,17 +1,25 @@
-import * as React from 'react';
-import { HStack, Box, Text } from '@chakra-ui/react';
-import { IProduct, IRoom } from '@/utils/types';
+import { useEffect, useState } from 'react';
+import { HStack, Box, Text, Center, SlideFade, Spinner } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
+import { IProduct, IRoom } from '@/utils/types';
 
 export interface ICostViewProps {
-  product?: IProduct;
-  room?: IRoom;
+  productId?: string;
+  roomId?: string;
   guests: number;
 }
 
-export default function CostView({ product, room, guests }: ICostViewProps) {
+export default function CostView({ productId, roomId, guests }: ICostViewProps) {
+  const [product, setProduct] = useState<IProduct | undefined>(undefined);
+  const [room, setRoom] = useState<IRoom | undefined>(undefined);
+
   const { data: bookingSetting } = trpc.bookingSetting.getBookingSetting.useQuery();
+  const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
+    page: 1,
+    limit: 100,
+  });
+  const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
 
   const getTotal = () => {
     if (!bookingSetting) return 0;
@@ -22,6 +30,25 @@ export default function CostView({ product, room, guests }: ICostViewProps) {
     if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
     return total;
   };
+
+  useEffect(() => {
+    const product = productsData?.records.find((row) => row.productId === productId);
+    const room = roomsData?.records.find((row) => row.roomId === roomId);
+
+    setProduct(product);
+    setRoom(room);
+  }, [productId, productsData?.records, roomId, roomsData?.records]);
+
+  if (fetchingProducts || fetchingRooms)
+    return (
+      <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
+        <SlideFade in>
+          <Center w='50%' h='300px' mx='auto'>
+            <Spinner size='xl' />
+          </Center>
+        </SlideFade>
+      </Box>
+    );
 
   return (
     <>

@@ -228,7 +228,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
               </Stack>
 
               <VStack display={{ base: 'block', md: 'none' }}>
-                <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
+                <CostView productId={watch('productId')} roomId={watch('roomId')} guests={watch('guests')} />
               </VStack>
 
               <Box display={{ base: 'flex', md: 'none' }} justifyContent='right'>
@@ -248,7 +248,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                 <CalenderInput setValue={setValue} product={selectedProduct} errMsg={errors.bookingDate?.message} />
               </Box>
 
-              <CostView product={selectedProduct} room={selectedRoom} guests={watch('guests')} />
+              <CostView productId={watch('productId')} roomId={watch('roomId')} guests={watch('guests')} />
 
               <Box display='flex' justifyContent='right'>
                 <Button
@@ -272,6 +272,17 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
         <NavLink href='/booking/cancel' bg='gray.100' w='auto'>
           <Button w='300px' bg='red.500' _hover={{ bg: 'red.400' }}>
             Cancel your booking here
+          </Button>
+        </NavLink>
+      </Stack>
+      <br />
+      <Stack direction='column' w={{ base: '95%', md: '100%', lg: '90%' }} mx='auto' alignItems='flex-start'>
+        <Text color='primary.1' fontFamily='primary.1' fontSize='xl' fontWeight='semibold'>
+          Want to update a Booking?
+        </Text>
+        <NavLink href='/booking/update' bg='gray.100' w='auto'>
+          <Button w='300px' bg='blue.500' _hover={{ bg: 'blue.400' }}>
+            Update your booking here
           </Button>
         </NavLink>
       </Stack>
