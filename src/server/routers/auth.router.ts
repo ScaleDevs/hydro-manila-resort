@@ -1,13 +1,10 @@
 import { z } from 'zod';
 import { deleteCookie, getCookie } from 'cookies-next';
 
-import { protectedProcedure, procedure, router } from '../trpc';
+import { procedure, router } from '../trpc';
 import { AuthService } from '@/server/services/auth.service';
 
 export const authRouter = router({
-  createUser: protectedProcedure.input(z.string().email()).mutation(({ input }) => {
-    return AuthService.createUser(input);
-  }),
   signIn: procedure
     .input(
       z.object({
