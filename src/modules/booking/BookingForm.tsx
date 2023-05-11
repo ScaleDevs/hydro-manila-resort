@@ -50,7 +50,12 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   });
   const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate, isError, error } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+  const {
+    mutate,
+    isError,
+    error,
+    isLoading: isInitiatingPaymentSession,
+  } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
 
   const {
     register,
@@ -264,7 +269,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                 <Button
                   mt='20px'
                   type='submit'
-                  isLoading={getProductsLoader || getRoomLoader || bookingSettingLoader}
+                  isLoading={getProductsLoader || getRoomLoader || bookingSettingLoader || isInitiatingPaymentSession}
                   disabled={bookingSetting ? watch('guests') > bookingSetting.maxPax : false}
                 >
                   PROCEED TO PAYMENT
