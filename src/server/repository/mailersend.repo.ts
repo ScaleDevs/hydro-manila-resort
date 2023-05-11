@@ -215,6 +215,43 @@ export const notifyAdminDbInsertionError = async ({
   });
 };
 
+export const notificationUpdateFailed = async ({
+  customer_name,
+  customer_email,
+  payment_id,
+  ref_no,
+}: {
+  customer_name: string;
+  customer_email: string;
+  payment_id?: string;
+  ref_no: string;
+}) => {
+  console.log('payment here', payment_id);
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Customer Booking Update Failed',
+      greetings: 'Hi Hydro Support,',
+      message_body: `The update booking request for customer ${customer_name} with booking reference ${ref_no} ${
+        !!payment_id ? `has been paid with payment_id ${payment_id} and` : ''
+      } has not been updated to your records so kindly handle the situation manually from here. You can contact the customer to know more about the details regarding the update or check the history of your emails for the update details by using the booking reference number.`,
+    },
+    subject: 'Hydro Resort Manila Booking Update Failed',
+  });
+
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: customer_email,
+    variables: {
+      title_of_message: 'Customer Booking Update Failed',
+      greetings: 'Hi ' + customer_name + ',',
+      message_body: `This is to notify that your request to update your booking details have failed but our team is already notified about this issue and will proceed with the update. Our team may contact you through your email if there are any news regarding this matter and we advice you to send a follow up email to the hydro team to make sure your updates are confirmed and is expected. Kindly reach our team with the contact details below if you have questions.`,
+    },
+    subject: 'Hydro Resort Manila Booking Update Failed',
+  });
+};
+
 export const updateBookingPartialRefundEmail = async (
   bookingRecord: IBooking,
   partialRefund: string,
@@ -236,7 +273,7 @@ export const updateBookingPartialRefundEmail = async (
   },
 ) => {
   await sendTemplateEmail({
-    templateId: constants.mailerSend.bookingUpdateTempId,
+    templateId: 'z3m5jgr9wqxgdpyo',
     recipientEmail: constants.mailerSend.supportEmail,
     variables: variables,
     subject: 'Hydro Resort Manila Customer Booking Update Request',
@@ -248,8 +285,74 @@ export const updateBookingPartialRefundEmail = async (
     variables: {
       title_of_message: 'Booking Update Request',
       greetings: 'Hi ' + bookingRecord.name + ',',
-      message_body: `Your request to update your details regarding your booking is now in progressed. You will receive an email confirmation once your booking details are updated and will also receive a partial refund of ${partialRefund}. Kindly reach our team with the contact details below if you have questions`,
+      message_body: `Your request to update your details regarding your booking of reference ${bookingRecord.ref_no} is now in progressed. You will receive an email confirmation once your booking details are updated and will also receive a partial refund of ${partialRefund}. Kindly reach our team with the contact details below if you have questions`,
     },
-    subject: 'Hydro Resort Manila Customer Booking Failed',
+    subject: 'Hydro Resort Manila Customer Booking Update Request',
+  });
+};
+
+export const bookingDateChangeConfirmation = async (
+  customerEmail: string,
+  {
+    customerName,
+    reference_no,
+    fromDate,
+    toDate,
+  }: {
+    customerName: string;
+    reference_no: string;
+    fromDate: string;
+    toDate: string;
+  },
+) => {
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Booking Date Updated',
+      greetings: 'Hi Hydro Support,',
+      message_body: `Kindly take note of the booking with reference ${reference_no} that has changed its booked date from ${fromDate} to ${toDate}`,
+    },
+    subject: 'Hydro Resort Manila Customer Booked Date Updated',
+  });
+
+  await sendTemplateEmail({
+    templateId: constants.mailerSend.reusableTempId,
+    recipientEmail: customerEmail,
+    variables: {
+      title_of_message: 'Booking Date Updated',
+      greetings: 'Hi ' + customerName + ',',
+      message_body: `You're booking with reference ${reference_no} has been updated from booked date ${fromDate} to ${toDate}`,
+    },
+    subject: 'Hydro Resort Manila Customer Booked Date Updated',
+  });
+};
+
+export const updateBookingConfirmation = async (
+  customerEmail: string,
+  variables: {
+    room: string;
+    guests: string;
+    booking_type: string;
+    reference_no: string;
+    check_in_date: string;
+    check_out_date: string;
+    customer_name: string;
+    total_payment: string;
+  },
+) => {
+  const tempId = 'pq3enl6xz87l2vwr';
+  await sendTemplateEmail({
+    templateId: tempId,
+    recipientEmail: customerEmail,
+    variables,
+    subject: 'Hydro Resort Manila Customer Booking Update Confirmation',
+  });
+
+  await sendTemplateEmail({
+    templateId: tempId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables,
+    subject: 'Hydro Resort Manila Customer Booking Update Confirmation',
   });
 };

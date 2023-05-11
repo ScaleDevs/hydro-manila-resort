@@ -16,17 +16,15 @@ import {
   Td,
   Tr,
 } from '@chakra-ui/react';
-import dayjs from 'dayjs';
 
 import { trpc } from '@/utils/trpc';
-import { IBooking } from '@/utils/types';
+import { BookingStatusDisplay } from '@/utils/types';
 
 const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
-  const [booking, setBooking] = useState<IBooking | null>(null);
-  const [productId, setProductId] = useState('');
+  const [statusDisplay, setStatusDisplay] = useState<BookingStatusDisplay | null>(null);
+  const [confirmType, setConfirmType] = useState<'CREATE' | 'UPDATE'>('CREATE');
 
   const { data, isLoading } = trpc.payment.getPaymentIntentSession.useQuery({ paymentIntentId: payment_intent_id as string });
-  const { data: productData } = trpc.product.getProductById.useQuery(productId);
 
   const retryPayment = () => {
     if (data && data.attributes.next_action?.redirect?.url) window.location.href = data.attributes.next_action.redirect.url;
@@ -34,12 +32,11 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
 
   useEffect(() => {
     const result = data?.attributes as any;
-    if (result && result.metadata) {
-      const bookingData = JSON.parse(result.metadata.bookingRecord);
-      console.log(bookingData);
-      setBooking(bookingData);
-      setProductId(bookingData.productId);
-    }
+    if (!result) return;
+    const metadata = result.metadata;
+
+    if (!!metadata.bookingUpdateParams) setConfirmType('UPDATE');
+    if (metadata.statusDisplay) setStatusDisplay(JSON.parse(metadata.statusDisplay));
   }, [data]);
 
   return (
@@ -81,20 +78,32 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
                   <Tbody>
                     <Tr>
                       <Td fontWeight='semibold'>REFERENCE</Td>
-                      <Td>{booking?.ref_no}</Td>
+                      <Td>{statusDisplay?.ref_no}</Td>
                     </Tr>
                     <Tr>
                       <Td fontWeight='semibold'>NAME</Td>
-                      <Td>{booking?.name}</Td>
+                      <Td>{statusDisplay?.customerName}</Td>
                     </Tr>
                     <Tr>
                       <Td fontWeight='semibold'>DATE</Td>
-                      <Td>{booking ? dayjs(booking.startSession).format('MMM DD, YYYY hh:mm A') : 'N/A'}</Td>
+                      <Td>{statusDisplay?.bookedDate}</Td>
                     </Tr>
                     <Tr>
                       <Td fontWeight='semibold'>SCHEDULE</Td>
-                      <Td>{productData?.name || ''}</Td>
+                      <Td>{statusDisplay?.scheduleType}</Td>
                     </Tr>
+                    {statusDisplay?.guests && (
+                      <Tr>
+                        <Td fontWeight='semibold'>GUESTS</Td>
+                        <Td>{statusDisplay.guests}</Td>
+                      </Tr>
+                    )}
+                    {statusDisplay?.roomName && (
+                      <Tr>
+                        <Td fontWeight='semibold'>ROOM</Td>
+                        <Td>{statusDisplay.roomName}</Td>
+                      </Tr>
+                    )}
                   </Tbody>
                 </Table>
               </TableContainer>
@@ -108,7 +117,8 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
           {data?.attributes.status === 'succeeded' && (
             <Box w='90%'>
               <Text mt='10px' textAlign='center'>
-                You should receive an email within a few minutes regarding your booking confirmation.
+                You should receive an email within a few minutes for the confirmation regarding your{' '}
+                {confirmType === 'UPDATE' ? 'update' : 'booking'}.
               </Text>
               <Text mt='5px' textAlign='center'>
                 If you have not receive any email after waiting long then kindly contact our team at hydroresort.manila@gmail.com

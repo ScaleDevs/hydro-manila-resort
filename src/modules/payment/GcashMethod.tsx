@@ -3,15 +3,15 @@ import { Button, useToast } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
 import { createPaymentMethod } from '../fetch-calls';
-import useBookingStoreTrack from '@/store/booking.store';
+import usePaymentStoreTrack from '@/store/payment.store';
 
 export interface IGcashMethodProps {
   setIsTaken: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function GcashMethod({ setIsTaken }: IGcashMethodProps) {
-  const { clientKey, paymentIntentId } = useBookingStoreTrack();
-  const { mutate } = trpc.payment.attachPaymentMethodToIntent.useMutation();
+  const { clientKey, paymentIntentId } = usePaymentStoreTrack();
+  const { mutate, isLoading } = trpc.payment.attachPaymentMethodToIntent.useMutation();
   const toast = useToast();
 
   const handlePayment = async () => {
@@ -50,7 +50,7 @@ export default function GcashMethod({ setIsTaken }: IGcashMethodProps) {
 
   return (
     <>
-      <Button mt='20px' onClick={handlePayment}>
+      <Button mt='20px' onClick={handlePayment} isLoading={isLoading}>
         PROCEED
       </Button>
     </>

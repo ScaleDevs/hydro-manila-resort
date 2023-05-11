@@ -7,7 +7,7 @@ import { IBookingPublicOnly } from '@/utils/types';
 export const bookingRequestUpdatesSchema = z.object({
   guests: z.number(),
   productId: z.string().min(1, 'Required'),
-  roomId: z.string().optional(),
+  roomId: z.string().optional().nullable(),
   bookingDate: z.string().min(1, 'Required'),
 });
 
@@ -29,6 +29,8 @@ export type BookingUpdateRequestStates = {
   bookingUpdateCase: BookingUpdateCase;
   newTotal: number;
   isRequestSuccess: boolean;
+  stepDescription: string;
+  stepsLength: number;
 };
 
 type BookingUpdateRequestActions = {
@@ -39,6 +41,8 @@ type BookingUpdateRequestActions = {
   setBookingUpdateCase: (data: BookingUpdateCase) => void;
   setIsRequestSuccess: (data: boolean) => void;
   setNewTotal: (amount: number) => void;
+  setStepDescription: (desc: string) => void;
+  setBookingUpdateStates: (data: Partial<BookingUpdateRequestStates>) => void;
   resetStates: () => void;
 };
 
@@ -52,10 +56,23 @@ const initState: BookingUpdateRequestStates = {
   bookingUpdateCase: 'NORMAL',
   newTotal: 0,
   isRequestSuccess: false,
+  stepDescription: 'Find Booking Record',
+  stepsLength: 3,
 };
 
 const stateStore = devtools((set) => ({
   ...initState,
+
+  setBookingUpdateStates: (data) => {
+    set((states) => ({
+      ...states,
+      ...data,
+    }));
+  },
+
+  setStepDescription: (desc) => {
+    set({ stepDescription: desc });
+  },
 
   setNewTotal: (amount) => {
     set({ newTotal: amount });

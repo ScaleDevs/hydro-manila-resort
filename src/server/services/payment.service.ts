@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
+import { TRPCError } from '@trpc/server';
+import { TransactionLog } from '@prisma/client';
 
-import { tzSchedToDayJsInsance } from '@/utils/helper';
-import { IBooking } from '@/utils/types';
+import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
+import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
 import {
   createPaymentIntent,
   attachPaymentMethodToIntent,
@@ -11,7 +13,6 @@ import {
   getRefundDetails,
   createRefund,
 } from '@/server/repository/payment.repo';
-import { TRPCError } from '@trpc/server';
 import { constants } from '../constants';
 import { BookingService } from '@/svc/booking.service';
 import {
@@ -20,16 +21,25 @@ import {
   sendRefundEmailConflictBooking,
   sendRefundEmailProcessing,
   sendRefundEmailSuccess,
+  updateBookingConfirmation,
 } from '@/server/repository/mailersend.repo';
 import { BookingRefundRepository } from '@/server/repository/bookingrefund.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
 import { BookingSettingRepository } from '@/server/repository/bookingsetting.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
-import { ScheduledEventRepository } from '../repository/scheduledevent.repo';
+import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
 import { createReferenceNumber, PHpeso } from '../util';
+
+const receiptSchema = z.object({
+  productPrice: z.number(),
+  roomPrice: z.number(),
+  additionalHeadsPrice: z.number(),
+  bookingFee: z.number(),
+  total: z.number(),
+});
 
 const bookingDataSchema = z.object({
   ref_no: z.string(),
@@ -43,13 +53,14 @@ const bookingDataSchema = z.object({
   roomVersion: z.number(),
   productId: z.string(),
   productVersion: z.number(),
-  receipt: z.object({
-    productPrice: z.number(),
-    roomPrice: z.number(),
-    additionalHeadsPrice: z.number(),
-    bookingFee: z.number(),
-    total: z.number(),
-  }),
+  receipt: receiptSchema,
+});
+
+const bookingUpdatesSchema = z.object({
+  guests: z.number().optional(),
+  bookingDate: z.string().optional(),
+  productId: z.string().optional(),
+  roomId: z.string().optional().nullable(),
 });
 
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
@@ -86,12 +97,13 @@ class Service {
     bookingDate: string;
   }) {
     try {
-      const { productDetails } = await ProductRepository.getProductDetails(input.productId, input.productVersion);
+      const { product, productDetails } = await ProductRepository.getProductDetails(input.productId, input.productVersion);
 
-      let roomDetails;
+      let roomDetails, roomName;
       if (input.roomId) {
-        const { roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId);
+        const { room, roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId);
         roomDetails = details;
+        roomName = room.roomIdentityName;
       }
 
       const bookingSetting = await BookingSettingRepository.findFirstBookingSetting();
@@ -108,6 +120,9 @@ class Service {
       if (input.guests && input.guests > bookingSetting.minPax)
         total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
+      const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, productDetails.scheduleStart);
+      const endSessionDayInstance = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd);
+
       const data = {
         name: input.name,
         email: input.email,
@@ -117,8 +132,8 @@ class Service {
         roomVersion: input.roomVersion,
         productId: input.productId,
         productVersion: input.productVersion,
-        startSession: tzSchedToDayJsInsance(input.bookingDate, productDetails.scheduleStart).toISOString(),
-        endSession: tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd).toISOString(),
+        startSession: startSessionDayInstance.toISOString(),
+        endSession: endSessionDayInstance.toISOString(),
         receipt: {
           productPrice: productDetails.price,
           roomPrice: roomDetails?.price || 0,
@@ -130,6 +145,18 @@ class Service {
           total,
         },
       };
+
+      const refNo = createReferenceNumber();
+
+      const statusDisplay = {
+        ref_no: refNo,
+        customerName: input.name,
+        guests: input.guests,
+        bookedDate: startSessionDayInstance.format('MMM DD, YYYY hh:mm A'),
+        checkOutDate: endSessionDayInstance.format('MMM DD, YYYY hh:mm A'),
+        scheduleType: product.name,
+        roomName: roomName,
+      } as BookingStatusDisplay;
 
       const isTaken = await this.checkIfBookingDateIsAvailable({
         startDate: data.startSession,
@@ -152,9 +179,15 @@ class Service {
             },
           },
           metadata: {
+            statusDisplay: JSON.stringify(statusDisplay),
+            bookedSchedule: JSON.stringify({
+              startSession: data.startSession,
+              endSession: data.endSession,
+              ref_no: refNo,
+            }),
             bookingRecord: JSON.stringify({
               ...data,
-              ref_no: createReferenceNumber(),
+              ref_no: refNo,
             }),
           },
         }),
@@ -165,27 +198,128 @@ class Service {
     }
   }
 
+  public async initiatePaymentSessionForUpdateBooking(bookingRefNo: string, bookingUpdates: CustomerUpdateBookingParams) {
+    try {
+      const bookingRecord = await BookingRepository.findBookingByReferenceNo(bookingRefNo);
+      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
+
+      const product = await ProductRepository.findProductById(bookingUpdates.productId || bookingRecord.productId);
+      const roomId = bookingUpdates.roomId || bookingRecord.roomId;
+      const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
+      const receipt = await BookingService.getBookingDetailsTotal({
+        product,
+        room,
+        guests: bookingUpdates.guests || bookingRecord.guests,
+      });
+      let bookedSchedule = '';
+      const statusDisplay = {
+        ref_no: bookingRecord.ref_no,
+        customerName: bookingRecord.name,
+        guests: bookingUpdates.guests || bookingRecord.guests,
+        bookedDate: '',
+        checkOutDate: '',
+        scheduleType: product.name,
+        roomName: room?.roomIdentityName,
+      } as BookingStatusDisplay;
+
+      if (bookingUpdates.bookingDate || bookingUpdates.productId) {
+        const productDetails = product.details[0];
+
+        const bookingDate =
+          (bookingUpdates.bookingDate as string) || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
+        const endDate = dayjs(bookingDate)
+          .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+          .format('YYYY-MM-DD');
+
+        const startSessionDayInstance = tzSchedToDayJsInsance(bookingDate, productDetails.scheduleStart);
+        const endSessionDayInstance = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd);
+
+        statusDisplay.bookedDate = startSessionDayInstance.format('MMM DD, YYYY hh:mm A');
+        statusDisplay.checkOutDate = endSessionDayInstance.format('MMM DD, YYYY hh:mm A');
+
+        const startSession = startSessionDayInstance.toISOString();
+        const endSession = endSessionDayInstance.toISOString();
+
+        const isTaken = await this.checkIfBookingDateIsAvailable({
+          startDate: startSession,
+          endDate: endSession,
+        });
+
+        if (isTaken) throw new TRPCError({ code: 'CONFLICT', message: 'Schedule is not available' });
+
+        bookedSchedule = JSON.stringify({
+          startSession,
+          endSession,
+          ref_no: bookingRecord.ref_no,
+        });
+      } else {
+        statusDisplay.bookedDate = dayjs
+          .utc(bookingRecord.startSession)
+          .tz(constants.general.timezone)
+          .format('MMM DD, YYYY hh:mm A');
+        statusDisplay.checkOutDate = dayjs
+          .utc(bookingRecord.endSession)
+          .tz(constants.general.timezone)
+          .format('MMM DD, YYYY hh:mm A');
+      }
+
+      return {
+        paymentIntentResource: await createPaymentIntent({
+          // in cents formula peso * 100
+          amount: (receipt.total - bookingRecord.receipt.total) * 100,
+          currency: 'PHP',
+          capture_type: 'automatic',
+          statement_descriptor: constants.general.companyName,
+          payment_method_allowed: ['gcash', 'card'],
+          payment_method_options: {
+            card: {
+              request_three_d_secure: 'any',
+            },
+          },
+          metadata: {
+            statusDisplay: JSON.stringify(statusDisplay),
+            bookedSchedule,
+            bookingUpdateParams: JSON.stringify({
+              currentBookingRecord: bookingRecord,
+              bookingRecordId: bookingRecord.id,
+              updates: {
+                ...bookingUpdates,
+              },
+            }),
+            receipt: JSON.stringify(receipt),
+          },
+        }),
+      };
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    }
+  }
+
   public async attachPaymentMethodToIntent(data: AttachPaymentMethodToIntentAttr) {
     try {
       const result = await this.getPaymentIntentSession(data.paymentIntentId);
-      const bookingRecord = JSON.parse(result.attributes.metadata.bookingRecord) as IBooking;
 
-      const isTaken = await this.checkIfBookingDateIsAvailable({
-        startDate: bookingRecord.startSession,
-        endDate: bookingRecord.endSession,
-      });
+      if (!!result.attributes.metadata.bookedSchedule) {
+        const session = JSON.parse(result.attributes.metadata.bookedSchedule) as DateSession & { ref_no: string };
 
-      if (isTaken) return { data: null };
+        const isTaken = await this.checkIfBookingDateIsAvailable({
+          startDate: session.startSession,
+          endDate: session.endSession,
+        });
 
-      await BookingAttemptRepository.createBookingAttempt({
-        startSession: bookingRecord.startSession,
-        endSession: bookingRecord.endSession,
-        ref_no: bookingRecord.ref_no,
-        expireAt: dayjs().add(25, 'm').toDate(),
-      });
+        if (isTaken) return { data: null };
+
+        await BookingAttemptRepository.createBookingAttempt({
+          startSession: session.startSession,
+          endSession: session.endSession,
+          ref_no: session.ref_no,
+          expireAt: dayjs().add(25, 'm').toDate(),
+        });
+      }
 
       return attachPaymentMethodToIntent(data);
     } catch (err) {
+      console.log(err);
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
@@ -356,7 +490,8 @@ class Service {
       endSession: parsed.data.endSession,
       calendarEventId,
       refundId: null,
-      updateLog: [],
+      updateLogs: [],
+      transactionLogs: [],
     });
 
     if (!bookingRecord) {
@@ -477,6 +612,111 @@ class Service {
 
       console.log('EMAIL SUCCESSFULLY SENT');
     }
+  }
+
+  public async handleUpdateBookingPayment(paymentIntentId: string, amountPaid: number) {
+    const paymentIntentRecord = await getPaymentIntentSession(paymentIntentId);
+
+    if (
+      !paymentIntentRecord ||
+      paymentIntentRecord.attributes.status !== 'succeeded' ||
+      paymentIntentRecord.attributes.payments.length === 0 ||
+      !paymentIntentRecord.attributes.metadata
+    ) {
+      console.log('Invalid Payment Intent!');
+      return;
+    }
+
+    const metadata = paymentIntentRecord.attributes.metadata;
+    const bookingUpdateParams = JSON.parse(metadata.bookingUpdateParams);
+    const bookingRecordId = bookingUpdateParams.bookingRecordId;
+
+    if (!bookingRecordId) {
+      console.log('No Booking Record Id provided');
+      return;
+    }
+
+    const bookingRecord = await BookingRepository.findBookingById(bookingRecordId);
+
+    if (!bookingRecord) {
+      console.log('No Booking Record Found');
+      return;
+    }
+
+    const bookingUpdates = bookingUpdateParams.updates;
+    const parsedUpdates = bookingUpdatesSchema.safeParse(bookingUpdates);
+
+    if (!parsedUpdates.success) {
+      console.log('Invalid Booking Updates Data!');
+      console.log(parsedUpdates.error.message);
+      return;
+    }
+
+    const parsedReceipt = receiptSchema.safeParse(metadata.receipt ? JSON.parse(metadata.receipt) : '{}');
+
+    if (!parsedReceipt.success) {
+      console.log('Invalid Receipt!');
+      console.log(parsedReceipt.error.message);
+      return;
+    }
+
+    const { bookingDate, ...data } = parsedUpdates.data;
+    const paymentId = paymentIntentRecord.attributes.payments[0].id;
+    const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
+    const roomId = data.roomId || bookingRecord.roomId;
+    const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
+    const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'CUSTOMER', paymentId);
+    const result = await BookingService.buildScheduleAndUpdateLog({
+      bookingRecord,
+      updatedBookedDate: bookingDate,
+      updatedProductId: data.productId,
+      updatedBy: 'CUSTOMER',
+      productDetails: product.details[0],
+      paymentId,
+    });
+    const transactionLogs: TransactionLog[] = [
+      ...bookingRecord.transactionLogs,
+      {
+        refNo: paymentId,
+        paymentIntentId: paymentIntentId,
+        type: 'PAYMENT',
+        amount: amountPaid,
+      },
+    ];
+
+    if (metadata.statusDisplay) {
+      const statusDisplay = JSON.parse(metadata.statusDisplay) as BookingStatusDisplay;
+
+      if (!!metadata.bookedSchedule) await BookingAttemptRepository.deleteBookingAttemptWithRefNo(statusDisplay.ref_no);
+      await updateBookingConfirmation(bookingRecord.email, {
+        customer_name: statusDisplay.customerName,
+        guests: `${statusDisplay.guests || 0}`,
+        booking_type: statusDisplay.scheduleType,
+        reference_no: statusDisplay.ref_no,
+        check_in_date: statusDisplay.bookedDate,
+        check_out_date: statusDisplay.checkOutDate,
+        room: statusDisplay.roomName || 'N/A',
+        total_payment: PHpeso.format(paymentIntentRecord.attributes.amount / 100),
+      });
+    }
+
+    await BookingService.updateBooking({
+      bookingId: bookingRecordId,
+      product,
+      room,
+      data: {
+        ...data,
+        roomId,
+        startSession: result.startSession,
+        endSession: result.endSession,
+        receipt: { ...parsedReceipt.data },
+        updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
+        transactionLogs,
+      },
+      paymentId,
+    });
+
+    console.log('done update!!');
   }
 }
 

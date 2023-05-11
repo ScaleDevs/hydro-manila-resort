@@ -26,7 +26,7 @@ function Home() {
         )}
         {step === 2 ? (
           <SlideFade in={step === 2} offsetY='20px'>
-            <PaymentForm />
+            <PaymentForm previousStep={() => setStep(1)} />
           </SlideFade>
         ) : (
           ''

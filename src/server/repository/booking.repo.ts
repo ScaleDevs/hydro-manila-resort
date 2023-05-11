@@ -1,5 +1,6 @@
 import prisma from './prisma.client';
 import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 
 export type IFindManyBookingInput = {
@@ -20,7 +21,9 @@ class Respository {
   }
 
   public async findBookingById(id: string) {
-    return prisma.booking.findFirst({ where: { id } });
+    const booking = await prisma.booking.findFirst({ where: { id } });
+    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+    return booking;
   }
 
   public async findBookingByReferenceNo(refNo: string) {

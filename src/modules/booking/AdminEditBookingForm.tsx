@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import dayjs from 'dayjs';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
@@ -25,14 +26,15 @@ export interface IRescheduleFormProps {
 
 export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormProps) {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
-
+  const [formError, setFormError] = useState<string | null>(null);
   const { data: bookingInfo, isLoading: fetchingBookingInfo } = trpc.booking.getBookingByRefNo.useQuery(bookingRefNo);
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
     limit: 100,
   });
   const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate, isLoading: isUpdating, isSuccess } = trpc.booking.updateBooking.useMutation();
+  const { mutate, isLoading: isUpdating, isSuccess, error } = trpc.booking.updateBooking.useMutation();
+  const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
 
   const {
     register,
@@ -48,7 +50,17 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
   };
 
   const submitUpdate = (data: FormSchemaType) => {
-    if (!bookingInfo) return;
+    if (!bookingInfo || !bookingSetting) return;
+    if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
+      setFormError('Schedule is not available! Kindly choose another date');
+      return;
+    }
+    if (bookingSetting.maxPax < data.guests) {
+      setFormError(`Max guests allowed is ${bookingSetting.maxPax}!`);
+      return;
+    }
+
+    setFormError(null);
 
     const updates = {} as any;
     Object.keys(dirtyFields).forEach((key) => {
@@ -68,7 +80,7 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     );
   };
 
-  if (fetchingBookingInfo || fetchingProducts || fetchingRooms)
+  if (fetchingBookingInfo || fetchingProducts || fetchingRooms || bookingSettingLoader)
     return (
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         <Heading textAlign='center'>EDIT BOOKING</Heading>
@@ -97,6 +109,16 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
               <Alert status='success' borderRadius='sm' color='green.600'>
                 <AlertIcon />
                 Booking Successfuly updated!
+              </Alert>
+              <br />
+            </>
+          )}
+
+          {(!!formError || error) && (
+            <>
+              <Alert status='error' borderRadius='sm' color='red.600'>
+                <AlertIcon />
+                {formError || error?.message || ''}
               </Alert>
               <br />
             </>

@@ -10,6 +10,7 @@ import { IProduct, IRoom } from '@/utils/types';
 import { RoomDetails, ProductDetails } from '@prisma/client';
 import { PHpeso } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
+import usePaymentStoreTrack from '@/store/payment.store';
 import CalenderInput from '@/components/CalendarInput';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
@@ -41,6 +42,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   const [roomDetails, setRoomDetails] = useState<RoomDetails | undefined>();
 
   const { setWholeBookingState } = useBookingStoreTrack();
+  const { setPaymentStates } = usePaymentStoreTrack();
 
   const { data: productsData, isLoading: getProductsLoader } = trpc.product.getProducts.useQuery({
     page: 1,
@@ -92,6 +94,9 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
 
         setWholeBookingState({
           ...bookingState,
+        });
+
+        setPaymentStates({
           clientKey: paymentIntentResource.data.attributes.client_key,
           paymentIntentId: paymentIntentResource.data.id,
         });

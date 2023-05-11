@@ -17,6 +17,7 @@ import {
 import { trpc } from '@/utils/trpc';
 import { PHpeso } from '@/utils/helper';
 import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
+import usePaymentStoreTrack from '@/store/payment.store';
 import CostView from '../CostView';
 
 const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: string }) => {
@@ -33,12 +34,14 @@ const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: stri
 };
 
 export interface IReviewDetailsProps {
+  nextStep?: (desc: string) => void;
   previousStep: () => void;
 }
 
-export default function ReviewDetails({ previousStep }: IReviewDetailsProps) {
+export default function ReviewDetails({ previousStep, nextStep }: IReviewDetailsProps) {
   const { customerBankInfo, bookingInfo, bookingUpdates, bookingReferenceNo, bookingUpdateCase, newTotal, setIsRequestSuccess } =
     useBookingUpdateRequestStoreTrack();
+  const { setPaymentStates } = usePaymentStoreTrack();
 
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
@@ -50,9 +53,30 @@ export default function ReviewDetails({ previousStep }: IReviewDetailsProps) {
     isLoading: isSendingUpdateRequest,
     isError,
   } = trpc.booking.customerUpdateRequest.useMutation();
+  const { mutate: inititatePaymentSession, isLoading: isInitiationPaymentSession } =
+    trpc.payment.initiatePaymentSessionForUpdateBooking.useMutation();
 
   const proceed = () => {
-    if (bookingUpdateCase === 'PARTIAL REFUND' && bookingUpdates) {
+    if (bookingUpdateCase === 'ADDITIONAL PAYMENT' && bookingUpdates) {
+      inititatePaymentSession(
+        {
+          bookingRefNo: bookingReferenceNo,
+          bookingUpdates,
+        },
+        {
+          onSuccess(data) {
+            const paymentIntentResource = data.paymentIntentResource;
+
+            setPaymentStates({
+              clientKey: paymentIntentResource.data.attributes.client_key,
+              paymentIntentId: paymentIntentResource.data.id,
+            });
+
+            nextStep && nextStep('Payment Method');
+          },
+        },
+      );
+    } else if (bookingUpdates) {
       sendUpdateRequest(
         {
           bookingRefNo: bookingReferenceNo,
@@ -198,7 +222,7 @@ export default function ReviewDetails({ previousStep }: IReviewDetailsProps) {
       <Stack direction='row' justifyContent='space-between'>
         <Button onClick={previousStep}>BACK</Button>
 
-        <Button onClick={proceed} isLoading={isSendingUpdateRequest}>
+        <Button onClick={proceed} isLoading={isSendingUpdateRequest || isInitiationPaymentSession}>
           {bookingUpdateCase === 'PARTIAL REFUND' ? 'SUBMIT REQUEST' : 'PROCEED'}
         </Button>
       </Stack>

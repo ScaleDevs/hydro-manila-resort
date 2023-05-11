@@ -11,15 +11,9 @@ import UpdateBookingRequestForm from '@/modules/booking/BookingUpdateRequestForm
 import CustomerBankInput from '@/modules/booking/BookingUpdateRequestForm/CustomerBankInputs';
 import ReviewDetails from '@/modules/booking/BookingUpdateRequestForm/ReviewDetails';
 import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
+import PaymentForm from '@/modules/payment/PaymentForm';
 
 const CheckIcon = chakra(BsPatchCheckFill);
-
-const steps = [
-  { title: 'First', description: 'Find Booking Record' },
-  { title: 'Second', description: 'Edit Booking Details' },
-  { title: 'Third', description: 'Bank Details' },
-  { title: 'Fourth', description: 'Review Details' },
-];
 
 interface IActiveFormProps {
   activeStep: number;
@@ -27,36 +21,61 @@ interface IActiveFormProps {
 }
 
 const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
-  const { bookingUpdateCase, resetStates } = useBookingUpdateRequestStoreTrack();
+  const { bookingUpdateCase, resetStates, setStepDescription } = useBookingUpdateRequestStoreTrack();
+
+  const previousStep = (step: number, desc: string) => {
+    setActiveStep(step);
+    setStepDescription(desc);
+  };
 
   if (activeStep === 1)
     return (
       <UpdateBookingRequestForm
-        nextStep={() => {
+        nextStep={(desc: string) => {
           setActiveStep(2);
+          setStepDescription(desc);
         }}
         previousStep={() => {
-          setActiveStep(0);
+          previousStep(0, 'Find Booking Record');
           resetStates();
         }}
       />
     );
 
   if (activeStep === 2 && bookingUpdateCase === 'PARTIAL REFUND')
-    return <CustomerBankInput nextStep={() => setActiveStep(3)} previousStep={() => setActiveStep(1)} />;
+    return (
+      <CustomerBankInput
+        nextStep={() => {
+          setStepDescription('Review Details');
+          setActiveStep(3);
+        }}
+        previousStep={() => previousStep(1, 'Edit Booking Details')}
+      />
+    );
 
   if (activeStep === 2 && bookingUpdateCase === 'NORMAL')
-    return <CustomerBankInput nextStep={() => setActiveStep(3)} previousStep={() => setActiveStep(1)} />;
+    return <ReviewDetails previousStep={() => previousStep(1, 'Edit Booking Details')} />;
 
   if (activeStep === 2 && bookingUpdateCase === 'ADDITIONAL PAYMENT')
-    return <CustomerBankInput nextStep={() => setActiveStep(3)} previousStep={() => setActiveStep(1)} />;
+    return (
+      <ReviewDetails
+        previousStep={() => previousStep(1, 'Edit Booking Details')}
+        nextStep={(desc) => {
+          setStepDescription(desc);
+          setActiveStep(3);
+        }}
+      />
+    );
 
-  if (activeStep === 3) return <ReviewDetails previousStep={() => setActiveStep(2)} />;
+  if (activeStep === 3 && bookingUpdateCase === 'ADDITIONAL PAYMENT')
+    return <PaymentForm previousStep={() => previousStep(2, 'Review Details')} />;
+  else if (activeStep === 3) return <ReviewDetails previousStep={() => setActiveStep(2)} />;
 
   return (
     <FindBookingInfoForm
       nextStep={() => {
         setActiveStep(1);
+        setStepDescription('Edit Booking Details');
       }}
     />
   );
@@ -64,11 +83,11 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
 
 export default function UpdateBooking() {
   const router = useRouter();
-  const { resetStates, isRequestSuccess } = useBookingUpdateRequestStoreTrack();
+  const { resetStates, isRequestSuccess, stepsLength } = useBookingUpdateRequestStoreTrack();
 
   const { activeStep, setActiveStep } = useSteps({
     index: 0,
-    count: steps.length,
+    count: stepsLength,
   });
 
   const backToBooking = () => {
@@ -107,7 +126,7 @@ export default function UpdateBooking() {
             <br />
             <br />
 
-            <FormStepper activeStep={activeStep} steps={steps} />
+            <FormStepper activeStep={activeStep} />
 
             <br />
             <br />

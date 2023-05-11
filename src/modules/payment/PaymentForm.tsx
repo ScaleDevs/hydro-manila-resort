@@ -1,18 +1,26 @@
 import { useState } from 'react';
-import { Heading, Stack, Collapse, Box, Alert, AlertIcon } from '@chakra-ui/react';
+import { Heading, Stack, Collapse, Box, Alert, AlertIcon, Button } from '@chakra-ui/react';
+import { BsArrowLeft } from 'react-icons/bs';
 
 import SelectPaymentMethod from './SelectPaymenthMethod';
 import CardInputsForm from './CardMethod';
 import GcashMethod from './GcashMethod';
 
-export interface IPaymentFormProps {}
+export interface IPaymentFormProps {
+  previousStep: () => void;
+}
 
-export default function PaymentForm({}: IPaymentFormProps) {
+export default function PaymentForm({ previousStep }: IPaymentFormProps) {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isTaken, setIsTaken] = useState(false);
 
   return (
     <Box px='10px'>
+      <Button onClick={previousStep}>
+        <BsArrowLeft />
+      </Button>
+      <br />
+      <br />
       <Heading as='h1' size='lg' noOfLines={1} textAlign={{ bas: 'center', md: 'left' }}>
         Select Payment Method:
       </Heading>
@@ -36,6 +44,8 @@ export default function PaymentForm({}: IPaymentFormProps) {
 
       <Collapse in={paymentMethod === 'card'} animateOpacity>
         <CardInputsForm setIsTaken={setIsTaken} />
+        <br />
+        <br />
       </Collapse>
     </Box>
   );

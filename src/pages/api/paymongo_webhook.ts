@@ -12,6 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
   if (eventType === 'payment.paid') {
+    // update booking
+    if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
+      await PaymentService.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
+      return res.end();
+    }
+
+    // create booking
     const paymentType = response.data?.attributes?.data?.attributes?.source.type;
     await PaymentService.handlePaymentPaidEvent(paymentIntentId, paymentType);
   }

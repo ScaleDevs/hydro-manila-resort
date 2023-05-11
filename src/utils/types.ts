@@ -1,4 +1,4 @@
-import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent, BookingAttempt } from '@prisma/client';
+import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent, BookingAttempt, Receipt } from '@prisma/client';
 
 export type DateSession = {
   startSession: string | Date;
@@ -19,6 +19,13 @@ export type IBookingPublicOnly = {
   productId: string;
   roomId: string | null;
   currentTotal: number;
+};
+
+export type CustomerUpdateBookingParams = {
+  guests?: number;
+  bookingDate?: string | Date;
+  productId?: string;
+  roomId?: string | null;
 };
 
 // inputs
@@ -99,6 +106,32 @@ export interface RefundResource {
   };
 }
 
+export type BookingStatusDisplay = {
+  ref_no: string;
+  customerName: string;
+  bookedDate: string;
+  checkOutDate: string;
+  scheduleType: string;
+  roomName?: string;
+  guests?: number;
+};
+
+export interface PayMongoPaymentIntentMetaData {
+  bookedSchedule: {
+    ref_no?: string;
+    startSession: string;
+    endSession: string;
+  } | null;
+  statusDisplay: BookingStatusDisplay;
+  bookingRecord?: string;
+  bookingUpdateParams?: {
+    currentBookingRecord: IBooking;
+    updates: CustomerUpdateBookingParams;
+    bookingRecordId: string;
+  };
+  receipt?: Receipt;
+}
+
 export interface PayMongoWebHookResponse {
   data: {
     id: string;
@@ -147,9 +180,7 @@ export interface PayMongoWebHookResponse {
           statement_descriptor: string;
           status: string;
           tax_amount: number | null;
-          metadata: {
-            bookingRecord: string;
-          };
+          metadata: PayMongoPaymentIntentMetaData;
           refunds: any[];
           taxes: any[];
           available_at: number;

@@ -8,6 +8,8 @@ import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { ProductRepository } from '@/server/repository/product.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
 import { GlobalService } from '@/server/services/global.service';
+import { bookingDateChangeConfirmation } from '@/server/repository/mailersend.repo';
+import { constants } from '../constants';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -65,15 +67,36 @@ export const bookingRouter = router({
       if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
 
       const { bookingDate, ...data } = input.data;
+      const roomId = data.roomId || bookingRecord.roomId;
+      const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
+      const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
 
-      const updateLog = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data);
-      const result = await BookingService.updateBookingSchedule(bookingRecord, { bookingDate, ...data });
+      const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'ADMIN');
+      const result = await BookingService.buildScheduleAndUpdateLog({
+        bookingRecord,
+        updatedBookedDate: bookingDate,
+        updatedProductId: data.productId,
+        updatedBy: 'ADMIN',
+        productDetails: product.details[0],
+      });
+      const receipt = await BookingService.getBookingDetailsTotal({
+        product,
+        room: room || undefined,
+        guests: data.guests || bookingRecord.guests,
+      });
 
-      return BookingService.updateBooking(input.bookingId, result.product, result.productDetails, {
-        ...data,
-        updateLog: result?.updateLog ? [...updateLog, ...result.updateLog] : [...updateLog],
-        startSession: result?.startSession,
-        endSession: result?.endSession,
+      await BookingService.updateBooking({
+        bookingId: bookingRecord.id,
+        product,
+        room,
+        data: {
+          ...data,
+          roomId,
+          updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
+          startSession: result.startSession,
+          endSession: result.endSession,
+          receipt: { ...receipt },
+        },
       });
     }),
   customerUpdateRequest: procedure
@@ -84,7 +107,7 @@ export const bookingRouter = router({
           guests: z.number().optional(),
           bookingDate: z.string().optional(),
           productId: z.string().optional(),
-          roomId: z.string().optional(),
+          roomId: z.string().optional().nullable(),
         }),
         customerInfo: z
           .object({
@@ -99,32 +122,57 @@ export const bookingRouter = router({
       const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
       if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
 
-      const product = input.bookingRequestUpdate.productId
-        ? await ProductRepository.getProductDetails(input.bookingRequestUpdate.productId)
-        : undefined;
-      const room = input.bookingRequestUpdate.roomId
-        ? await RoomRepository.getRoomDetails(input.bookingRequestUpdate.roomId)
-        : undefined;
+      const { productId: newProductId, roomId: newRoomId, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
+      const newProduct = newProductId ? await ProductRepository.findProductById(newProductId) : undefined;
+      const newRoom = newRoomId ? await RoomRepository.findRoomById(newRoomId) : undefined;
+      const oldProduct = await ProductRepository.findProductById(bookingRecord.productId);
+      const oldRoom = bookingRecord.roomId ? await RoomRepository.findRoomById(bookingRecord.roomId) : undefined;
 
       const currentTotal = bookingRecord.receipt.total;
-      const newTotal = await BookingService.getBookingDetailsTotal(input.bookingRequestUpdate, { product, room });
+      const { total: newTotal } = await BookingService.getBookingDetailsTotal({
+        product: newProduct || oldProduct,
+        room: newRoom || oldRoom || undefined,
+        guests: updatedGuests || bookingRecord.guests,
+      });
 
-      // partial refund
       if (currentTotal > newTotal && input.customerInfo) {
-        await BookingService.updateBookingPartialRefundCase(
+        // partial refund
+        await BookingService.updateBookingPartialRefundCase({
           bookingRecord,
-          input.bookingRequestUpdate,
-          input.customerInfo,
-          {
-            product,
-            room,
-          },
+          bookingRequestUpdate: input.bookingRequestUpdate,
+          customerInfo: input.customerInfo,
           newTotal,
-        );
-      } else if (currentTotal < newTotal) {
-        // create a payment intent for customer to pay the additional amount
-      } else {
-        // just update the details
+          oldProduct,
+          oldRoom,
+          newProduct,
+          newRoom,
+        });
+      } else if (currentTotal === newTotal && !!input.bookingRequestUpdate.bookingDate) {
+        // no additional payment / partial refund
+        const result = await BookingService.buildScheduleAndUpdateLog({
+          bookingRecord,
+          updatedBookedDate: bookingDate,
+          updatedBy: 'CUSTOMER',
+          productDetails: oldProduct.details[0],
+        });
+
+        await BookingService.updateBooking({
+          bookingId: bookingRecord.id,
+          product: oldProduct,
+          room: oldRoom,
+          data: {
+            updateLogs: [...bookingRecord.updateLogs, ...result.updateLogs],
+            startSession: result.startSession,
+            endSession: result.endSession,
+          },
+        });
+
+        await bookingDateChangeConfirmation(bookingRecord.email, {
+          customerName: bookingRecord.name,
+          reference_no: bookingRecord.ref_no,
+          fromDate: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
+          toDate: dayjs.utc(result.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
+        });
       }
 
       return true;

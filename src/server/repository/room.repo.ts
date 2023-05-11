@@ -13,7 +13,9 @@ class Respository {
   }
 
   public async findRoomById(id: string) {
-    return prisma.room.findFirst({ where: { roomId: id } });
+    const room = await prisma.room.findFirst({ where: { roomId: id } });
+    if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
+    return room;
   }
 
   public async findManyRoom({ page, limit, roomIdentityName }: IFindManyroomInput) {

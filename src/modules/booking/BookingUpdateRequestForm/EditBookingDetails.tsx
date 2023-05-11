@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heading, SlideFade, Alert, AlertIcon, Stack, Button, Box, Center, Spinner } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import dayjs from 'dayjs';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
@@ -17,7 +18,7 @@ import CostView from '../CostView';
 const schema = bookingRequestUpdatesSchema;
 
 export interface IUpdateBookingRequestFormProps {
-  nextStep: () => void;
+  nextStep: (desc: string) => void;
   previousStep: () => void;
 }
 
@@ -28,6 +29,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
     bookingInfo,
     setBookingUpdateCase,
     setNewTotal,
+    setBookingUpdateStates,
   } = useBookingUpdateRequestStoreTrack();
 
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
@@ -52,7 +54,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
       guests: savedValues?.guests || bookingInfo?.guests,
       bookingDate: savedValues?.bookingDate || (bookingInfo?.startSession as string).split('T')[0],
       productId: savedValues?.productId || bookingInfo?.productId,
-      roomId: savedValues?.roomId || bookingInfo?.roomId || undefined,
+      roomId: savedValues?.roomId || bookingInfo?.roomId,
     },
   });
 
@@ -78,7 +80,15 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
   };
 
   const proceed = (data: BookingRequestUpdates) => {
-    if (!dirtyFields || !bookingInfo) return;
+    if (!dirtyFields || !bookingInfo || !bookingSetting) return;
+    if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
+      setFormError('Date is not available! Kindly choose another date');
+      return;
+    }
+    if (bookingSetting.maxPax < data.guests) {
+      setFormError(`Max guests allowed is ${bookingSetting.maxPax}!`);
+      return;
+    }
 
     const updates = {} as any;
 
@@ -104,14 +114,17 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
       const newTotal = getUpdatedTotal(data);
 
       if (newTotal > bookingInfo.currentTotal) {
-        nextStep();
+        nextStep('Review Details');
         setBookingUpdateCase('ADDITIONAL PAYMENT');
+        setBookingUpdateStates({ stepsLength: 3 });
       } else if (newTotal < bookingInfo.currentTotal) {
-        nextStep();
+        nextStep('Customer Bank Info');
         setBookingUpdateCase('PARTIAL REFUND');
+        setBookingUpdateStates({ stepsLength: 4 });
       } else {
-        nextStep();
+        nextStep('Review Details');
         setBookingUpdateCase('NORMAL');
+        setBookingUpdateStates({ stepsLength: 3 });
       }
     };
 

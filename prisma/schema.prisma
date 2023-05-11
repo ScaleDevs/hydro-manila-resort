@@ -35,11 +35,24 @@ type Receipt {
 }
 
 type BookingUpdateLog {
-  updatedBy    String
-  fieldUpdated String
-  fromValue    String
-  toValue      String
-  createdAt    DateTime @default(now())
+  transactionRefNo String?
+  updatedBy        String
+  fieldUpdated     String
+  fromValue        String
+  toValue          String
+  createdAt        DateTime @default(now())
+}
+
+enum TransactionType {
+  REFUND
+  PAYMENT
+}
+
+type TransactionLog {
+  refNo           String
+  paymentIntentId String?
+  type            TransactionType
+  amount          Int
 }
 
 enum BookingRefundStatus {
@@ -83,7 +96,8 @@ model Booking {
   productId       String             @db.ObjectId
   productVersion  Int
   receipt         Receipt
-  updateLog       BookingUpdateLog[]
+  updateLogs      BookingUpdateLog[]
+  transactionLogs TransactionLog[]
   paymentIntentId String             @unique
   paymentId       String
   refundId        String?

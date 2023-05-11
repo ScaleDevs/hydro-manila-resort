@@ -26,6 +26,23 @@ export const paymentRouter = router({
         bookingState,
       };
     }),
+  initiatePaymentSessionForUpdateBooking: procedure
+    .input(
+      z.object({
+        bookingRefNo: z.string(),
+        bookingUpdates: z.object({
+          guests: z.number().optional(),
+          bookingDate: z.string().optional(),
+          productId: z.string().optional(),
+          roomId: z.string().optional().nullable(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const result = await PaymentService.initiatePaymentSessionForUpdateBooking(input.bookingRefNo, input.bookingUpdates);
+
+      return result;
+    }),
   attachPaymentMethodToIntent: procedure
     .input(
       z.object({

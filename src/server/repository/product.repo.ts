@@ -12,7 +12,9 @@ class Respository {
   }
 
   public async findProductById(id: string) {
-    return prisma.product.findFirst({ where: { productId: id } });
+    const product = await prisma.product.findFirst({ where: { productId: id } });
+    if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+    return product;
   }
 
   public async findProducts({ page, limit, name }: IFindProductsInput) {

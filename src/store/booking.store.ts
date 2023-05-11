@@ -20,9 +20,6 @@ export type BookingState = {
     total: number;
   };
 
-  clientKey: string | null;
-  paymentIntentId: string | null;
-
   getBookingStates: () => Omit<
     BookingState,
     'getBookingStates' | 'setBookingState' | 'resetBookingState' | 'setWholeBookingState'
@@ -57,9 +54,6 @@ const initState: Omit<BookingState, 'getBookingStates' | 'setBookingState' | 're
     additionalHeadsPrice: 0,
     total: 0,
   },
-
-  clientKey: null,
-  paymentIntentId: null,
 };
 
 const stateStore = devtools((set, get) => ({

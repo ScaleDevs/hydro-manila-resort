@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 
 import { createPaymentMethod } from '../fetch-calls';
 import { getCitiesOptions, getProvincesOptions, RegexValidations } from '@/modules/utils/helper';
-import useBookingStoreTrack from '@/store/booking.store';
+import usePaymentStoreTrack from '@/store/payment.store';
 import { TextField } from '@/components/TextField';
 import { SelectNumberField } from '@/components/SelectNumberField';
 import { SelectField } from '@/components/SelectField';
@@ -52,7 +52,7 @@ export interface ICardInputsFormProps {
 export default function CardInputsForm({ setIsTaken }: ICardInputsFormProps) {
   const toast = useToast();
   const router = useRouter();
-  const { clientKey, paymentIntentId } = useBookingStoreTrack();
+  const { clientKey, paymentIntentId } = usePaymentStoreTrack();
   const [isCardNumberValid, setIsCardNumberValid] = useState<boolean | null>(null);
   const { mutate, isLoading } = trpc.payment.attachPaymentMethodToIntent.useMutation();
 
