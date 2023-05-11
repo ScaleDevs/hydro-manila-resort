@@ -127,6 +127,11 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
             <Heading as='h1' size='lg' noOfLines={1} textAlign={{ base: 'center', md: 'left' }}>
               BOOK A DATE!
             </Heading>
+            <Alert status='info' borderRadius='sm' my='10px' fontFamily='primary' color='blue.600'>
+              <AlertIcon />
+              Note: Please pick a schedule first before choosing a date so that you would know what date is available related to
+              your chosen schedule.
+            </Alert>
             {isError ? (
               <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
                 <AlertIcon />
