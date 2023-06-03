@@ -51,12 +51,6 @@ class Respository {
   public async deleteProduct(id: string) {
     return prisma.product.delete({ where: { productId: id } });
   }
-
-  public async getProductDetails(productId: string, version?: number) {
-    const product = await this.findProductById(productId);
-    if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
-    return { productDetails: product.details[version || product.activeVersion - 1], product };
-  }
 }
 
 export const ProductRepository = new Respository();

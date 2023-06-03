@@ -10,13 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-type ProductDetails {
-  price              Float
-  scheduleStart      String
-  scheduleEnd        String
-  scheduleEndNextDay Boolean
-  withRooms          Boolean
-  description        String?
+type UpdateLog {
+  updatedBy    String
+  fieldUpdated String
+  fromValue    String
+  toValue      String
+  createdAt    DateTime @default(now())
 }
 
 type RoomDetails {
@@ -67,11 +66,16 @@ enum BookingRefundType {
 }
 
 model Product {
-  productId     String           @id @default(auto()) @map("_id") @db.ObjectId
-  name          String
-  activeVersion Int              @default(1)
-  details       ProductDetails[]
-  Booking       Booking[]
+  productId          String      @id @default(auto()) @map("_id") @db.ObjectId
+  name               String
+  price              Float
+  scheduleStart      String
+  scheduleEnd        String
+  scheduleEndNextDay Boolean
+  withRooms          Boolean
+  description        String?
+  updateLogs         UpdateLog[]
+  Booking            Booking[]
 }
 
 model Room {

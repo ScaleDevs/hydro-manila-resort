@@ -77,7 +77,7 @@ export const bookingRouter = router({
         updatedBookedDate: bookingDate,
         updatedProductId: data.productId,
         updatedBy: 'ADMIN',
-        productDetails: product.details[0],
+        product,
       });
       const receipt = await BookingService.getBookingDetailsTotal({
         product,
@@ -153,7 +153,7 @@ export const bookingRouter = router({
           bookingRecord,
           updatedBookedDate: bookingDate,
           updatedBy: 'CUSTOMER',
-          productDetails: oldProduct.details[0],
+          product: oldProduct,
         });
 
         await BookingService.updateBooking({
@@ -195,15 +195,15 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const product = await ProductRepository.getProductDetails(input.productId);
+      const product = await ProductRepository.findProductById(input.productId);
       if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Not Found!' });
 
       const endDate = dayjs(input.bookingDate)
-        .add(!!product.productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
         .format('YYYY-MM-DD');
 
-      const startSession = tzSchedToDayJsInsance(input.bookingDate, product.productDetails.scheduleStart).toISOString();
-      const endSession = tzSchedToDayJsInsance(endDate, product.productDetails.scheduleEnd).toISOString();
+      const startSession = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart).toISOString();
+      const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
 
       return GlobalService.checkScheduleAvailability({
         startDate: startSession,

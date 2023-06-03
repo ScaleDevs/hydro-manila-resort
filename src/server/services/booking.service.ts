@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { BookingUpdateLog, ProductDetails } from '@prisma/client';
+import { BookingUpdateLog } from '@prisma/client';
 import { calendar_v3 } from 'googleapis';
 
 import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime, PHpeso } from '@/utils/helper';
@@ -168,23 +168,23 @@ class Service {
     updatedBookedDate,
     updatedBy,
     paymentId,
-    productDetails,
+    product,
   }: {
     bookingRecord: IBooking;
     updatedBookedDate?: string;
     updatedProductId?: string;
     updatedBy: 'ADMIN' | 'CUSTOMER';
     paymentId?: string;
-    productDetails: ProductDetails;
+    product: IProduct;
   }) {
     try {
       const bookingDate = updatedBookedDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
       const endDate = dayjs(bookingDate)
-        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
         .format('YYYY-MM-DD');
 
-      const startSession = tzSchedToDayJsInsance(bookingDate, productDetails.scheduleStart).toISOString();
-      const endSession = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd).toISOString();
+      const startSession = tzSchedToDayJsInsance(bookingDate, product.scheduleStart).toISOString();
+      const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
 
       if (!updatedBookedDate && !updatedProductId) return { updateLogs: [], startSession, endSession };
 
@@ -251,13 +251,12 @@ class Service {
     paymentId?: string;
   }) {
     try {
-      const productDetails = product.details[0];
       const updatedBooking = await BookingRepository.updateBooking(bookingId, { ...data });
 
       const googleCalendarUpdates: calendar_v3.Schema$Event = {
         summary: updatedBooking.name,
-        description: `${product?.name} / ${updatedBooking.guests ?? 0} PAX / ${
-          room?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
+        description: `${product.name} / ${updatedBooking.guests ?? 0} PAX / ${
+          room?.roomIdentityName ?? (!!product.withRooms ? 'ALL ROOMS' : 'NO ROOM')
         }`,
       };
 
@@ -303,11 +302,11 @@ class Service {
           additionalHeadsPrice = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
         }
       }
-      if (product) newTotal += product.details[0].price;
+      if (product) newTotal += product.price;
       if (room) newTotal += room.details[0].price;
 
       return {
-        productPrice: product.details[0].price || 0,
+        productPrice: product.price || 0,
         roomPrice: room?.details[0].price || 0,
         additionalHeadsPrice,
         bookingFee: 0,
@@ -345,7 +344,7 @@ class Service {
       let currentRoom = oldRoom?.roomIdentityName || 'None';
       const modifications: { name: string; value: string }[] = [];
 
-      if (oldProduct?.details[0].withRooms) currentRoom = 'ALL ROOMS';
+      if (oldProduct.withRooms) currentRoom = 'ALL ROOMS';
 
       if (!!bookingRequestUpdate.guests)
         modifications.push({
@@ -364,7 +363,7 @@ class Service {
         const bookingDate =
           bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
         const endDate = dayjs(bookingDate)
-          .add(!!product.details[0].scheduleEndNextDay ? 1 : 0, 'day')
+          .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
           .format('YYYY-MM-DD');
 
         modifications.push({
@@ -374,15 +373,14 @@ class Service {
 
         modifications.push({
           name: 'Check-In Date',
-          value: tzSchedToDayJsInsance(
-            bookingDate as string,
-            newProduct?.details[0].scheduleStart || oldProduct.details[0].scheduleStart,
-          ).format('MMM DD, YYYY / hh:mm A'),
+          value: tzSchedToDayJsInsance(bookingDate as string, newProduct?.scheduleStart || oldProduct.scheduleStart).format(
+            'MMM DD, YYYY / hh:mm A',
+          ),
         });
 
         modifications.push({
           name: 'Check-Out Date',
-          value: tzSchedToDayJsInsance(endDate, newProduct?.details[0].scheduleEnd || oldProduct.details[0].scheduleEnd).format(
+          value: tzSchedToDayJsInsance(endDate, newProduct?.scheduleEnd || oldProduct.scheduleEnd).format(
             'MMM DD, YYYY / hh:mm A',
           ),
         });

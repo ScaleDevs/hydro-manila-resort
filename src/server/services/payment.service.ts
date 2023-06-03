@@ -97,7 +97,7 @@ class Service {
     bookingDate: string;
   }) {
     try {
-      const { product, productDetails } = await ProductRepository.getProductDetails(input.productId, input.productVersion);
+      const product = await ProductRepository.findProductById(input.productId);
 
       let roomDetails, roomName;
       if (input.roomId) {
@@ -111,17 +111,17 @@ class Service {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong, Kindly Try Again.' });
 
       const endDate = dayjs(input.bookingDate)
-        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
         .format('YYYY-MM-DD');
 
       let total = 0;
-      total += productDetails.price;
+      total += product.price;
       if (roomDetails) total += roomDetails.price;
       if (input.guests && input.guests > bookingSetting.minPax)
         total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
-      const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, productDetails.scheduleStart);
-      const endSessionDayInstance = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd);
+      const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
+      const endSessionDayInstance = tzSchedToDayJsInsance(endDate, product.scheduleEnd);
 
       const data = {
         name: input.name,
@@ -135,7 +135,7 @@ class Service {
         startSession: startSessionDayInstance.toISOString(),
         endSession: endSessionDayInstance.toISOString(),
         receipt: {
-          productPrice: productDetails.price,
+          productPrice: product.price,
           roomPrice: roomDetails?.price || 0,
           additionalHeadsPrice:
             input.guests && input.guests > bookingSetting.minPax
@@ -223,16 +223,14 @@ class Service {
       } as BookingStatusDisplay;
 
       if (bookingUpdates.bookingDate || bookingUpdates.productId) {
-        const productDetails = product.details[0];
-
         const bookingDate =
           (bookingUpdates.bookingDate as string) || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
         const endDate = dayjs(bookingDate)
-          .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+          .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
           .format('YYYY-MM-DD');
 
-        const startSessionDayInstance = tzSchedToDayJsInsance(bookingDate, productDetails.scheduleStart);
-        const endSessionDayInstance = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd);
+        const startSessionDayInstance = tzSchedToDayJsInsance(bookingDate, product.scheduleStart);
+        const endSessionDayInstance = tzSchedToDayJsInsance(endDate, product.scheduleEnd);
 
         statusDisplay.bookedDate = startSessionDayInstance.format('MMM DD, YYYY hh:mm A');
         statusDisplay.checkOutDate = endSessionDayInstance.format('MMM DD, YYYY hh:mm A');
@@ -456,7 +454,6 @@ class Service {
     const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
     const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
 
-    const productDetails = product?.details[product.activeVersion - 1];
     const room1Details = room1?.details[room1.activeVersion - 1];
     const room2Details = room2?.details[room2.activeVersion - 1];
 
@@ -470,7 +467,7 @@ class Service {
     const calendarEventId = await GoogleCalendarRepository.createEvent({
       summary: parsed.data.name,
       description: `${product?.name} / ${parsed.data.guests ?? 0} PAX / ${
-        chosenRoom?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
+        chosenRoom?.roomIdentityName ?? (!!product.withRooms ? 'ALL ROOMS' : 'NO ROOM')
       }`,
       start: {
         dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
@@ -513,9 +510,9 @@ class Service {
         guest_name: parsed.data.name,
         reference_number: parsed.data.ref_no,
         booking_type: product?.name || '',
-        number_of_rooms: !!productDetails?.withRooms ? 2 : 0,
+        number_of_rooms: !!product.withRooms ? 2 : 0,
         number_of_guest: parsed.data.guests,
-        room_type: !!productDetails?.withRooms ? 'ALL ROOMS' : '-',
+        room_type: !!product.withRooms ? 'ALL ROOMS' : '-',
         checkin_datetime: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         checkout_datetime: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         booking_type_rate: 'BEST AVAILABLE RATE',
@@ -671,7 +668,7 @@ class Service {
       updatedBookedDate: bookingDate,
       updatedProductId: data.productId,
       updatedBy: 'CUSTOMER',
-      productDetails: product.details[0],
+      product,
       paymentId,
     });
     const transactionLogs: TransactionLog[] = [
