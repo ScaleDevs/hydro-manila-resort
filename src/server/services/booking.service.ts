@@ -303,11 +303,11 @@ class Service {
         }
       }
       if (product) newTotal += product.price;
-      if (room) newTotal += room.details[0].price;
+      if (room) newTotal += room.price;
 
       return {
         productPrice: product.price || 0,
-        roomPrice: room?.details[0].price || 0,
+        roomPrice: room?.price || 0,
         additionalHeadsPrice,
         bookingFee: 0,
         total: newTotal,

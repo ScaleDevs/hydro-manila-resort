@@ -49,7 +49,9 @@ class Respository {
   }
 
   public async deleteProduct(id: string) {
-    return prisma.product.delete({ where: { productId: id } });
+    const result = await prisma.product.delete({ where: { productId: id } });
+    if (!result) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Product Failed to delete' });
+    return result;
   }
 }
 

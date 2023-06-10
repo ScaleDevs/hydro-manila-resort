@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { procedure, protectedProcedure, router } from '../trpc';
-import { ProductService } from '@/svc/product.service';
-import { IProduct } from '@/utils/types';
-import { updateProductHandler } from '@/server/handlers/product.handler';
+import { ProductHandler } from '@/server/handlers/product.handler';
+import { ProductRepository } from '@/server/repository/product.repo';
 
 export const productRouter = router({
   create: protectedProcedure
@@ -24,31 +23,7 @@ export const productRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      const {
-        price,
-        scheduleStartHour,
-        scheduleStartMin,
-        scheduleStartPost,
-        scheduleEndHour,
-        scheduleEndMin,
-        scheduleEndPost,
-        scheduleEndNextDay,
-        withRooms,
-        description,
-      } = input.details;
-
-      const productData: Omit<IProduct, 'productId'> = {
-        ...input,
-        price: price,
-        scheduleStart: `${scheduleStartHour}:${scheduleStartMin === 0 ? '00' : scheduleStartMin}:00 ${scheduleStartPost}`,
-        scheduleEnd: `${scheduleEndHour}:${scheduleEndMin === 0 ? '00' : scheduleEndMin}:00 ${scheduleEndPost}`,
-        scheduleEndNextDay,
-        withRooms,
-        description: description === undefined ? null : description,
-        updateLogs: [],
-      };
-
-      return ProductService.createProduct(productData);
+      return ProductHandler.createProductHandler({ ...input.details, name: input.name});
     }),
   updateProduct: protectedProcedure
     .input(
@@ -78,13 +53,13 @@ export const productRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      return updateProductHandler(input.id, input.details);
+      return ProductHandler.updateProductHandler(input.id, input.details);
     }),
   deleteProduct: protectedProcedure.input(z.string()).mutation(({ input }) => {
-    return ProductService.deleteProduct(input);
+    return ProductRepository.deleteProduct(input);
   }),
-  getProductById: procedure.input(z.string()).query(({ input }) => {
-    return ProductService.findProductById(input);
+  getProductById: procedure.input(z.string().min(1)).query(({ input }) => {
+    return ProductRepository.findProductById(input);
   }),
   getProducts: procedure
     .input(
@@ -95,6 +70,6 @@ export const productRouter = router({
       }),
     )
     .query(({ input }) => {
-      return ProductService.findProducts(input);
+      return ProductHandler.getProductsHandler(input);
     }),
 });

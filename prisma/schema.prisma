@@ -79,10 +79,13 @@ model Product {
 }
 
 model Room {
-  roomId           String        @id @default(auto()) @map("_id") @db.ObjectId
+  roomId           String      @id @default(auto()) @map("_id") @db.ObjectId
   roomIdentityName String
-  activeVersion    Int           @default(1)
-  details          RoomDetails[]
+  description      String?
+  withBathroom     Boolean
+  guests           Int
+  price            Float
+  updateLogs       UpdateLog[]
 }
 
 model Booking {

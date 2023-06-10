@@ -101,9 +101,8 @@ class Service {
 
       let roomDetails, roomName;
       if (input.roomId) {
-        const { room, roomDetails: details } = await RoomRepository.getRoomDetails(input.roomId);
-        roomDetails = details;
-        roomName = room.roomIdentityName;
+        roomDetails = await RoomRepository.findRoomById(input.roomId);
+        roomName = roomDetails.roomIdentityName;
       }
 
       const bookingSetting = await BookingSettingRepository.findFirstBookingSetting();
@@ -454,9 +453,6 @@ class Service {
     const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
     const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
 
-    const room1Details = room1?.details[room1.activeVersion - 1];
-    const room2Details = room2?.details[room2.activeVersion - 1];
-
     const isRoom1 = () => parsed.data.roomId === room1?.roomId;
     const isRoom2 = () => parsed.data.roomId === room2?.roomId;
     const isBothRooms = () => parsed.data.roomId === bothRooms?.roomId;
@@ -520,12 +516,12 @@ class Service {
         extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',
         extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
         extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
-        room2_rate: room2Details ? PHpeso.format(room2Details.price) : 'N/A',
+        room2_rate: room2 ? PHpeso.format(room2.price) : 'N/A',
         room2_qty: isRoom2() || isBothRooms() ? 1 : 0,
-        room2_total: PHpeso.format(room2Details && (isRoom2() || isBothRooms()) ? room2Details.price : 0),
-        room1_rate: room1Details ? PHpeso.format(room1Details.price) : 'N/A',
+        room2_total: PHpeso.format(room2 && (isRoom2() || isBothRooms()) ? room2.price : 0),
+        room1_rate: room1 ? PHpeso.format(room1.price) : 'N/A',
         room1_qty: isRoom1() || isBothRooms() ? 1 : 0,
-        room1_total: PHpeso.format(room1Details && (isRoom1() || isBothRooms()) ? room1Details.price : 0),
+        room1_total: PHpeso.format(room1 && (isRoom1() || isBothRooms()) ? room1.price : 0),
         addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
         type_payment: paymentType,
         total_payment: PHpeso.format(parsed.data.receipt.total),
