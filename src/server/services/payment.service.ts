@@ -414,7 +414,7 @@ class Service {
       return;
     }
 
-    const bookingRecordCheck = await BookingService.findBookingByPaymentIntentId(paymentIntentRecord.id);
+    const bookingRecordCheck = await BookingRepository.findBookingByPaymentIntentId(paymentIntentRecord.id);
 
     if (bookingRecordCheck) {
       console.log('Booking Record already exist in DB!');
@@ -471,7 +471,7 @@ class Service {
       },
     });
 
-    const bookingRecord = await BookingService.createBooking({
+    const bookingRecord = await BookingRepository.createBooking({
       ...parsed.data,
       paymentIntentId: paymentIntentRecord.id,
       paymentId: paymentIntentRecord.attributes.payments[0].id || '',
@@ -555,7 +555,7 @@ class Service {
     }
 
     if (refundResource.attributes.status === 'succeeded') {
-      const bookingRecord = await BookingService.findBookingByPaymentIntentId(paymentIntentId);
+      const bookingRecord = await BookingRepository.findBookingByPaymentIntentId(paymentIntentId);
 
       if (!bookingRecord) {
         console.log('Booking record does not exist');

@@ -20,33 +20,11 @@ import {
 import { constants } from '../constants';
 
 class Service {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
-    try {
-      return BookingRepository.createBooking({
-        ...data,
-      });
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findBookingById(id: string) {
-    try {
-      return BookingRepository.findBookingById(id);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
   public async findBookingByReferenceNo(refNo: string) {
     try {
       const booking = await BookingRepository.findBookingByReferenceNo(refNo);
 
-      if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
-
       const product = await ProductRepository.findProductById(booking.productId);
-
-      if (!product) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No Product Record Found' });
 
       const bookingResult: typeof booking & { product: IProduct } & { room?: IRoom } = {
         ...booking,
@@ -64,68 +42,6 @@ class Service {
       const message = err.message || 'Something went wrong';
 
       throw new TRPCError({ code, message });
-    }
-  }
-
-  public async findBookingByPaymentIntentId(paymentIntentId: string) {
-    try {
-      return BookingRepository.findBookingByPaymentIntentId(paymentIntentId);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findManyBooking(inputs: IFindManyBookingInput) {
-    try {
-      return BookingRepository.findManyBooking(inputs);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findAllBookingsByDates(inputs: { startDate: string; endDate: string }) {
-    try {
-      const getRecordsParams = {
-        ...inputs,
-        page: 1,
-        limit: 1000,
-      };
-
-      const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
-
-      const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
-
-      const bookingAttemptRecords = await BookingAttemptRepository.findAllBookingAttemptsByDates(getRecordsParams);
-
-      const bookedDates: IBookingDates = {};
-
-      for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
-        if ('id' in record) if (!!record.refundId) continue;
-
-        const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
-        const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
-        const value = {
-          start: dayjs.utc(record.startSession).unix(),
-          end: dayjs.utc(record.endSession).unix(),
-        };
-        if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
-        if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
-
-        bookedDates[keyStart].push(value);
-        if (keyStart !== keyEnd) bookedDates[keyEnd].push(value);
-      }
-
-      return { bookedDates };
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async deleteBooking(id: string) {
-    try {
-      return BookingRepository.deleteBooking(id);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
@@ -417,7 +333,7 @@ class Service {
 
       return true;
     } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingPartialRefundCase' });
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingPartialRefundCase()' });
     }
   }
 }
