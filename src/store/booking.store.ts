@@ -10,9 +10,7 @@ export type BookingState = {
   endSession: string;
   guests: number;
   roomId: string | null;
-  roomVersion: number;
   productId: string;
-  productVersion: number;
   receipt: {
     productPrice: number;
     roomPrice: number;
@@ -45,9 +43,7 @@ const initState: Omit<BookingState, 'getBookingStates' | 'setBookingState' | 're
   endSession: '',
   guests: 0,
   roomId: '',
-  roomVersion: 0,
   productId: '',
-  productVersion: 0,
   receipt: {
     productPrice: 0,
     roomPrice: 0,

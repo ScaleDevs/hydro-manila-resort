@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
-import { RoomDetails, ProductDetails } from '@prisma/client';
 import { PHpeso } from '@/modules/utils/helper';
 import useBookingStoreTrack from '@/store/booking.store';
 import usePaymentStoreTrack from '@/store/payment.store';
@@ -38,8 +37,6 @@ export interface IBookingFormProps {
 export default function BookingForm({ setStep }: IBookingFormProps) {
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
   const [selectedRoom, setSelectedRoom] = useState<IRoom | undefined>(undefined);
-  const [productDetails, setProductDetails] = useState<ProductDetails | undefined>();
-  const [roomDetails, setRoomDetails] = useState<RoomDetails | undefined>();
 
   const { setWholeBookingState } = useBookingStoreTrack();
   const { setPaymentStates } = usePaymentStoreTrack();
@@ -48,14 +45,14 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
     page: 1,
     limit: 100,
   });
-  const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { data: roomsData, isLoading: getRoomLoader } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
+  const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
   const {
     mutate,
     isError,
     error,
     isLoading: isInitiatingPaymentSession,
-  } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+  } = trpc.payment.initiatePaymentSessionForBooking.useMutation();z
 
   const {
     register,
@@ -69,7 +66,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   });
 
   const handleSelectProduct = (value: any) => {
-    if (productsData) setSelectedProduct(productsData.records.find((v) => v.productId === value));
+    if (!!productsData) setSelectedProduct(productsData.records.find((v) => v.productId === value));
   };
 
   const handleSelectRoom = (value: any) => {
@@ -87,9 +84,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
       bookingDate: data.bookingDate,
       guests: data.guests,
       roomId: data.roomId === '' || !data.roomId ? null : data.roomId,
-      roomVersion: selectedRoom?.activeVersion ? selectedRoom?.activeVersion - 1 : 0,
       productId: data.productId,
-      productVersion: selectedProduct?.activeVersion ? selectedProduct?.activeVersion - 1 : 0,
     };
 
     mutate(payload, {
@@ -112,17 +107,11 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
   };
 
   useEffect(() => {
-    if (selectedProduct) setProductDetails(selectedProduct?.details[selectedProduct.activeVersion - 1]);
-
-    if (selectedProduct?.details[selectedProduct.activeVersion - 1].withRooms) {
+    if (selectedProduct?.withRooms) {
       setValue('roomId', '');
       setSelectedRoom(undefined);
     }
   }, [selectedProduct, setValue]);
-
-  useEffect(() => {
-    if (selectedRoom) setRoomDetails(selectedRoom.details[selectedRoom.activeVersion - 1]);
-  }, [selectedRoom]);
 
   return (
     <Box>
@@ -202,14 +191,14 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   }
                   errMsg={!!errors.productId?.message ? 'Required!' : undefined}
                 >
-                  {!!selectedProduct && productDetails ? (
+                  {!!selectedProduct ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        {selectedProduct.name} | {PHpeso.format(productDetails.price)}
+                        {selectedProduct.name} | {PHpeso.format(selectedProduct.price)}
                       </Text>
                       <Text fontSize='14px' color='white'>
-                        {productDetails.scheduleStart} - {productDetails.scheduleEnd} |{' '}
-                        {productDetails.withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
+                        {selectedProduct.scheduleStart} - {selectedProduct.scheduleEnd} |{' '}
+                        {selectedProduct.withRooms ? 'WITH ROOMS' : 'WITHOUT ROOMS'}
                       </Text>
                     </Box>
                   ) : (
@@ -218,7 +207,7 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                 </SelectField>
 
                 <SelectField
-                  disabled={selectedProduct?.details[0].withRooms}
+                  disabled={selectedProduct?.withRooms}
                   handleOnChange={handleSelectRoom}
                   register={register}
                   property='roomId'
@@ -227,13 +216,13 @@ export default function BookingForm({ setStep }: IBookingFormProps) {
                   options={roomsData?.records.map((v) => ({ label: `${v.roomIdentityName}`, value: v.roomId })) || []}
                   errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
                 >
-                  {!!selectedRoom && roomDetails ? (
+                  {!!selectedRoom && selectedRoom ? (
                     <Box bg='primary.1' p='5' mt='3' borderRadius='sm'>
                       <Text fontSize='14px' color='white'>
-                        {selectedRoom.roomIdentityName} | {roomDetails.withBathroom ? 'w/' : 'w/o'} bathroom
+                        {selectedRoom.roomIdentityName} | {selectedRoom.withBathroom ? 'w/' : 'w/o'} bathroom
                       </Text>
                       <Text fontSize='14px' color='white'>
-                        ROOM {roomDetails.guests} PAX | ADDITIONAL {PHpeso.format(roomDetails.price)}
+                        ROOM {selectedRoom.guests} PAX | ADDITIONAL {PHpeso.format(selectedRoom.price)}
                       </Text>
                     </Box>
                   ) : (

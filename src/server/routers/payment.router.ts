@@ -13,9 +13,7 @@ export const paymentRouter = router({
         bookingDate: z.string(),
         guests: z.number(),
         roomId: z.string().nullable(),
-        roomVersion: z.number(),
         productId: z.string(),
-        productVersion: z.number(),
       }),
     )
     .mutation(async ({ input }) => {

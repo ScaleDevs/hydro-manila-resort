@@ -118,7 +118,7 @@ function Component({ id }: Props) {
                     <Text>ROOM:</Text>
                     <Text>
                       {data?.room?.roomIdentityName ||
-                        (data?.product.details[data.product.activeVersion - 1].withRooms ? 'ALL ROOMS' : 'N/A')}
+                        (data?.product.withRooms ? 'ALL ROOMS' : 'N/A')}
                     </Text>
                   </Stack>
 

@@ -91,9 +91,7 @@ class Service {
     phoneNumber: string;
     guests: number;
     roomId: string | null;
-    roomVersion: number;
     productId: string;
-    productVersion: number;
     bookingDate: string;
   }) {
     try {
@@ -128,9 +126,7 @@ class Service {
         phoneNumber: input.phoneNumber,
         guests: input.guests,
         roomId: input.roomId,
-        roomVersion: input.roomVersion,
         productId: input.productId,
-        productVersion: input.productVersion,
         startSession: startSessionDayInstance.toISOString(),
         endSession: endSessionDayInstance.toISOString(),
         receipt: {

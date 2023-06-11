@@ -3,6 +3,7 @@ import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, useToas
 import { BsFillTrashFill } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
+import { PHpeso } from '@/utils/helper';
 import Paginator from '@/components/Paginator';
 
 export interface ITableProductsProps {}
@@ -90,10 +91,10 @@ export default function TableProducts({}: ITableProductsProps) {
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
                   <Td>{v.name}</Td>
                   <Td>
-                    {v.details[(v.activeVersion || 1) - 1].scheduleStart} - {v.details[(v.activeVersion || 1) - 1].scheduleEnd}
+                    {v.scheduleStart} - {v.scheduleEnd}
                   </Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].description}</Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                  <Td>{v.description}</Td>
+                  <Td>{PHpeso.format(v.price)}</Td>
                   <Td>
                     <Button borderRadius='sm' onClick={() => deleteProductRecord(v.name, v.productId)}>
                       <BsFillTrashFill />
