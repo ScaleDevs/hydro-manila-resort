@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { protectedProcedure, router } from '../trpc';
 import { ScheduledEventService } from '@/svc/scheduledevent.service';
+import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 
 export const scheduledEventRouter = router({
   createScheduledEvent: protectedProcedure
@@ -25,7 +26,7 @@ export const scheduledEventRouter = router({
       return ScheduledEventService.deleteScheduledEvent(input.scheduleEventId, input.calendarEventId);
     }),
   getScheduledEventById: protectedProcedure.input(z.string()).query(({ input }) => {
-    return ScheduledEventService.findScheduledEventById(input);
+    return ScheduledEventRepository.findScheduledEventById(input);
   }),
   getManyScheduledEvent: protectedProcedure
     .input(
@@ -37,7 +38,7 @@ export const scheduledEventRouter = router({
       }),
     )
     .query(({ input }) => {
-      return ScheduledEventService.findManyScheduledEvent({
+      return ScheduledEventRepository.findManyScheduledEvent({
         ...input,
         startDate: input.startDate,
         endDate: input.endDate,

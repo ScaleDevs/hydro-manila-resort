@@ -1,6 +1,7 @@
+import { Prisma } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
 import prisma from './prisma.client';
 import { IPaginationInputs, IScheduledEvent, DatesInput } from '@/utils/types';
-import { Prisma } from '@prisma/client';
 
 class Respository {
   public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt'>) {
@@ -8,40 +9,46 @@ class Respository {
   }
 
   public async findScheduledEventById(scheduledEventId: string) {
-    return prisma.scheduledEvent.findFirst({ where: { scheduledEventId } });
+    const scheduledEvent = await prisma.scheduledEvent.findFirst({ where: { scheduledEventId } });
+    if (!scheduledEvent) throw new TRPCError({ code: 'NOT_FOUND', message: 'scheduled Event Record not found' });
+    return scheduledEvent;
   }
 
   public async findManyScheduledEvent({ page, limit, startDate, endDate }: IPaginationInputs & DatesInput) {
-    const whereFilter: Prisma.ScheduledEventWhereInput = {
-      OR: [
-        {
-          startSession: {
-            gte: startDate,
-            lte: endDate,
+    try {
+      const whereFilter: Prisma.ScheduledEventWhereInput = {
+        OR: [
+          {
+            startSession: {
+              gte: startDate,
+              lte: endDate,
+            },
           },
-        },
-        {
-          endSession: {
-            gte: startDate,
-            lte: endDate,
+          {
+            endSession: {
+              gte: startDate,
+              lte: endDate,
+            },
           },
-        },
-      ],
-    };
-
-    const result = await prisma.scheduledEvent.findMany({
-      where: whereFilter,
-      orderBy: { startSession: 'asc' },
-      skip: page > 0 ? (page - 1) * limit : 0,
-      take: limit,
-    });
-
-    const totalCount = await prisma.scheduledEvent.count({ where: whereFilter });
-
-    return {
-      pageCount: Math.ceil(totalCount / limit),
-      records: result,
-    };
+        ],
+      };
+  
+      const result = await prisma.scheduledEvent.findMany({
+        where: whereFilter,
+        orderBy: { startSession: 'asc' },
+        skip: page > 0 ? (page - 1) * limit : 0,
+        take: limit,
+      });
+  
+      const totalCount = await prisma.scheduledEvent.count({ where: whereFilter });
+  
+      return {
+        pageCount: Math.ceil(totalCount / limit),
+        records: result,
+      };
+    } catch (error) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Error :: Repo ==> findManyScheduledEvent()' });
+    }
   }
 
   public async findAllScheduledEventByDates({ page, limit, startDate, endDate }: IPaginationInputs & DatesInput) {

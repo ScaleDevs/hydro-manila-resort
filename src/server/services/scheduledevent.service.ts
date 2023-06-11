@@ -65,22 +65,6 @@ class Service {
     }
   }
 
-  public async findScheduledEventById(scheduledEventId: string) {
-    try {
-      return ScheduledEventRepository.findScheduledEventById(scheduledEventId);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findManyScheduledEvent(input: IPaginationInputs & DatesInput) {
-    try {
-      return ScheduledEventRepository.findManyScheduledEvent(input);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
   public async deleteScheduledEvent(scheduledEventId: string, calendarEventId: string | null) {
     try {
       const result = await ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
