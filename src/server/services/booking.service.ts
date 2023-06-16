@@ -5,7 +5,7 @@ import { calendar_v3 } from 'googleapis';
 
 import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime, PHpeso } from '@/utils/helper';
 import { IBooking, IProduct, IRoom, CustomerUpdateBookingParams } from '@/utils/types';
-import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
+import { BookingRepository } from '@/server/repository/booking.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
@@ -20,6 +20,25 @@ import {
 import { constants } from '../constants';
 
 class Service {
+  public async checkScheduleAvailability({ startDate, endDate }: { startDate: string | Date; endDate: string | Date }) {
+    const isBookingDateTaken = await BookingRepository.findBookingConflicts({
+      startDate,
+      endDate,
+    });
+
+    const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
+      startDate,
+      endDate,
+    });
+
+    const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
+      startDate,
+      endDate,
+    });
+
+    return isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken;
+  }
+
   public async findBookingByReferenceNo(refNo: string) {
     try {
       const booking = await BookingRepository.findBookingByReferenceNo(refNo);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-
-import { procedure, router } from '../trpc';
-import { PaymentService } from '@/svc/payment.service';
+import { procedure, router } from '@/server/trpc';
+import { PaymentHandler } from '@/server/handlers/payment.handler';
+import { getPaymentIntentSession } from '@/repo/payment.repo';
 
 export const paymentRouter = router({
   initiatePaymentSessionForBooking: procedure
@@ -17,8 +17,7 @@ export const paymentRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const { paymentIntentResource, bookingState } = await PaymentService.initiatePaymentSessionForBooking(input);
-
+      const { paymentIntentResource, bookingState } = await PaymentHandler.initiatePaymentSessionForBooking(input);
       return {
         paymentIntentResource,
         bookingState,
@@ -37,8 +36,7 @@ export const paymentRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const result = await PaymentService.initiatePaymentSessionForUpdateBooking(input.bookingRefNo, input.bookingUpdates);
-
+      const result = await PaymentHandler.initiatePaymentSessionForUpdateBooking(input.bookingRefNo, input.bookingUpdates);
       return result;
     }),
   attachPaymentMethodToIntent: procedure
@@ -51,7 +49,7 @@ export const paymentRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return PaymentService.attachPaymentMethodToIntent(input);
+      return PaymentHandler.attachPaymentMethodToIntentHandler(input);
     }),
   createRefund: procedure
     .input(
@@ -61,7 +59,7 @@ export const paymentRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return PaymentService.createRefund(input.refNo, input.reason);
+      return PaymentHandler.createRefundHandler(input.refNo, input.reason);
     }),
   getPaymentIntentSession: procedure
     .input(
@@ -70,6 +68,6 @@ export const paymentRouter = router({
       }),
     )
     .query(({ input }) => {
-      return PaymentService.getPaymentIntentSession(input.paymentIntentId);
+      return getPaymentIntentSession(input.paymentIntentId);
     }),
 });

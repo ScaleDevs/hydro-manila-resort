@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server';
 import prisma from './prisma.client';
 import { IPaginationInputs, IBookingSetting } from '@/utils/types';
 
@@ -7,36 +8,54 @@ class Respository {
   }
 
   public async findFirstBookingSetting() {
-    return prisma.bookingSetting.findFirst();
+    try {
+      const result = await prisma.bookingSetting.findFirst();
+      if (!result) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Settings not found' });
+      return result;
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findFirstBookingSetting()' });
+    }
   }
 
   public async findBookingSettingById(bookingSettingId: string) {
-    return prisma.bookingSetting.findFirst({ where: { bookingSettingId } });
+    try {
+      return prisma.bookingSetting.findFirst({ where: { bookingSettingId } });
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findBookingSettingById()' });
+    }
   }
 
   public async findManyBookingSettings({ page, limit }: IPaginationInputs) {
-    const result = await prisma.bookingSetting.findMany({
-      orderBy: { createdAt: 'desc' },
-      skip: page > 0 ? (page - 1) * limit : 0,
-      take: limit,
-    });
-
-    const totalCount = await prisma.bookingSetting.count();
-
-    return {
-      pageCount: Math.ceil(totalCount / limit),
-      records: result,
-    };
+    try {
+      const result = await prisma.bookingSetting.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip: page > 0 ? (page - 1) * limit : 0,
+        take: limit,
+      });
+  
+      const totalCount = await prisma.bookingSetting.count();
+  
+      return {
+        pageCount: Math.ceil(totalCount / limit),
+        records: result,
+      };
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findManyBookingSettings()' });
+    }
   }
 
   public async updateBookingSettingById(
     bookingSettingId: string,
     partialData: Partial<Omit<IBookingSetting, 'bookingSettingId' | 'createdAt'>>,
   ) {
-    return prisma.bookingSetting.update({
-      where: { bookingSettingId },
-      data: partialData,
-    });
+    try {
+      return prisma.bookingSetting.update({
+        where: { bookingSettingId },
+        data: partialData,
+      });
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> updateBookingSettingById()' });
+    }
   }
 }
 

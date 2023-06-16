@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { protectedProcedure, procedure, router } from '../trpc';
-import { RoomRepository } from '@/server/repository/room.repo';
+import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { RoomHandler } from '@/server/handlers/room.handler';
+import { RoomRepository } from '@/repo/room.repo';
 
 export const roomRouter = router({
   create: protectedProcedure

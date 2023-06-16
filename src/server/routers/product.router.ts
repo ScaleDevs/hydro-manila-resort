@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { procedure, protectedProcedure, router } from '../trpc';
+import { procedure, protectedProcedure, router } from '@/server/trpc';
 import { ProductHandler } from '@/server/handlers/product.handler';
-import { ProductRepository } from '@/server/repository/product.repo';
+import { ProductRepository } from '@/repo/product.repo';
 
 export const productRouter = router({
   create: protectedProcedure

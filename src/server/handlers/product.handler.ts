@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { UpdateLog } from '@prisma/client';
-import { IFindProductsInput, ProductRepository } from '@/server/repository/product.repo';
+import { IFindProductsInput, ProductRepository } from '@/repo/product.repo';
 import { IProduct } from '@/utils/types';
 
 export * as ProductHandler from './product.handler';

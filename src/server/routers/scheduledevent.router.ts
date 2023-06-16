@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { protectedProcedure, router } from '../trpc';
+import { protectedProcedure, router } from '@/server/trpc';
 import { ScheduledEventService } from '@/svc/scheduledevent.service';
-import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
+import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 
 export const scheduledEventRouter = router({
   createScheduledEvent: protectedProcedure

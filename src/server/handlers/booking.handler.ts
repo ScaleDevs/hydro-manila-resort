@@ -2,16 +2,14 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 
 import { tzSchedToDayJsInsance } from '@/utils/helper';
-import { IProduct, IRoom } from '@/utils/types';
-import { BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
-import { ProductRepository } from '@/server/repository/product.repo';
-import { RoomRepository } from '@/server/repository/room.repo';
-import { bookingDateChangeConfirmation } from '@/server/repository/mailersend.repo';
-import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
-import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
-import { BookingService } from '@/server/services/booking.service';
-import { GlobalService } from '@/svc/global.service';
-import { constants } from '../constants';
+import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
+import { ProductRepository } from '@/repo/product.repo';
+import { RoomRepository } from '@/repo/room.repo';
+import { bookingDateChangeConfirmation } from '@/repo/mailersend.repo';
+import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
+import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
+import { BookingService } from '@/svc/booking.service';
+import { constants } from '@/server/constants';
 
 export * as BookingHandler from './booking.handler';
 
@@ -193,7 +191,7 @@ export const checkBookingAvailability = async (input: {
   const startSession = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart).toISOString();
   const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
 
-  return GlobalService.checkScheduleAvailability({
+  return BookingService.checkScheduleAvailability({
     startDate: startSession,
     endDate: endSession,
   });

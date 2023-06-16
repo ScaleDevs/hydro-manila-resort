@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PayMongoWebHookResponse } from '@/utils/types';
-import { PaymentService } from '@/server/services/payment.service';
+import { PaymentEventsHandler } from '@/server/handlers/payment_events.handler';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('==========PAYMONGO WEBHOOK API INVOKED========');
@@ -14,17 +14,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (eventType === 'payment.paid') {
     // update booking
     if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
-      await PaymentService.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
+      await PaymentEventsHandler.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
       return res.end();
     }
 
     // create booking
     const paymentType = response.data?.attributes?.data?.attributes?.source.type;
-    await PaymentService.handlePaymentPaidEvent(paymentIntentId, paymentType);
+    await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId, paymentType);
   }
 
   if (eventType === 'payment.refunded')
-    await PaymentService.handleRefundPaymentEvent(paymentIntentId, response.data?.attributes.data.attributes.refunds[0].id);
+    await PaymentEventsHandler.handleRefundPaymentEvent(paymentIntentId, response.data?.attributes.data.attributes.refunds[0].id);
 
   res.end();
 }

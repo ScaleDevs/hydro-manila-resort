@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { UpdateLog } from "@prisma/client";
 import { IRoom } from "@/utils/types";
-import { RoomRepository } from "@/server/repository/room.repo";
+import { RoomRepository } from "@/repo/room.repo";
 
 export * as RoomHandler from "./room.handler";
 

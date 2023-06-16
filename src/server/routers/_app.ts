@@ -1,4 +1,4 @@
-import { procedure, router } from '../trpc';
+import { procedure, router } from '@/server/trpc';
 import { authRouter } from './auth.router';
 import { productRouter } from './product.router';
 import { roomRouter } from './room.router';
@@ -6,6 +6,7 @@ import { bookingRouter } from './booking.router';
 import { paymentRouter } from './payment.router';
 import { bookingSettingRouter } from './booksetting.router';
 import { scheduledEventRouter } from './scheduledevent.router';
+
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { protectedProcedure, procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { BookingHandler } from '@/server/handlers/booking.handler';
-import { BookingRepository } from '@/server/repository/booking.repo';
+import { BookingRepository } from '@/repo/booking.repo';
 import { BookingService } from '@/svc/booking.service';
 
 export const bookingRouter = router({
