@@ -25,8 +25,8 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
     if (!bookingSetting) return 0;
 
     let total = 0;
-    if (product) total += product.details[product.activeVersion - 1].price;
-    if (room) total += room.details[room.activeVersion - 1].price;
+    if (product) total += product.price;
+    if (room) total += room.price;
     if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
     return total;
   };
@@ -57,7 +57,7 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
         {product ? (
           <HStack mt='10px' justifyContent='space-between'>
             <Text>{product.name}:</Text>
-            <Text>{PHpeso.format(product.details[product.activeVersion - 1].price)}</Text>
+            <Text>{PHpeso.format(product.price)}</Text>
           </HStack>
         ) : (
           ''
@@ -65,7 +65,7 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
         {room ? (
           <HStack justifyContent='space-between'>
             <Text>ADDITIONAL ROOM ({room.roomIdentityName})</Text>
-            <Text>{PHpeso.format(room.details[room.activeVersion - 1].price)}</Text>
+            <Text>{PHpeso.format(room.price)}</Text>
           </HStack>
         ) : (
           ''
