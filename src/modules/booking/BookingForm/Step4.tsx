@@ -1,7 +1,25 @@
 import * as React from 'react';
-import { Box, Button, Card, CardBody, Heading, Stack, StackDivider, Text } from '@chakra-ui/react';
-import { PHpeso } from '@/utils/helper';
+import dayjs from 'dayjs';
+import {
+  Alert,
+  AlertIcon,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  Heading,
+  Stack,
+  StackDivider,
+  Text,
+  useDisclosure,
+} from '@chakra-ui/react';
+
+import { trpc } from '@/utils/trpc';
+import { tzSchedToDayJsInsance } from '@/utils/helper';
+import { useBookingStore } from '@/store/booking.store';
+import usePaymentStoreTrack from '@/store/payment.store';
 import CostView from '../CostView';
+import { TermsAndConditionModal } from './T&CModal';
 
 const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: string }) => {
   return (
@@ -16,62 +34,112 @@ const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: stri
   );
 };
 
-export interface IStep4Props {}
+export interface IStep4Props {
+  onPrev: () => void;
+  onNext: () => void;
+}
 
-export function Step4 (props: IStep4Props) {
+export function Step4({ onPrev, onNext }: IStep4Props) {
+  const { data, selectedProduct, selectedRoom } = useBookingStore();
+  const { setPaymentStates } = usePaymentStoreTrack();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const {
+    mutate,
+    isError,
+    error,
+    isLoading: isInitiatingPaymentSession,
+  } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+
+  const proceedToPayment = () => {
+    mutate(data, {
+      onSuccess(data) {
+        const paymentIntentResource = data.paymentIntentResource;
+
+        setPaymentStates({
+          clientKey: paymentIntentResource.data.attributes.client_key,
+          paymentIntentId: paymentIntentResource.data.id,
+        });
+
+        onNext();
+      },
+    });
+
+    onClose();
+  };
+
+  if (!selectedProduct) return null;
+
+  const endDate = dayjs(data.bookingDate)
+    .add(!!selectedProduct.scheduleEndNextDay ? 1 : 0, 'day')
+    .format('YYYY-MM-DD');
+
   return (
     <Stack spacing={5}>
-      <Heading fontSize='3xl' fontWeight='medium'>Review Details</Heading>
+      {isError ? (
+        <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
+          <AlertIcon />
+          {error.message}
+        </Alert>
+      ) : (
+        ''
+      )}
 
       <Card>
         <CardBody>
           <Stack divider={<StackDivider />} spacing='4'>
             <Box>
               <Heading size='md' textTransform='uppercase' fontWeight='medium'>
-                Schedule
+                Date & Time
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Reference No' value='asdasd' />
-                <FieldValueReport fieldName='Guests' value='asdasd' />
-                <FieldValueReport fieldName='Booked Date' value='asdasd' />
+                <FieldValueReport
+                  fieldName='Check In'
+                  value={tzSchedToDayJsInsance(data.bookingDate, selectedProduct.scheduleStart).format('hh:mm A MMM DD, YYYY')}
+                />
+                <FieldValueReport
+                  fieldName='Check Out'
+                  value={tzSchedToDayJsInsance(endDate, selectedProduct.scheduleEnd).format('hh:mm A MMM DD, YYYY')}
+                />
               </Stack>
             </Box>
+
             <Box>
               <Heading size='md' textTransform='uppercase' fontWeight='medium'>
                 Addons
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Reference No' value='asdasd' />
-                <FieldValueReport fieldName='Guests' value='asdasd' />
-                <FieldValueReport fieldName='Booked Date' value='asdasd' />
+                <FieldValueReport fieldName='Guests' value={`${data.guests}`} />
+                <FieldValueReport fieldName='Room' value={`${selectedRoom ? selectedRoom.roomIdentityName : 'N/A'}`} />
               </Stack>
             </Box>
+
             <Box>
               <Heading size='md' textTransform='uppercase' fontWeight='medium'>
                 Personal Details
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Reference No' value='asdasd' />
-                <FieldValueReport fieldName='Guests' value='asdasd' />
-                <FieldValueReport fieldName='Booked Date' value='asdasd' />
+                <FieldValueReport fieldName='Name' value={data.name} />
+                <FieldValueReport fieldName='Contact Number' value={data.phoneNumber} />
+                <FieldValueReport fieldName='Email' value={data.email} />
               </Stack>
             </Box>
           </Stack>
         </CardBody>
       </Card>
-      
+
+      <TermsAndConditionModal isOpen={isOpen} onClose={onClose} onAccept={proceedToPayment} />
+
       <Stack direction='row' justifyContent='flex-end'>
-        <Box w='300px'>
-          <CostView guests={26} />
+        <Box w='400px'>
+          <CostView guests={data.guests} productId={data.productId} roomId={data.roomId} />
         </Box>
       </Stack>
-      
+
       <Stack direction='row' justifyContent='space-between'>
-        <Button>
-          Back
-        </Button>
-        <Button>
-          Proceed
+        <Button onClick={onPrev}>Back</Button>
+        <Button onClick={onOpen} isLoading={isInitiatingPaymentSession}>
+          PROCEED TO PAYMENT
         </Button>
       </Stack>
     </Stack>

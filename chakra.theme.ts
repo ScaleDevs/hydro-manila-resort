@@ -4,6 +4,13 @@ import Heading from './theme/heading.comp';
 import Text from './theme/text.comp';
 
 export const theme = extendTheme({
+  breakpoints: {
+    sm: '30em',
+    md: '48em',
+    lg: '62em',
+    xl: '80em',
+    '2xl': '96em',
+  },
   colors: {
     primary: {
       1: '#2c5155',

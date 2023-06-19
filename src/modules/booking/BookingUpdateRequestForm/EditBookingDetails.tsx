@@ -71,8 +71,8 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
     const room = roomsData.records.find((row) => row.roomId === roomId);
 
     let newTotal = 0;
-    if (product) newTotal += product.details[0].price;
-    if (room) newTotal += room.details[0].price;
+    if (product) newTotal += product.price;
+    if (room) newTotal += room.price;
     if (guests && guests > bookingSetting.minPax) newTotal += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
 
     setNewTotal(newTotal);
@@ -219,7 +219,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
                 />
 
                 <SelectField
-                  disabled={selectedProduct?.details[0].withRooms}
+                  disabled={selectedProduct?.withRooms}
                   register={register}
                   property='roomId'
                   placeholder='ROOM RENTAL(optional)'

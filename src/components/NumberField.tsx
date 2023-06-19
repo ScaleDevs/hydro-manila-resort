@@ -28,14 +28,16 @@ export function NumberField({
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
   };
 
-  const inputProps = register ? {
-    ...register(property, {
-      setValueAs: setFormValue,
-      onBlur: () => {
-        onBlur && onBlur();
-      },
-    })
-  } : {};
+  const inputProps = register
+    ? {
+        ...register(property, {
+          setValueAs: setFormValue,
+          onBlur: () => {
+            onBlur && onBlur();
+          },
+        }),
+      }
+    : {};
 
   return (
     <Box w='100%'>
@@ -47,6 +49,7 @@ export function NumberField({
           </Text>
         )}
       </Text>
+
       <Input
         {...inputProps}
         defaultValue={defaultvalue}

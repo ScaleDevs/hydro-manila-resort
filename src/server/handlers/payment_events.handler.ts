@@ -1,21 +1,27 @@
-import dayjs from "dayjs";
-import { z } from "zod";
+import dayjs from 'dayjs';
+import { z } from 'zod';
 
-import { BookingSettingRepository } from "@/repo/bookingsetting.repo";
-import { ProductRepository } from "@/repo/product.repo";
-import { RoomRepository } from "@/repo/room.repo";
-import { BookingRepository } from "@/repo/booking.repo";
-import { BookingAttemptRepository } from "@/repo/bookingattempt.repo";
-import { GoogleCalendarRepository } from "@/repo/googlecalender.repo";
-import { notifyAdminDbInsertionError, sendBookingSuccessEmail, sendRefundEmailConflictBooking, sendRefundEmailSuccess, updateBookingConfirmation } from "@/repo/mailersend.repo";
-import { ScheduledEventRepository } from "@/repo/scheduledevent.repo";
-import { getPaymentIntentSession, getRefundDetails } from "@/repo/payment.repo";
-import { BookingRefundRepository } from "@/repo/bookingrefund.repo";
-import { BookingService } from "@/svc/booking.service";
-import { PHpeso } from "@/utils/helper";
-import { constants } from "@/server/constants";
-import { BookingStatusDisplay } from "@/utils/types";
-import { TransactionLog } from "@prisma/client";
+import { BookingSettingRepository } from '@/repo/bookingsetting.repo';
+import { ProductRepository } from '@/repo/product.repo';
+import { RoomRepository } from '@/repo/room.repo';
+import { BookingRepository } from '@/repo/booking.repo';
+import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
+import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
+import {
+  notifyAdminDbInsertionError,
+  sendBookingSuccessEmail,
+  sendRefundEmailConflictBooking,
+  sendRefundEmailSuccess,
+  updateBookingConfirmation,
+} from '@/repo/mailersend.repo';
+import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
+import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
+import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
+import { BookingService } from '@/svc/booking.service';
+import { PHpeso } from '@/utils/helper';
+import { constants } from '@/server/constants';
+import { BookingStatusDisplay } from '@/utils/types';
+import { TransactionLog } from '@prisma/client';
 
 export * as PaymentEventsHandler from './payment_events.handler';
 
@@ -36,9 +42,7 @@ const bookingDataSchema = z.object({
   endSession: z.string(),
   guests: z.number(),
   roomId: z.string().nullable(),
-  roomVersion: z.number(),
   productId: z.string(),
-  productVersion: z.number(),
   receipt: receiptSchema,
 });
 
@@ -198,7 +202,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string, paymentTyp
   await BookingAttemptRepository.deleteBookingAttemptWithRefNo(parsed.data.ref_no);
 
   console.log('DONE');
-}
+};
 
 export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId: string) => {
   if (!paymentIntentId) {
@@ -265,7 +269,7 @@ export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId
 
     console.log('EMAIL SUCCESSFULLY SENT');
   }
-}
+};
 
 export const handleUpdateBookingPayment = async (paymentIntentId: string, amountPaid: number) => {
   const paymentIntentRecord = await getPaymentIntentSession(paymentIntentId);
@@ -370,4 +374,4 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
   });
 
   console.log('done update!!');
-}
+};

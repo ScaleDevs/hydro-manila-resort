@@ -24,7 +24,7 @@ export const getBookingByRefNoPublic = async (refNo: string) => {
     roomId: bookingInfo.roomId,
     currentTotal: bookingInfo.receipt.total,
   };
-}
+};
 
 export const findAllBookingsByDates = async (inputs: { startDate: string; endDate: string }) => {
   try {
@@ -62,14 +62,17 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
-export const updateBookingHandler = async (bookingId: string, data: {
-  bookingDate?: string | undefined;
-  guests?: number | undefined;
-  roomId?: string | null | undefined;
-  productId?: string | undefined;
-}) => {
+export const updateBookingHandler = async (
+  bookingId: string,
+  data: {
+    bookingDate?: string | undefined;
+    guests?: number | undefined;
+    roomId?: string | null | undefined;
+    productId?: string | undefined;
+  },
+) => {
   const bookingRecord = await BookingRepository.findBookingById(bookingId);
 
   const roomId = data.roomId || bookingRecord.roomId;
@@ -106,17 +109,19 @@ export const updateBookingHandler = async (bookingId: string, data: {
 };
 
 export const customerUpdateRequestHandler = async (input: {
-  customerInfo?: {
-      bankType: string;
-      accountNo: string;
-      accountName: string;
-  } | undefined;
+  customerInfo?:
+    | {
+        bankType: string;
+        accountNo: string;
+        accountName: string;
+      }
+    | undefined;
   bookingRefNo: string;
   bookingRequestUpdate: {
-      productId?: string | undefined;
-      roomId?: string | null | undefined;
-      guests?: number | undefined;
-      bookingDate?: string | undefined;
+    productId?: string | undefined;
+    roomId?: string | null | undefined;
+    guests?: number | undefined;
+    bookingDate?: string | undefined;
   };
 }) => {
   const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
@@ -175,12 +180,9 @@ export const customerUpdateRequestHandler = async (input: {
   }
 
   return true;
-}
+};
 
-export const checkBookingAvailability = async (input: {
-  productId: string;
-  bookingDate: string;
-}) => {
+export const checkBookingAvailability = async (input: { productId: string; bookingDate: string }) => {
   const product = await ProductRepository.findProductById(input.productId);
   if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Not Found!' });
 
@@ -195,4 +197,4 @@ export const checkBookingAvailability = async (input: {
     startDate: startSession,
     endDate: endSession,
   });
-}
+};

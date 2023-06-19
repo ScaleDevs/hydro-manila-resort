@@ -1,4 +1,14 @@
-import { Booking, Product, Room, BookingSetting, BookingRefund, ScheduledEvent, BookingAttempt, Receipt, UpdateLog } from '@prisma/client';
+import {
+  Booking,
+  Product,
+  Room,
+  BookingSetting,
+  BookingRefund,
+  ScheduledEvent,
+  BookingAttempt,
+  Receipt,
+  UpdateLog,
+} from '@prisma/client';
 
 export type DateSession = {
   startSession: string | Date;
@@ -8,7 +18,7 @@ export type DateSession = {
 export type IUpdateLog = Omit<UpdateLog, 'createdAt'> & { createdAt: string | Date };
 
 export type IProduct = Omit<Product, 'updateLogs'> & { updateLogs: IUpdateLog[] };
-export type IRoom = Omit<Room, 'updateLogs'> & { updateLogs: IUpdateLog[] };;
+export type IRoom = Omit<Room, 'updateLogs'> & { updateLogs: IUpdateLog[] };
 export type IBooking = Omit<Booking, 'startSession' | 'endSession'> & DateSession;
 export type IBookingSetting = BookingSetting;
 export type IBookingRefund = BookingRefund;

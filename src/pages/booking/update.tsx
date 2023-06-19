@@ -83,7 +83,7 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
 
 export default function UpdateBooking() {
   const router = useRouter();
-  const { resetStates, isRequestSuccess, stepsLength } = useBookingUpdateRequestStoreTrack();
+  const { resetStates, isRequestSuccess, stepsLength, stepDescription } = useBookingUpdateRequestStoreTrack();
 
   const { activeStep, setActiveStep } = useSteps({
     index: 0,
@@ -126,7 +126,7 @@ export default function UpdateBooking() {
             <br />
             <br />
 
-            <FormStepper activeStep={activeStep} />
+            <FormStepper activeStep={activeStep} stepDescription={stepDescription} stepsLength={stepsLength} />
 
             <br />
             <br />

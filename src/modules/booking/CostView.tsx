@@ -7,7 +7,7 @@ import { IProduct, IRoom } from '@/utils/types';
 export interface ICostViewProps {
   productId?: string;
   roomId?: string | null;
-  guests: number;
+  guests?: number;
 }
 
 export default function CostView({ productId, roomId, guests }: ICostViewProps) {

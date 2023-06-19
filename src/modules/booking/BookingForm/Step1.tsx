@@ -1,24 +1,51 @@
-import * as React from 'react';
-import { Stack, Heading, Button, Box } from '@chakra-ui/react';
+import { useState } from 'react';
+import { Stack, Button, Box, Collapse } from '@chakra-ui/react';
+
+import { IProduct } from '@/utils/types';
+import useBookingStoreTrack from '@/store/booking.store';
 import CostView from '../CostView';
 import { ChooseDate } from './ChooseDate';
 import { ChooseSchedule } from './ChooseTime';
 
-export interface IStep1Props {}
+interface Step1Props {
+  onNext: () => void;
+}
 
-export function Step1 (props: IStep1Props) {
+export function Step1({ onNext }: Step1Props) {
+  const { setBookingStateData, setBookingState, data, selectedProduct } = useBookingStoreTrack();
+  const [chosenDate, setChosenDate] = useState<string | null>(data.bookingDate || null);
+  const [chosenSchedule, setChosenSchedule] = useState<IProduct | null>(selectedProduct);
+
+  const isDisabled = () => !chosenDate || !chosenSchedule;
+
+  const proceed = () => {
+    if (!chosenDate || !chosenSchedule) return;
+
+    setBookingStateData({
+      bookingDate: chosenDate,
+      productId: chosenSchedule.productId,
+    });
+
+    setBookingState('selectedProduct', chosenSchedule);
+
+    onNext();
+  };
+
   return (
     <Stack direction='column' spacing={5}>
-      <Heading size='lg'>Date & Time</Heading>
-      <ChooseDate />
-      <ChooseSchedule />
+      <ChooseDate chosenDate={chosenDate} setChosenDate={setChosenDate} setChosenSchedule={setChosenSchedule} />
+      {chosenDate && (
+        <Collapse in={!!chosenDate} animateOpacity>
+          <ChooseSchedule chosenDate={chosenDate} chosenSchedule={chosenSchedule} setChosenSchedule={setChosenSchedule} />
+        </Collapse>
+      )}
       <Stack direction='row' justifyContent='flex-end'>
-        <Box w='300px'>
-          <CostView guests={26} />
+        <Box w='400px'>
+          <CostView guests={data.guests} productId={chosenSchedule?.productId || data.productId} roomId={data.roomId} />
         </Box>
       </Stack>
       <Stack direction='row' justifyContent='flex-end'>
-        <Button>
+        <Button onClick={proceed} cursor={isDisabled() ? 'not-allowed' : 'pointer'}>
           Proceed
         </Button>
       </Stack>

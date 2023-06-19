@@ -38,7 +38,6 @@ class Respository {
 
   public async findBookingByPaymentIntentId(paymentIntentId: string) {
     const booking = await prisma.booking.findFirst({ where: { paymentIntentId } });
-    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
     return booking;
   }
 
@@ -47,7 +46,7 @@ class Respository {
       const whereFilter: Prisma.BookingWhereInput = {
         ref_no,
       };
-  
+
       if (dateFilter)
         whereFilter['AND'] = [
           {
@@ -63,18 +62,18 @@ class Respository {
             },
           },
         ];
-  
+
       const result = await prisma.booking.findMany({
         where: whereFilter,
         orderBy: [{ startSession: 'asc' }],
         skip: page > 0 ? (page - 1) * limit : 0,
         take: limit,
       });
-  
+
       const totalCount = await prisma.booking.count({
         where: whereFilter,
       });
-  
+
       return {
         pageCount: Math.ceil(totalCount / limit),
         records: result,

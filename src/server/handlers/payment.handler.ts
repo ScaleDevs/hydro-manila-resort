@@ -1,20 +1,26 @@
-import { TRPCError } from "@trpc/server";
-import dayjs from "dayjs";
+import { TRPCError } from '@trpc/server';
+import dayjs from 'dayjs';
 
-import { BookingSettingRepository } from "@/repo/bookingsetting.repo";
-import { AttachPaymentMethodToIntentAttr, attachPaymentMethodToIntent, createPaymentIntent, createRefund, getPaymentIntentSession } from "@/repo/payment.repo";
-import { ProductRepository } from "@/repo/product.repo";
-import { RoomRepository } from "@/repo/room.repo";
-import { BookingRepository } from "@/repo/booking.repo";
-import { BookingAttemptRepository } from "@/repo/bookingattempt.repo";
-import { BookingRefundRepository } from "@/repo/bookingrefund.repo";
-import { GoogleCalendarRepository } from "@/repo/googlecalender.repo";
-import { sendRefundEmailProcessing } from "@/repo/mailersend.repo";
-import { BookingService } from "@/svc/booking.service";
-import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from "@/utils/helper";
-import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from "@/utils/types";
-import { createReferenceNumber } from "@/server/util";
-import { constants } from "@/server/constants";
+import { BookingSettingRepository } from '@/repo/bookingsetting.repo';
+import {
+  AttachPaymentMethodToIntentAttr,
+  attachPaymentMethodToIntent,
+  createPaymentIntent,
+  createRefund,
+  getPaymentIntentSession,
+} from '@/repo/payment.repo';
+import { ProductRepository } from '@/repo/product.repo';
+import { RoomRepository } from '@/repo/room.repo';
+import { BookingRepository } from '@/repo/booking.repo';
+import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
+import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
+import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
+import { sendRefundEmailProcessing } from '@/repo/mailersend.repo';
+import { BookingService } from '@/svc/booking.service';
+import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
+import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
+import { createReferenceNumber } from '@/server/util';
+import { constants } from '@/server/constants';
 
 export * as PaymentHandler from './payment.handler';
 
@@ -116,9 +122,12 @@ export const initiatePaymentSessionForBooking = async (input: {
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
-export const initiatePaymentSessionForUpdateBooking = async (bookingRefNo: string, bookingUpdates: CustomerUpdateBookingParams) => {
+export const initiatePaymentSessionForUpdateBooking = async (
+  bookingRefNo: string,
+  bookingUpdates: CustomerUpdateBookingParams,
+) => {
   try {
     const bookingRecord = await BookingRepository.findBookingByReferenceNo(bookingRefNo);
     if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
@@ -211,7 +220,7 @@ export const initiatePaymentSessionForUpdateBooking = async (bookingRefNo: strin
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
 export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMethodToIntentAttr) => {
   try {
@@ -240,7 +249,7 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
     console.log(err);
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
 interface CreateRefundHandler {
   (ref_no: string, reason: string): Promise<{ status: 'MANUAL_PROCESSING' | 'AUTOMATIC_PROCESSING' | 'FAILED' }>;
@@ -303,4 +312,4 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
     console.log(err);
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
