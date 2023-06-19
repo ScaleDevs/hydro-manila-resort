@@ -23,7 +23,7 @@ export const productRouter = router({
       }),
     )
     .mutation(({ input }) => {
-      return ProductHandler.createProductHandler({ ...input.details, name: input.name});
+      return ProductHandler.createProductHandler({ ...input.details, name: input.name });
     }),
   updateProduct: protectedProcedure
     .input(

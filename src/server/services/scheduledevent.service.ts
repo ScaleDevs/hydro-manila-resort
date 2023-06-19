@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import dayjs from 'dayjs';
-import { DatesInput, IPaginationInputs, IScheduledEvent } from '@/utils/types';
+import { IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';

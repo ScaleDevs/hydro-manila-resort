@@ -32,16 +32,16 @@ class Respository {
           },
         ],
       };
-  
+
       const result = await prisma.scheduledEvent.findMany({
         where: whereFilter,
         orderBy: { startSession: 'asc' },
         skip: page > 0 ? (page - 1) * limit : 0,
         take: limit,
       });
-  
+
       const totalCount = await prisma.scheduledEvent.count({ where: whereFilter });
-  
+
       return {
         pageCount: Math.ceil(totalCount / limit),
         records: result,

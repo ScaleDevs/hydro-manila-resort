@@ -12,7 +12,7 @@ type SchedParams = {
   schedulePost: 'AM' | 'PM';
 };
 
-export const createProductHandler = async ( details: {
+export const createProductHandler = async (details: {
   name: string;
   description?: string | undefined;
   price: number;
@@ -20,10 +20,10 @@ export const createProductHandler = async ( details: {
   withRooms: boolean;
   scheduleStartHour: number;
   scheduleStartMin: number;
-  scheduleStartPost: "AM" | "PM";
+  scheduleStartPost: 'AM' | 'PM';
   scheduleEndHour: number;
   scheduleEndMin: number;
-  scheduleEndPost: "AM" | "PM";
+  scheduleEndPost: 'AM' | 'PM';
 }) => {
   try {
     const {
@@ -50,12 +50,12 @@ export const createProductHandler = async ( details: {
       description: description === undefined ? null : description,
       updateLogs: [],
     };
-    
+
     return ProductRepository.createProduct(data);
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
 export const getProductsHandler = async (inputs: IFindProductsInput) => {
   try {
@@ -63,7 +63,7 @@ export const getProductsHandler = async (inputs: IFindProductsInput) => {
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
-}
+};
 
 export const updateProductHandler = async (
   id: string,
@@ -96,7 +96,7 @@ export const updateProductHandler = async (
     ...productSchedule,
     ...updateData,
   };
-  
+
   const updateLogs: UpdateLog[] = [];
   const currentProduct = await ProductRepository.findProductById(id);
 
@@ -107,7 +107,7 @@ export const updateProductHandler = async (
       fromValue: `${currentProduct[entry[0] as keyof typeof currentProduct]}`,
       toValue: `${entry[1]}`,
       createdAt: dayjs().toDate(),
-    })
+    });
   });
 
   try {

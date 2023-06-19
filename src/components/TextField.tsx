@@ -12,11 +12,15 @@ export interface ITextFieldProps {
 }
 
 export function TextField({ register, property, placeholder, errMsg, onBlur, label, required }: ITextFieldProps) {
-  const fieldProps = register ? { ...register(property, {
-    onBlur: () => {
-      onBlur && onBlur();
-    },
-  })} : {};
+  const fieldProps = register
+    ? {
+        ...register(property, {
+          onBlur: () => {
+            onBlur && onBlur();
+          },
+        }),
+      }
+    : {};
 
   return (
     <Box w='100%'>

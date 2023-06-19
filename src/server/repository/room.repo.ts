@@ -30,18 +30,18 @@ class Respository {
           equals: roomIdentityName,
         },
       };
-  
+
       const result = await prisma.room.findMany({
         where: whereFilter,
         orderBy: { roomId: 'asc' },
         skip: page > 0 ? (page - 1) * limit : 0,
         take: limit,
       });
-  
+
       const totalCount = await prisma.room.count({
         where: whereFilter,
       });
-  
+
       return {
         pageCount: Math.ceil(totalCount / limit),
         records: result,

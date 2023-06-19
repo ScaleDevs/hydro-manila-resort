@@ -32,9 +32,9 @@ class Respository {
         skip: page > 0 ? (page - 1) * limit : 0,
         take: limit,
       });
-  
+
       const totalCount = await prisma.bookingSetting.count();
-  
+
       return {
         pageCount: Math.ceil(totalCount / limit),
         records: result,

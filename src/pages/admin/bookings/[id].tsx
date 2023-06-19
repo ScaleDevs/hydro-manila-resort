@@ -116,10 +116,7 @@ function Component({ id }: Props) {
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
                     <Text>ROOM:</Text>
-                    <Text>
-                      {data?.room?.roomIdentityName ||
-                        (data?.product.withRooms ? 'ALL ROOMS' : 'N/A')}
-                    </Text>
+                    <Text>{data?.room?.roomIdentityName || (data?.product.withRooms ? 'ALL ROOMS' : 'N/A')}</Text>
                   </Stack>
 
                   <Divider borderColor='gray.400' />
