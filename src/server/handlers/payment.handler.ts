@@ -120,7 +120,8 @@ export const initiatePaymentSessionForBooking = async (input: {
       bookingState: data,
     };
   } catch (err) {
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    const error = err as any;
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
 };
 
@@ -218,7 +219,8 @@ export const initiatePaymentSessionForUpdateBooking = async (
       }),
     };
   } catch (err) {
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    const error = err as any;
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
 };
 
@@ -246,8 +248,8 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
     return attachPaymentMethodToIntent(data);
   } catch (err) {
-    console.log(err);
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    const error = err as any;
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
 };
 
@@ -310,6 +312,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
     };
   } catch (err) {
     console.log(err);
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+    const error = err as any;
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
 };
