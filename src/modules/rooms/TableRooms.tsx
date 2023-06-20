@@ -89,9 +89,9 @@ export default function TableRoom({}: ITableRoomProps) {
               data?.records.map((v, i) => (
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
                   <Td>{v.roomIdentityName}</Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].guests}</Td>
-                  <Td>{v.details[(v.activeVersion || 1) - 1].withBathroom ? 'AVAILABLE' : 'N/A'}</Td>
-                  <Td>₱{v.details[(v.activeVersion || 1) - 1].price}</Td>
+                  <Td>{v.guests}</Td>
+                  <Td>{v.withBathroom ? 'AVAILABLE' : 'N/A'}</Td>
+                  <Td>₱{v.price}</Td>
                   <Td>
                     <Button borderRadius='sm' onClick={() => deleteRoomRecord(v.roomIdentityName, v.roomId)}>
                       <BsFillTrashFill />

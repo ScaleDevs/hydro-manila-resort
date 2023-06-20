@@ -1,15 +1,8 @@
 import { z } from 'zod';
-import dayjs from 'dayjs';
-import { TRPCError } from '@trpc/server';
-
-import { protectedProcedure, procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '@/server/trpc';
+import { BookingHandler } from '@/server/handlers/booking.handler';
+import { BookingRepository } from '@/repo/booking.repo';
 import { BookingService } from '@/svc/booking.service';
-import { tzSchedToDayJsInsance } from '@/utils/helper';
-import { ProductRepository } from '@/server/repository/product.repo';
-import { RoomRepository } from '@/server/repository/room.repo';
-import { GlobalService } from '@/server/services/global.service';
-import { bookingDateChangeConfirmation } from '@/server/repository/mailersend.repo';
-import { constants } from '../constants';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -27,28 +20,19 @@ export const bookingRouter = router({
       }),
     )
     .query(({ input }) => {
-      return BookingService.findManyBooking(input);
+      return BookingRepository.findManyBooking(input);
     }),
   getBookingById: protectedProcedure.input(z.string()).query(({ input }) => {
-    return BookingService.findBookingById(input);
+    return BookingRepository.findBookingById(input);
   }),
-  getBookingByRefNo: protectedProcedure.input(z.string()).query(({ input }) => {
+  getBookingByRefNo: protectedProcedure.input(z.string().min(1)).query(({ input }) => {
     return BookingService.findBookingByReferenceNo(input);
   }),
-  getBookingByRefNoPublic: procedure.input(z.string()).query(async ({ input }) => {
-    const bookingInfo = await BookingService.findBookingByReferenceNo(input);
-
-    return {
-      guests: bookingInfo.guests,
-      startSession: bookingInfo.startSession,
-      endSession: bookingInfo.endSession,
-      productId: bookingInfo.productId,
-      roomId: bookingInfo.roomId,
-      currentTotal: bookingInfo.receipt.total,
-    };
+  getBookingByRefNoPublic: procedure.input(z.string().min(1)).query(async ({ input }) => {
+    return BookingHandler.getBookingByRefNoPublic(input);
   }),
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
-    return BookingService.deleteBooking(input);
+    return BookingRepository.deleteBooking(input);
   }),
   updateBooking: protectedProcedure
     .input(
@@ -63,41 +47,7 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const bookingRecord = await BookingService.findBookingById(input.bookingId);
-      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
-
-      const { bookingDate, ...data } = input.data;
-      const roomId = data.roomId || bookingRecord.roomId;
-      const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
-      const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
-
-      const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'ADMIN');
-      const result = await BookingService.buildScheduleAndUpdateLog({
-        bookingRecord,
-        updatedBookedDate: bookingDate,
-        updatedProductId: data.productId,
-        updatedBy: 'ADMIN',
-        productDetails: product.details[0],
-      });
-      const receipt = await BookingService.getBookingDetailsTotal({
-        product,
-        room: room || undefined,
-        guests: data.guests || bookingRecord.guests,
-      });
-
-      await BookingService.updateBooking({
-        bookingId: bookingRecord.id,
-        product,
-        room,
-        data: {
-          ...data,
-          roomId,
-          updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
-          startSession: result.startSession,
-          endSession: result.endSession,
-          receipt: { ...receipt },
-        },
-      });
+      return BookingHandler.updateBookingHandler(input.bookingId, input.data);
     }),
   customerUpdateRequest: procedure
     .input(
@@ -119,63 +69,7 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
-      if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
-
-      const { productId: newProductId, roomId: newRoomId, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
-      const newProduct = newProductId ? await ProductRepository.findProductById(newProductId) : undefined;
-      const newRoom = newRoomId ? await RoomRepository.findRoomById(newRoomId) : undefined;
-      const oldProduct = await ProductRepository.findProductById(bookingRecord.productId);
-      const oldRoom = bookingRecord.roomId ? await RoomRepository.findRoomById(bookingRecord.roomId) : undefined;
-
-      const currentTotal = bookingRecord.receipt.total;
-      const { total: newTotal } = await BookingService.getBookingDetailsTotal({
-        product: newProduct || oldProduct,
-        room: newRoom || oldRoom || undefined,
-        guests: updatedGuests || bookingRecord.guests,
-      });
-
-      if (currentTotal > newTotal && input.customerInfo) {
-        // partial refund
-        await BookingService.updateBookingPartialRefundCase({
-          bookingRecord,
-          bookingRequestUpdate: input.bookingRequestUpdate,
-          customerInfo: input.customerInfo,
-          newTotal,
-          oldProduct,
-          oldRoom,
-          newProduct,
-          newRoom,
-        });
-      } else if (currentTotal === newTotal && !!input.bookingRequestUpdate.bookingDate) {
-        // no additional payment / partial refund
-        const result = await BookingService.buildScheduleAndUpdateLog({
-          bookingRecord,
-          updatedBookedDate: bookingDate,
-          updatedBy: 'CUSTOMER',
-          productDetails: oldProduct.details[0],
-        });
-
-        await BookingService.updateBooking({
-          bookingId: bookingRecord.id,
-          product: oldProduct,
-          room: oldRoom,
-          data: {
-            updateLogs: [...bookingRecord.updateLogs, ...result.updateLogs],
-            startSession: result.startSession,
-            endSession: result.endSession,
-          },
-        });
-
-        await bookingDateChangeConfirmation(bookingRecord.email, {
-          customerName: bookingRecord.name,
-          reference_no: bookingRecord.ref_no,
-          fromDate: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
-          toDate: dayjs.utc(result.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
-        });
-      }
-
-      return true;
+      return BookingHandler.customerUpdateRequestHandler(input);
     }),
   getAllBookingsByDates: procedure
     .input(
@@ -185,7 +79,7 @@ export const bookingRouter = router({
       }),
     )
     .query(({ input }) => {
-      return BookingService.findAllBookingsByDates(input);
+      return BookingHandler.findAllBookingsByDates(input);
     }),
   checkBookingAvailability: procedure
     .input(
@@ -195,19 +89,6 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const product = await ProductRepository.getProductDetails(input.productId);
-      if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Not Found!' });
-
-      const endDate = dayjs(input.bookingDate)
-        .add(!!product.productDetails.scheduleEndNextDay ? 1 : 0, 'day')
-        .format('YYYY-MM-DD');
-
-      const startSession = tzSchedToDayJsInsance(input.bookingDate, product.productDetails.scheduleStart).toISOString();
-      const endSession = tzSchedToDayJsInsance(endDate, product.productDetails.scheduleEnd).toISOString();
-
-      return GlobalService.checkScheduleAvailability({
-        startDate: startSession,
-        endDate: endSession,
-      });
+      return BookingHandler.checkBookingAvailability(input);
     }),
 });

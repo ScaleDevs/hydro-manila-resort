@@ -1,11 +1,11 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { BookingUpdateLog, ProductDetails } from '@prisma/client';
+import { BookingUpdateLog } from '@prisma/client';
 import { calendar_v3 } from 'googleapis';
 
 import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime, PHpeso } from '@/utils/helper';
 import { IBooking, IProduct, IRoom, CustomerUpdateBookingParams } from '@/utils/types';
-import { IFindManyBookingInput, BookingRepository, IBookingDates } from '@/server/repository/booking.repo';
+import { BookingRepository } from '@/server/repository/booking.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { RoomRepository } from '@/server/repository/room.repo';
@@ -20,33 +20,30 @@ import {
 import { constants } from '../constants';
 
 class Service {
-  public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
-    try {
-      return BookingRepository.createBooking({
-        ...data,
-      });
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
+  public async checkScheduleAvailability({ startDate, endDate }: { startDate: string | Date; endDate: string | Date }) {
+    const isBookingDateTaken = await BookingRepository.findBookingConflicts({
+      startDate,
+      endDate,
+    });
 
-  public async findBookingById(id: string) {
-    try {
-      return BookingRepository.findBookingById(id);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
+    const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
+      startDate,
+      endDate,
+    });
+
+    const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
+      startDate,
+      endDate,
+    });
+
+    return isBookingDateTaken || isEventSchedTaken || isBookingAttemptTaken;
   }
 
   public async findBookingByReferenceNo(refNo: string) {
     try {
       const booking = await BookingRepository.findBookingByReferenceNo(refNo);
 
-      if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
-
       const product = await ProductRepository.findProductById(booking.productId);
-
-      if (!product) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'No Product Record Found' });
 
       const bookingResult: typeof booking & { product: IProduct } & { room?: IRoom } = {
         ...booking,
@@ -64,68 +61,6 @@ class Service {
       const message = err.message || 'Something went wrong';
 
       throw new TRPCError({ code, message });
-    }
-  }
-
-  public async findBookingByPaymentIntentId(paymentIntentId: string) {
-    try {
-      return BookingRepository.findBookingByPaymentIntentId(paymentIntentId);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findManyBooking(inputs: IFindManyBookingInput) {
-    try {
-      return BookingRepository.findManyBooking(inputs);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findAllBookingsByDates(inputs: { startDate: string; endDate: string }) {
-    try {
-      const getRecordsParams = {
-        ...inputs,
-        page: 1,
-        limit: 1000,
-      };
-
-      const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
-
-      const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
-
-      const bookingAttemptRecords = await BookingAttemptRepository.findAllBookingAttemptsByDates(getRecordsParams);
-
-      const bookedDates: IBookingDates = {};
-
-      for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
-        if ('id' in record) if (!!record.refundId) continue;
-
-        const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
-        const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
-        const value = {
-          start: dayjs.utc(record.startSession).unix(),
-          end: dayjs.utc(record.endSession).unix(),
-        };
-        if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
-        if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
-
-        bookedDates[keyStart].push(value);
-        if (keyStart !== keyEnd) bookedDates[keyEnd].push(value);
-      }
-
-      return { bookedDates };
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async deleteBooking(id: string) {
-    try {
-      return BookingRepository.deleteBooking(id);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 
@@ -168,23 +103,23 @@ class Service {
     updatedBookedDate,
     updatedBy,
     paymentId,
-    productDetails,
+    product,
   }: {
     bookingRecord: IBooking;
     updatedBookedDate?: string;
     updatedProductId?: string;
     updatedBy: 'ADMIN' | 'CUSTOMER';
     paymentId?: string;
-    productDetails: ProductDetails;
+    product: IProduct;
   }) {
     try {
       const bookingDate = updatedBookedDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
       const endDate = dayjs(bookingDate)
-        .add(!!productDetails.scheduleEndNextDay ? 1 : 0, 'day')
+        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
         .format('YYYY-MM-DD');
 
-      const startSession = tzSchedToDayJsInsance(bookingDate, productDetails.scheduleStart).toISOString();
-      const endSession = tzSchedToDayJsInsance(endDate, productDetails.scheduleEnd).toISOString();
+      const startSession = tzSchedToDayJsInsance(bookingDate, product.scheduleStart).toISOString();
+      const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
 
       if (!updatedBookedDate && !updatedProductId) return { updateLogs: [], startSession, endSession };
 
@@ -251,13 +186,12 @@ class Service {
     paymentId?: string;
   }) {
     try {
-      const productDetails = product.details[0];
       const updatedBooking = await BookingRepository.updateBooking(bookingId, { ...data });
 
       const googleCalendarUpdates: calendar_v3.Schema$Event = {
         summary: updatedBooking.name,
-        description: `${product?.name} / ${updatedBooking.guests ?? 0} PAX / ${
-          room?.roomIdentityName ?? (!!productDetails?.withRooms ? 'ALL ROOMS' : 'NO ROOM')
+        description: `${product.name} / ${updatedBooking.guests ?? 0} PAX / ${
+          room?.roomIdentityName ?? (!!product.withRooms ? 'ALL ROOMS' : 'NO ROOM')
         }`,
       };
 
@@ -303,12 +237,12 @@ class Service {
           additionalHeadsPrice = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
         }
       }
-      if (product) newTotal += product.details[0].price;
-      if (room) newTotal += room.details[0].price;
+      if (product) newTotal += product.price;
+      if (room) newTotal += room.price;
 
       return {
-        productPrice: product.details[0].price || 0,
-        roomPrice: room?.details[0].price || 0,
+        productPrice: product.price || 0,
+        roomPrice: room?.price || 0,
         additionalHeadsPrice,
         bookingFee: 0,
         total: newTotal,
@@ -345,7 +279,7 @@ class Service {
       let currentRoom = oldRoom?.roomIdentityName || 'None';
       const modifications: { name: string; value: string }[] = [];
 
-      if (oldProduct?.details[0].withRooms) currentRoom = 'ALL ROOMS';
+      if (oldProduct.withRooms) currentRoom = 'ALL ROOMS';
 
       if (!!bookingRequestUpdate.guests)
         modifications.push({
@@ -364,7 +298,7 @@ class Service {
         const bookingDate =
           bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
         const endDate = dayjs(bookingDate)
-          .add(!!product.details[0].scheduleEndNextDay ? 1 : 0, 'day')
+          .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
           .format('YYYY-MM-DD');
 
         modifications.push({
@@ -374,15 +308,14 @@ class Service {
 
         modifications.push({
           name: 'Check-In Date',
-          value: tzSchedToDayJsInsance(
-            bookingDate as string,
-            newProduct?.details[0].scheduleStart || oldProduct.details[0].scheduleStart,
-          ).format('MMM DD, YYYY / hh:mm A'),
+          value: tzSchedToDayJsInsance(bookingDate as string, newProduct?.scheduleStart || oldProduct.scheduleStart).format(
+            'MMM DD, YYYY / hh:mm A',
+          ),
         });
 
         modifications.push({
           name: 'Check-Out Date',
-          value: tzSchedToDayJsInsance(endDate, newProduct?.details[0].scheduleEnd || oldProduct.details[0].scheduleEnd).format(
+          value: tzSchedToDayJsInsance(endDate, newProduct?.scheduleEnd || oldProduct.scheduleEnd).format(
             'MMM DD, YYYY / hh:mm A',
           ),
         });
@@ -419,7 +352,7 @@ class Service {
 
       return true;
     } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingPartialRefundCase' });
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong - updateBookingPartialRefundCase()' });
     }
   }
 }

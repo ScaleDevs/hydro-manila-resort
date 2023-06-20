@@ -1,7 +1,9 @@
 import fetch from 'node-fetch';
-import { constants } from '../constants';
+import { TRPCError } from '@trpc/server';
+
 import { base64Encoding } from '@/utils/helper';
 import { PaymentMethodTypes, PaymentIntentResource, RefundResource, RefundResourceReason } from '@/utils/types';
+import { constants } from '../constants';
 
 export interface CreatePaymentIntentAttr {
   amount: number;
@@ -72,17 +74,21 @@ export const attachPaymentMethodToIntent = async (data: AttachPaymentMethodToInt
 };
 
 export const getPaymentIntentSession = async (paymentIntentId: string) => {
-  const response = await fetch(`https://api.paymongo.com/v1/payment_intents/${paymentIntentId}`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      authorization: 'Basic ' + base64Encoding(`${constants.paymongo.secretKey as string}:`),
-    },
-  });
+  try {
+    const response = await fetch(`https://api.paymongo.com/v1/payment_intents/${paymentIntentId}`, {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        authorization: 'Basic ' + base64Encoding(`${constants.paymongo.secretKey as string}:`),
+      },
+    });
 
-  const result = (await response.json()) as PaymentIntentResource;
+    const result = (await response.json()) as PaymentIntentResource;
 
-  return result.data;
+    return result.data;
+  } catch (err) {
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> getPaymentIntentSession()' });
+  }
 };
 
 export interface CreateRefundInput {

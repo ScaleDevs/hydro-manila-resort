@@ -17,59 +17,70 @@ export type IBookingDates = {
 
 class Respository {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
-    return prisma.booking.create({ data: { ...data } });
+    try {
+      return prisma.booking.create({ data: { ...data } });
+    } catch (err) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> createBooking()' });
+    }
   }
 
   public async findBookingById(id: string) {
     const booking = await prisma.booking.findFirst({ where: { id } });
-    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'Product Record not found' });
+    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record not found' });
     return booking;
   }
 
   public async findBookingByReferenceNo(refNo: string) {
-    return prisma.booking.findFirst({ where: { ref_no: refNo } });
+    const booking = await prisma.booking.findFirst({ where: { ref_no: refNo } });
+    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
+    return booking;
   }
 
   public async findBookingByPaymentIntentId(paymentIntentId: string) {
-    return prisma.booking.findFirst({ where: { paymentIntentId } });
+    const booking = await prisma.booking.findFirst({ where: { paymentIntentId } });
+    return booking;
   }
 
   public async findManyBooking({ page, limit, ref_no, dateFilter }: IFindManyBookingInput) {
-    const whereFilter: Prisma.BookingWhereInput = {
-      ref_no,
-    };
+    try {
+      const whereFilter: Prisma.BookingWhereInput = {
+        ref_no,
+      };
 
-    if (dateFilter)
-      whereFilter['AND'] = [
-        {
-          startSession: {
-            gte: dateFilter.startDate,
-            lte: dateFilter.endDate,
+      if (dateFilter)
+        whereFilter['AND'] = [
+          {
+            startSession: {
+              gte: dateFilter.startDate,
+              lte: dateFilter.endDate,
+            },
           },
-        },
-        {
-          endSession: {
-            gte: dateFilter.startDate,
-            lte: dateFilter.endDate,
+          {
+            endSession: {
+              gte: dateFilter.startDate,
+              lte: dateFilter.endDate,
+            },
           },
-        },
-      ];
+        ];
 
-    const result = await prisma.booking.findMany({
-      where: whereFilter,
-      orderBy: [{ startSession: 'asc' }],
-      skip: page > 0 ? (page - 1) * limit : 0,
-      take: limit,
-    });
+      const result = await prisma.booking.findMany({
+        where: whereFilter,
+        orderBy: [{ startSession: 'asc' }],
+        skip: page > 0 ? (page - 1) * limit : 0,
+        take: limit,
+      });
 
-    const totalCount = await prisma.booking.count({
-      where: whereFilter,
-    });
+      const totalCount = await prisma.booking.count({
+        where: whereFilter,
+      });
 
-    return {
-      pageCount: Math.ceil(totalCount / limit),
-      records: result,
-    };
+      return {
+        pageCount: Math.ceil(totalCount / limit),
+        records: result,
+      };
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findManyBooking()' });
+    }
   }
 
   public async findBookingConflicts({ startDate, endDate }: DatesInput) {
@@ -140,7 +151,11 @@ class Respository {
   }
 
   public async deleteBooking(id: string) {
-    return prisma.booking.delete({ where: { id } });
+    try {
+      return prisma.booking.delete({ where: { id } });
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> deleteBooking()' });
+    }
   }
 }
 

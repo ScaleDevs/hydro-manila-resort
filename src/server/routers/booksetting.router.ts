@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { protectedProcedure, procedure, router } from '../trpc';
+import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { BookingSettingService } from '@/svc/bookingsetting.service';
+import { BookingSettingRepository } from '@/repo/bookingsetting.repo';
 
 export const bookingSettingRouter = router({
   upsertBookingSetting: protectedProcedure
@@ -13,15 +14,11 @@ export const bookingSettingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      const bookingRecord = await BookingSettingService.findFirstBookingSetting();
-
-      if (bookingRecord) {
-        return BookingSettingService.updateBookingSettingById(bookingRecord.bookingSettingId, input);
-      }
-
+      const bookingRecord = await BookingSettingRepository.findFirstBookingSetting();
+      if (bookingRecord) return BookingSettingRepository.updateBookingSettingById(bookingRecord.bookingSettingId, input);
       return BookingSettingService.createBookingSetting(input);
     }),
   getBookingSetting: procedure.query(() => {
-    return BookingSettingService.findFirstBookingSetting();
+    return BookingSettingRepository.findFirstBookingSetting();
   }),
 });

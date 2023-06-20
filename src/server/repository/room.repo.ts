@@ -9,7 +9,12 @@ export type IFindManyroomInput = {
 
 class Respository {
   public async createRoom(data: Omit<IRoom, 'roomId' | 'activeVersion'>) {
-    return prisma.room.create({ data: { ...data } });
+    try {
+      const room = await prisma.room.create({ data: { ...data } });
+      return room;
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> createRoom()' });
+    }
   }
 
   public async findRoomById(id: string) {
@@ -19,27 +24,31 @@ class Respository {
   }
 
   public async findManyRoom({ page, limit, roomIdentityName }: IFindManyroomInput) {
-    const whereFilter: Prisma.RoomWhereInput = {
-      roomIdentityName: {
-        equals: roomIdentityName,
-      },
-    };
+    try {
+      const whereFilter: Prisma.RoomWhereInput = {
+        roomIdentityName: {
+          equals: roomIdentityName,
+        },
+      };
 
-    const result = await prisma.room.findMany({
-      where: whereFilter,
-      orderBy: { roomId: 'asc' },
-      skip: page > 0 ? (page - 1) * limit : 0,
-      take: limit,
-    });
+      const result = await prisma.room.findMany({
+        where: whereFilter,
+        orderBy: { roomId: 'asc' },
+        skip: page > 0 ? (page - 1) * limit : 0,
+        take: limit,
+      });
 
-    const totalCount = await prisma.room.count({
-      where: whereFilter,
-    });
+      const totalCount = await prisma.room.count({
+        where: whereFilter,
+      });
 
-    return {
-      pageCount: Math.ceil(totalCount / limit),
-      records: result,
-    };
+      return {
+        pageCount: Math.ceil(totalCount / limit),
+        records: result,
+      };
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findManyRoom()' });
+    }
   }
 
   public async updateRoom(id: string, partialData: Partial<IRoom>) {
@@ -50,13 +59,11 @@ class Respository {
   }
 
   public async deleteRoom(id: string) {
-    return prisma.room.delete({ where: { roomId: id } });
-  }
-
-  public async getRoomDetails(roomId: string) {
-    const room = await this.findRoomById(roomId);
-    if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
-    return { room, roomDetails: room.details[0] };
+    try {
+      return prisma.room.delete({ where: { roomId: id } });
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> deleteRoom()' });
+    }
   }
 }
 

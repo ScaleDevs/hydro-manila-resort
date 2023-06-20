@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { Alert, AlertIcon, Button, Fade, Heading, SlideFade, Stack, Text } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -52,13 +51,6 @@ function BookingCancel() {
 
       <Stack w={{ base: '90%', lg: '1000px' }} mx='auto'>
         <SlideFade in offsetY='20px'>
-          <Stack direction='row' justifyContent='left'>
-            <Link href='/'>
-              <Button>BACK TO BOOKING</Button>
-            </Link>
-          </Stack>
-
-          <br />
           <form onSubmit={handleSubmit(onCancellation)}>
             <Stack w='100%' spacing={5}>
               <Heading>Cancellation Form</Heading>

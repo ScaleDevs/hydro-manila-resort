@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import dayjs from 'dayjs';
-import { DatesInput, IPaginationInputs, IScheduledEvent } from '@/utils/types';
+import { IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
@@ -61,22 +61,6 @@ class Service {
           code: 'BAD_REQUEST',
           message: 'Schedule Already Filled',
         });
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findScheduledEventById(scheduledEventId: string) {
-    try {
-      return ScheduledEventRepository.findScheduledEventById(scheduledEventId);
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
-    }
-  }
-
-  public async findManyScheduledEvent(input: IPaginationInputs & DatesInput) {
-    try {
-      return ScheduledEventRepository.findManyScheduledEvent(input);
-    } catch (err) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }

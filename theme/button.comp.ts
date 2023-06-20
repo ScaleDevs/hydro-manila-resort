@@ -35,6 +35,14 @@ const Button = defineStyleConfig({
         bg: 'teal.400',
       },
     },
+    ghost: {
+      _hover: {
+        bg: 'teal.600',
+      },
+      _active: {
+        bg: 'teal.600',
+      },
+    },
   },
   defaultProps: {
     size: 'md',

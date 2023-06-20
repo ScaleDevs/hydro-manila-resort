@@ -1,80 +1,82 @@
 import create, { StateCreator } from 'zustand';
 import { createTrackedSelector } from 'react-tracked';
 import { devtools } from 'zustand/middleware';
+import { IProduct, IRoom } from '@/utils/types';
 
-export type BookingState = {
+export enum BookingSteps {
+  step1 = 'Date & Time',
+  step2 = 'Addons',
+  step3 = 'Personal Details',
+  step4 = 'Review Details',
+}
+
+export type BookingPayload = {
   name: string;
   email: string;
   phoneNumber: string;
-  startSession: string;
-  endSession: string;
+  bookingDate: string;
   guests: number;
   roomId: string | null;
-  roomVersion: number;
   productId: string;
-  productVersion: number;
-  receipt: {
-    productPrice: number;
-    roomPrice: number;
-    additionalHeadsPrice: number;
-    total: number;
-  };
+};
 
-  getBookingStates: () => Omit<
-    BookingState,
-    'getBookingStates' | 'setBookingState' | 'resetBookingState' | 'setWholeBookingState'
-  >;
+export type BookingState = {
+  data: BookingPayload;
+  selectedProduct: IProduct | null;
+  selectedRoom: IRoom | null;
+  stepDescription: string;
+  stepsLength: number;
+};
 
-  setBookingState: (
-    label: keyof Omit<BookingState, 'getBookingStates' | 'setBookingState' | 'resetBookingState' | 'setWholeBookingState'>,
-    value: any,
-  ) => void;
+export type BookingActions = {
+  getBookingStates: () => BookingState;
 
-  setWholeBookingState: (
-    bookingStates: Omit<BookingState, 'getBookingStates' | 'setBookingState' | 'resetBookingState' | 'setWholeBookingState'>,
-  ) => void;
+  setBookingState: (label: keyof BookingState, value: any) => void;
+
+  setBookingStateData: (newData: Partial<BookingPayload>) => void;
 
   resetBookingState: () => void;
 };
 
-const initState: Omit<BookingState, 'getBookingStates' | 'setBookingState' | 'resetBookingState' | 'setWholeBookingState'> = {
-  name: '',
-  email: '',
-  phoneNumber: '',
-  startSession: '',
-  endSession: '',
-  guests: 0,
-  roomId: '',
-  roomVersion: 0,
-  productId: '',
-  productVersion: 0,
-  receipt: {
-    productPrice: 0,
-    roomPrice: 0,
-    additionalHeadsPrice: 0,
-    total: 0,
+const initState: BookingState = {
+  data: {
+    name: '',
+    email: '',
+    phoneNumber: '',
+    bookingDate: '',
+    guests: 0,
+    roomId: null,
+    productId: '',
   },
+  selectedProduct: null,
+  selectedRoom: null,
+  stepDescription: BookingSteps.step1,
+  stepsLength: 5,
 };
+
+type StoreType = BookingState & BookingActions;
 
 const stateStore = devtools((set, get) => ({
   ...initState,
 
   getBookingStates: () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { getBookingStates, setBookingState, setWholeBookingState, resetBookingState, ...restBookingState } = get();
+    const states = get();
 
-    return restBookingState;
+    return states;
   },
 
   setBookingState: (label, value) => set({ [`${label}`]: value }),
 
-  setWholeBookingState: (bookingState: BookingState | Partial<BookingState>) =>
-    set((current) => ({ ...current, ...bookingState })),
+  setBookingStateData: (newData) => {
+    const bookingData = get().data;
+    set({ data: { ...bookingData, ...newData } });
+  },
 
   resetBookingState: () => set({ ...initState }),
-})) as StateCreator<BookingState, [], [], BookingState>;
+})) as StateCreator<StoreType, [], [], StoreType>;
 
-export const useBookingStore = create<BookingState>(stateStore);
+export const useBookingStore = create<StoreType>(stateStore);
 
 const useBookingStoreTrack = createTrackedSelector(useBookingStore);
 

@@ -163,7 +163,7 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
               />
 
               <SelectField
-                disabled={selectedProduct?.details[0].withRooms}
+                disabled={selectedProduct?.withRooms}
                 register={register}
                 property='roomId'
                 placeholder='ROOM RENTAL(optional)'

@@ -1,7 +1,6 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { Stack, Button, Box, useSteps, chakra, Center, Heading, SlideFade } from '@chakra-ui/react';
+import { Stack, Box, useSteps, chakra, Center, Heading, SlideFade } from '@chakra-ui/react';
 import { BsPatchCheckFill } from 'react-icons/bs';
 
 import Layout from '@/layouts/index';
@@ -82,8 +81,7 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
 };
 
 export default function UpdateBooking() {
-  const router = useRouter();
-  const { resetStates, isRequestSuccess, stepsLength } = useBookingUpdateRequestStoreTrack();
+  const { resetStates, isRequestSuccess, stepsLength, stepDescription } = useBookingUpdateRequestStoreTrack();
 
   const { activeStep, setActiveStep } = useSteps({
     index: 0,
@@ -92,10 +90,15 @@ export default function UpdateBooking() {
 
   const backToBooking = () => {
     setActiveStep(0);
-    router.push('/');
     resetStates();
-    return;
   };
+
+  useEffect(() => {
+    return () => {
+      backToBooking();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Layout>
@@ -108,10 +111,6 @@ export default function UpdateBooking() {
       <br />
 
       <Box w={{ base: '90%', xl: '100%' }} mx='auto' borderRadius='sm'>
-        <Stack direction='row' justifyContent='left'>
-          <Button onClick={backToBooking}>BACK TO BOOKING</Button>
-        </Stack>
-
         {isRequestSuccess ? (
           <SlideFade in={true} offsetY='20px'>
             <Center p='100px' boxShadow='2xl' borderRadius='2xl' mt='50px'>
@@ -126,7 +125,7 @@ export default function UpdateBooking() {
             <br />
             <br />
 
-            <FormStepper activeStep={activeStep} />
+            <FormStepper activeStep={activeStep} stepDescription={stepDescription} stepsLength={stepsLength} />
 
             <br />
             <br />

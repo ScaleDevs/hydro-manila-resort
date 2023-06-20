@@ -44,14 +44,11 @@ function Admin() {
   });
 
   const createAddOnSubmit = (data: FormSchemaType) => {
-    const { roomIdentityName, description, ...rest } = data;
+    const { description, ...rest } = data;
 
     const payload = {
-      roomIdentityName,
-      details: {
-        ...rest,
-        description: description ? description : null,
-      },
+      ...rest,
+      description: description ? description : null,
     };
 
     console.log(payload);

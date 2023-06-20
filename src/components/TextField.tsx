@@ -2,7 +2,7 @@ import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
 
 export interface ITextFieldProps {
-  register: UseFormRegister<any>;
+  register?: UseFormRegister<any>;
   property: string;
   placeholder?: string;
   errMsg?: string;
@@ -12,6 +12,16 @@ export interface ITextFieldProps {
 }
 
 export function TextField({ register, property, placeholder, errMsg, onBlur, label, required }: ITextFieldProps) {
+  const fieldProps = register
+    ? {
+        ...register(property, {
+          onBlur: () => {
+            onBlur && onBlur();
+          },
+        }),
+      }
+    : {};
+
   return (
     <Box w='100%'>
       <Text fontSize='md'>
@@ -23,11 +33,7 @@ export function TextField({ register, property, placeholder, errMsg, onBlur, lab
         )}
       </Text>
       <Input
-        {...register(property, {
-          onBlur: () => {
-            onBlur && onBlur();
-          },
-        })}
+        {...fieldProps}
         placeholder={placeholder || ''}
         borderColor='primary.1'
         borderRadius='sm'
