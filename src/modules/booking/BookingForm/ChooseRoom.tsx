@@ -15,7 +15,11 @@ export function ChooseRoom({ chosenRoom, setChosenRoom }: IChooseRoomProps) {
   return (
     <Box w='100%' mx='auto'>
       <Text fontSize='lg' fontWeight='semibold'>
-        Choose Rooms:
+        Choose Rooms{' '}
+        <Text as='span' fontWeight='normal' color='gray.500'>
+          (optional)
+        </Text>
+        :
       </Text>
       <br />
       <Stack
