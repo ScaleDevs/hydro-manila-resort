@@ -66,6 +66,7 @@ export default function Paginator({ currentPage, pageCount, handlePageChange }: 
         .fill(1)
         .map((v, i) => {
           const currentIteration = v + i;
+          const isActive = currentPage === i + 1;
 
           if (currentIteration >= lowerLimit && currentIteration <= higherLimit)
             return (
@@ -73,11 +74,11 @@ export default function Paginator({ currentPage, pageCount, handlePageChange }: 
                 key={i}
                 w='35px'
                 h='10'
-                bg={currentPage === i + 1 ? 'teal.500' : 'gray.200'}
-                color={currentPage === i + 1 ? 'white' : 'black'}
+                bg={isActive ? 'primary.1' : 'gray.200'}
+                color={isActive ? 'white' : 'black'}
                 borderRadius='sm'
                 overflow='hidden'
-                _hover={{ cursor: 'pointer', bg: 'teal.400' }}
+                _hover={isActive ? { cursor: 'pointer' } : { cursor: 'pointer', bg: 'gray.300' }}
                 onClick={() => handlePageChange(currentIteration)}
               >
                 <Center h='100%'>{currentIteration}</Center>

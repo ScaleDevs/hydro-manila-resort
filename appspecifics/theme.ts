@@ -73,4 +73,5 @@ export const GetApp = {
 
     return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
   })(),
+  HoverButton: 'whiteAlpha.800',
 };

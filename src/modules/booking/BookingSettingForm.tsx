@@ -23,6 +23,7 @@ import { BsPencilSquare, BsX } from 'react-icons/bs';
 import { trpc } from '@/utils/trpc';
 import { PHpeso } from '@/modules/utils/helper';
 import { NumberField } from '@/components/NumberField';
+import { GetApp } from '@/appspecs/theme';
 
 const PencilIcon = chakra(BsPencilSquare);
 const XIcon = chakra(BsX);
@@ -94,7 +95,7 @@ export default function BookingSetting({}: IBookingSettingProps) {
           <XIcon
             h='40px'
             w='40px'
-            _hover={{ cursor: 'pointer', color: 'teal.500' }}
+            _hover={{ cursor: 'pointer', color: GetApp.ActiveColor }}
             transition='color 0.25s'
             onClick={onToggle}
           />
@@ -102,7 +103,7 @@ export default function BookingSetting({}: IBookingSettingProps) {
           <PencilIcon
             h='30px'
             w='30px'
-            _hover={{ cursor: 'pointer', color: 'teal.500' }}
+            _hover={{ cursor: 'pointer', color: GetApp.ActiveColor }}
             transition='color 0.25s'
             onClick={onToggle}
           />

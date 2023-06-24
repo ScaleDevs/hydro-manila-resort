@@ -28,7 +28,7 @@ export default function Layout({ children }: any) {
             </Hide>
             <Hide below='md'>
               <MenuButton as={Button} rightIcon={<RxChevronDown />} display={{ base: 'none', md: 'flex' }} variant='ghost'>
-                <Text color='primary.3'>Manage Booking</Text>
+                Manage Booking
               </MenuButton>
             </Hide>
             <MenuList>

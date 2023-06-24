@@ -28,6 +28,8 @@ const Button = defineStyleConfig({
   variants: {
     solid: GetApp.ButtonSolid,
     ghost: {
+      color: 'white',
+      fontFamily: 'primary',
       _hover: {
         bg: 'whiteAlpha.400',
       },
