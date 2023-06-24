@@ -11,7 +11,7 @@ export interface IFormStepperProps {
 export default function FormStepper({ activeStep, stepDescription, stepsLength }: IFormStepperProps) {
   return (
     <Stack>
-      <Stepper size='sm' index={activeStep} gap='5' colorScheme='teal'>
+      <Stepper size='sm' index={activeStep} gap='5' colorScheme='default'>
         {Array(stepsLength)
           .fill(1)
           .map((v, index) => (

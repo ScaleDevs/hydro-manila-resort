@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { Box, IconButton, Stack, Text, chakra } from '@chakra-ui/react';
 import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
 import { IProduct } from '@/utils/types';
+import { GetApp } from '@/appspecs/theme';
 
 const LeftArrowIcon = chakra(BsChevronLeft);
 const RightArrowIcon = chakra(BsChevronRight);
@@ -58,7 +59,7 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
             return (
               <Box
                 key={i}
-                bg={isActive ? 'teal.400' : '#FBFBFB'}
+                bg={isActive ? GetApp.ActiveColor : '#FBFBFB'}
                 borderRadius='10px'
                 boxShadow='md'
                 border='1px'
@@ -67,7 +68,7 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
                 h='105px'
                 p={5}
                 cursor='pointer'
-                _hover={{ bg: 'gray.100' }}
+                _hover={isActive ? {} : { bg: 'gray.100' }}
                 transition='background-color 0.25s'
                 onClick={() => {
                   setChosenDate(dateDisplay.format('YYYY-MM-DD'));

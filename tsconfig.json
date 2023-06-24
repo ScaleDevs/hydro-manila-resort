@@ -34,7 +34,8 @@
       "@/styles/*": ["styles/*"],
       "@/theme": ["chakra.theme.ts"],
       "@/repo/*": ["src/server/repository/*"],
-      "@/svc/*": ["src/server/services/*"]
+      "@/svc/*": ["src/server/services/*"],
+      "@/appspecs/*": ["appspecifics/*"],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
