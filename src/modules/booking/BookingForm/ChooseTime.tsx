@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, getISOFormatFromSchedule } from '@/utils/helper';
 import { IProduct } from '@/utils/types';
+import { GetApp } from '@/appspecs/theme';
 
 const transformSchedule = (schedule: string) => {
   const schedArr = schedule.split(' ');
@@ -86,7 +87,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
               <Stack
                 key={index}
                 direction='row'
-                bg={isActive ? 'teal.400' : isBlocked ? 'blackAlpha.500' : 'blackAlpha.100'}
+                bg={isActive ? GetApp.ActiveColor : isBlocked ? 'blackAlpha.500' : 'blackAlpha.100'}
                 borderRadius='10px'
                 w='100%'
                 py='7'

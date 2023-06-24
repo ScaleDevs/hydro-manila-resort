@@ -1,20 +1,20 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Box, Stack, Menu, MenuButton, MenuList, MenuItem, IconButton, Text, Button, chakra, Hide } from '@chakra-ui/react';
+import { Box, Menu, MenuButton, MenuList, MenuItem, IconButton, Text, Button, chakra, Hide } from '@chakra-ui/react';
 import { RxHamburgerMenu, RxChevronDown } from 'react-icons/rx';
+import GetAppComp from '@/appspecs/components';
 
 const HamburgerIcon = chakra(RxHamburgerMenu);
 
 export default function Layout({ children }: any) {
+  const HeaderLogo = GetAppComp.AppHeaderLogo;
+
   return (
     <Box bg='primary.2' height='100vh' overflowY='auto'>
-      <Box h='100px' w='100%' py='0' bg='primary.1' pos='relative'>
-        <Stack position='absolute' mt='-57px' left={{ base: '100px', md: '50%' }} transform='translateX(-50%)'>
-          <Image src='/logo_white.png' alt='Hydro Resort Logo' width={200} height={200} priority />
-        </Stack>
+      <Box h='140px' w='100%' py='0' bg='primary.1' pos='relative'>
+        <HeaderLogo />
 
-        <Box position='absolute' right={5} top={7}>
+        <Box position='absolute' right={8} top={12}>
           <Menu>
             <Hide above='md'>
               <MenuButton
@@ -28,7 +28,7 @@ export default function Layout({ children }: any) {
             </Hide>
             <Hide below='md'>
               <MenuButton as={Button} rightIcon={<RxChevronDown />} display={{ base: 'none', md: 'flex' }} variant='ghost'>
-                <Text color='white'>Manage Booking</Text>
+                Manage Booking
               </MenuButton>
             </Hide>
             <MenuList>

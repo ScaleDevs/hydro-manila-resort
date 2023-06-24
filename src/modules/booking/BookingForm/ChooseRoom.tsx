@@ -3,6 +3,7 @@ import { Box, Skeleton, Stack, Text } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
 import { IRoom } from '@/utils/types';
 import { PHpeso } from '@/utils/helper';
+import { GetApp } from '@/appspecs/theme';
 
 export interface IChooseRoomProps {
   chosenRoom: IRoom | null;
@@ -45,7 +46,7 @@ export function ChooseRoom({ chosenRoom, setChosenRoom }: IChooseRoomProps) {
               <Stack
                 key={index}
                 direction='row'
-                bg={isActive ? 'teal.400' : 'blackAlpha.200'}
+                bg={isActive ? GetApp.ActiveColor : 'blackAlpha.200'}
                 borderRadius='10px'
                 w='100%'
                 py='7'

@@ -1,4 +1,5 @@
 import { defineStyleConfig } from '@chakra-ui/react';
+import { GetApp } from '@/appspecs/theme';
 
 const Button = defineStyleConfig({
   baseStyle: {
@@ -25,22 +26,15 @@ const Button = defineStyleConfig({
     },
   },
   variants: {
-    solid: {
-      bg: 'primary.1',
-      color: 'white',
-      _hover: {
-        bg: 'teal',
-      },
-      _active: {
-        bg: 'teal.400',
-      },
-    },
+    solid: GetApp.ButtonSolid,
     ghost: {
+      color: 'white',
+      fontFamily: 'primary',
       _hover: {
-        bg: 'teal.600',
+        bg: 'whiteAlpha.400',
       },
       _active: {
-        bg: 'teal.600',
+        bg: 'whiteAlpha.400',
       },
     },
   },

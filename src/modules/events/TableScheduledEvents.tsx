@@ -27,6 +27,7 @@ import { tableFormatTimeDisplay } from '../utils/helper';
 import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
 import ModalFilter, { SessionFilter } from './ModalFilter';
+import { GetApp } from '@/appspecs/theme';
 
 const FilterIcon = chakra(BsFilterCircleFill);
 
@@ -93,7 +94,13 @@ export default function TableScheduledEvent() {
               +
             </Button>
           </Link>
-          <FilterIcon h='50px' w='50px' color='primary.1' _hover={{ color: 'teal', cursor: 'pointer' }} onClick={onToggle} />
+          <FilterIcon
+            h='50px'
+            w='50px'
+            color='primary.1'
+            _hover={{ color: GetApp.ActiveColor, cursor: 'pointer' }}
+            onClick={onToggle}
+          />
         </HStack>
         {dateFilter && (
           <Stack direction={{ base: 'column', sm: 'row' }} alignItems='center'>

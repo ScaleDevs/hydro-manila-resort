@@ -2,6 +2,7 @@ import { extendTheme } from '@chakra-ui/react';
 import Button from './theme/button.comp';
 import Heading from './theme/heading.comp';
 import Text from './theme/text.comp';
+import { GetApp } from '@/appspecs/theme';
 
 export const theme = extendTheme({
   breakpoints: {
@@ -11,17 +12,7 @@ export const theme = extendTheme({
     xl: '80em',
     '2xl': '96em',
   },
-  colors: {
-    primary: {
-      1: '#2c5155',
-      2: '#fffbf8',
-      3: '#ffffff',
-    },
-    secondary: {
-      1: '#ebebeb',
-      2: '#7f9193',
-    },
-  },
+  colors: GetApp.ThemeColors,
   fonts: {
     primary: 'Poppins, sans-serif',
   },

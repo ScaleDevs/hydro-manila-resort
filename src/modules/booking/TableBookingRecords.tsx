@@ -24,6 +24,8 @@ import { tableFormatTimeDisplay } from '../utils/helper';
 import { trpc } from '@/utils/trpc';
 import Paginator from '@/components/Paginator';
 import ModalFilter, { SessionFilter } from './ModalFilter';
+import { GetApp } from '@/appspecs/theme';
+
 const FilterIcon = chakra(BsFilterCircleFill);
 
 export default function TableBookingRecords() {
@@ -55,7 +57,13 @@ export default function TableBookingRecords() {
       <ModalFilter {...{ isOpen, setRefNo, setDateFilter, onClose: onToggle }} />
 
       <Stack spacing={5} direction={{ base: 'column', sm: 'row' }}>
-        <FilterIcon h='40px' w='40px' color='primary.1' _hover={{ color: 'teal', cursor: 'pointer' }} onClick={onToggle} />
+        <FilterIcon
+          h='40px'
+          w='40px'
+          color='primary.1'
+          _hover={{ color: GetApp.ActiveColor, cursor: 'pointer' }}
+          onClick={onToggle}
+        />
         {dateFilter && (
           <Stack direction={{ base: 'column', sm: 'row' }} alignItems='center'>
             <Tag size='lg' colorScheme='gray' borderRadius='full'>

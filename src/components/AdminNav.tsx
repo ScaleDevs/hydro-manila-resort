@@ -12,6 +12,8 @@ import { IconType } from 'react-icons/lib';
 
 import { useLogout } from '@/modules/hooks/useLogout.hook';
 import useAppStoreTrack from '@/store/app.store';
+import { GetApp } from '@/appspecs/theme';
+import GetAppComp from '@/appspecs/components';
 
 const RightArrowIconButton = chakra(BsFillArrowRightSquareFill);
 const LeftArrowIconButton = chakra(BsFillArrowLeftSquareFill);
@@ -40,14 +42,29 @@ const ParentLink = ({ Icon, appStateName, isOpen, links, headTitle }: IParentLin
 
   return (
     <>
-      <Button fontWeight='normal' fontSize='20px' w='100%' justifyContent='left' leftIcon={<Icon />} onClick={() => onToggle()}>
+      <Button
+        fontWeight='normal'
+        fontSize='20px'
+        w='100%'
+        justifyContent='left'
+        leftIcon={<Icon />}
+        onClick={() => onToggle()}
+        variant='ghost'
+      >
         {headTitle}
       </Button>
       <Collapse in={isOpen} animateOpacity>
         <VStack borderLeft='1px solid' borderColor='gray.200' pl='10px'>
           {links.map((val, index) => (
             <ChakraLink key={index} href={val.path} w='100%'>
-              <Button fontWeight='normal' fontSize='md' w='100%' justifyContent='left' isActive={router.pathname === val.path}>
+              <Button
+                fontWeight='normal'
+                fontSize='md'
+                w='100%'
+                justifyContent='left'
+                isActive={router.pathname === val.path}
+                variant='ghost'
+              >
                 {val.title}
               </Button>
             </ChakraLink>
@@ -96,14 +113,14 @@ export default function AdminNav() {
                 h='35px'
                 color='gray.300'
                 transition='color 0.5s'
-                _hover={{ cursor: 'pointer', color: 'teal.300' }}
+                _hover={{ cursor: 'pointer', color: GetApp.HoverButton }}
               />
             </Center>
           </SlideFade>
         ) : (
           <SlideFade in={sideNavOpen}>
             <Center h='150px'>
-              <Image src='/logo_white.png' width={200} height={200} alt='Hydro Resort Logo' />
+              <Image src={GetAppComp.ImgSrcLogo} width={200} height={200} alt='Hydro Resort Logo' />
             </Center>
             <Divider borderColor='gray' w='100%' />
 
@@ -127,6 +144,7 @@ export default function AdminNav() {
                   justifyContent='left'
                   leftIcon={<CalendarIcon />}
                   isActive={router.pathname === '/admin/scheduledevent'}
+                  variant='ghost'
                 >
                   EVENT
                 </Button>
@@ -150,6 +168,7 @@ export default function AdminNav() {
                 w='100%'
                 justifyContent='left'
                 leftIcon={<BiLogOut />}
+                variant='ghost'
               >
                 LOGOUT
               </Button>
@@ -162,7 +181,7 @@ export default function AdminNav() {
                 h='35px'
                 color='gray.300'
                 transition='color 0.5s'
-                _hover={{ cursor: 'pointer', color: 'teal.300' }}
+                _hover={{ cursor: 'pointer', color: GetApp.HoverButton }}
               />
             </Center>
           </SlideFade>

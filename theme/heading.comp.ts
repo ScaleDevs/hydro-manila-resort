@@ -4,7 +4,7 @@ const Heading = defineStyleConfig({
   baseStyle: {
     fontFamily: 'primary',
     fontWeight: '600',
-    color: 'primary.1',
+    color: 'gray.700',
   },
 });
 
