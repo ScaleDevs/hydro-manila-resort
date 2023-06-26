@@ -6,6 +6,7 @@ import Layout from '@/layouts/admin';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, tableFormatTimeDisplay } from '@/modules/utils/helper';
 import AdminEditBookingForm from '@/modules/booking/AdminEditBookingForm';
+import { GetApp } from '@/appspecs/theme';
 
 interface Props {
   id: string;
@@ -32,7 +33,7 @@ function Component({ id }: Props) {
       <Head>
         <title>Admin | Bookings Details</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack w='100%' alignItems='flex-end'>

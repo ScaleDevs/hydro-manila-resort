@@ -13,6 +13,7 @@ import { SelectNumberField } from '@/components/SelectNumberField';
 import { SelectField } from '@/components/SelectField';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
 import { trpc } from '@/utils/trpc';
+import { GetApp } from '@/appspecs/theme';
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -77,7 +78,7 @@ function CreateProduct() {
       <Head>
         <title>Admin | Create Schedule</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack spacing={7} w='100%' bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>

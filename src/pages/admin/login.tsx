@@ -5,6 +5,7 @@ import Layout from '@/layouts/login';
 import useAuthStoreTrack from '@/store/auth.store';
 import LoginForm from '@/modules/login/LoginForm';
 import ForceChangePassword from '@/modules/login/ForceChangePassword';
+import { GetApp } from '@/appspecs/theme';
 
 function Login() {
   const { forceChangePassword } = useAuthStoreTrack();
@@ -14,7 +15,7 @@ function Login() {
       <Head>
         <title>Admin Login</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Box w='100%' mx='auto'>

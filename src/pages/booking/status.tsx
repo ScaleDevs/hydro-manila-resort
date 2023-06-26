@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
   Heading,
   VStack,
   Text,
-  Image,
   Box,
   Button,
   Spinner,
@@ -15,10 +15,13 @@ import {
   Tbody,
   Td,
   Tr,
+  Center,
 } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
 import { BookingStatusDisplay } from '@/utils/types';
+import GetAppComp from '@/appspecs/components';
+import { GetApp } from '@/appspecs/theme';
 
 const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
   const [statusDisplay, setStatusDisplay] = useState<BookingStatusDisplay | null>(null);
@@ -44,19 +47,14 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
       <Head>
         <title>Booking | Status</title>
         <meta name='description' content='checking the status of booking' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
       <Box h='100vh'>
+        <br /> <br />
         <VStack spacing={10}>
-          <Box marginBottom={{ base: '-100px', md: '-150px' }}>
-            <Image
-              src='/logo_blue.png'
-              alt='Hydro Resort Logo'
-              h={{ base: '350px', md: '500px' }}
-              w={{ base: '350px', md: '500px' }}
-              marginTop={{ base: '-30px', xl: '-60px' }}
-            />
-          </Box>
+          <Center h='150px' w={{ base: '250px', md: '300px' }}>
+            <Image src={GetAppComp.ImgSrcLogoNonWhite} alt='Logo' width={300} height={300} />
+          </Center>
 
           {isLoading && (
             <Stack justifyContent='center' alignItems='center' spacing={5}>
@@ -121,9 +119,11 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
                 {confirmType === 'UPDATE' ? 'update' : 'booking'}.
               </Text>
               <Text mt='5px' textAlign='center'>
-                If you have not receive any email after waiting long then kindly contact our team at hydroresort.manila@gmail.com
+                If you have not receive any email after waiting long then kindly contact our team at{' '}
+                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || ''}
                 to confirm your booking schedule.
               </Text>
+              <br /> <br />
             </Box>
           )}
         </VStack>

@@ -11,6 +11,7 @@ import { NumberField } from '@/components/NumberField';
 import { TextField } from '@/components/TextField';
 import { trpc } from '@/utils/trpc';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
+import { GetApp } from '@/appspecs/theme';
 
 const schema = z.object({
   roomIdentityName: z.string().min(1, 'Required'),
@@ -73,7 +74,7 @@ function Admin() {
       <Head>
         <title>Admin | Create Room</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack spacing={7} w='100%' bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>

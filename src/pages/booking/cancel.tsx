@@ -9,6 +9,7 @@ import { trpc } from '@/utils/trpc';
 import Layout from '@/layouts/index';
 import { TextField } from '@/components/TextField';
 import { TextAreaField } from '@/components/TextAreaField';
+import { GetApp } from '@/appspecs/theme';
 
 const schema = z.object({
   refNo: z.string().min(1, 'Required'),
@@ -44,7 +45,7 @@ function BookingCancel() {
       <Head>
         <title>Booking | Cancellation</title>
         <meta name='description' content='form to cancel booking' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <br />

@@ -10,6 +10,7 @@ import Layout from '@/layouts/admin';
 import { TextField } from '@/components/TextField';
 import { trpc } from '@/utils/trpc';
 import { DateTimeField } from '@/components/DateTimeField';
+import { GetApp } from '@/appspecs/theme';
 
 const schema = z.object({
   description: z.string().min(1, 'Required'),
@@ -51,7 +52,7 @@ function CreateScheduledEvent() {
       <Head>
         <title>Admin | Create Schedule</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack spacing={7} w='100%' bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>
