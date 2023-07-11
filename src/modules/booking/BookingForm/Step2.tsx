@@ -65,7 +65,12 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
-          <CostView guests={guests || data.guests} productId={data.productId} roomId={chosenRoom?.roomId || data.roomId} />
+          <CostView
+            guests={guests || data.guests}
+            bookedDate={data.bookingDate || undefined}
+            productId={data.productId}
+            roomId={chosenRoom?.roomId || data.roomId}
+          />
         </Box>
       </Stack>
 

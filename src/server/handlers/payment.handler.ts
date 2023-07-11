@@ -17,7 +17,7 @@ import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import { sendRefundEmailProcessing } from '@/repo/mailersend.repo';
 import { BookingService } from '@/svc/booking.service';
-import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
+import { getProductPrice, tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
 import { createReferenceNumber } from '@/server/util';
 import { constants } from '@/server/constants';
@@ -46,7 +46,7 @@ export const initiatePaymentSessionForBooking = async (input: {
     const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
     const endSessionDayInstance = tzSchedToDayJsInsance(endDate, product.scheduleEnd);
 
-    let total = product.price;
+    let total = getProductPrice(startSessionDayInstance.format('YYYY-MM-DD'), product);
     if (roomDetails) total += roomDetails.price;
     if (input.guests && input.guests > bookingSetting.minPax)
       total += (input.guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
@@ -61,7 +61,7 @@ export const initiatePaymentSessionForBooking = async (input: {
       startSession: startSessionDayInstance.toISOString(),
       endSession: endSessionDayInstance.toISOString(),
       receipt: {
-        productPrice: product.price,
+        productPrice: getProductPrice(startSessionDayInstance.format('YYYY-MM-DD'), product),
         roomPrice: roomDetails?.price || 0,
         additionalHeadsPrice:
           input.guests && input.guests > bookingSetting.minPax

@@ -41,7 +41,12 @@ export function Step1({ onNext }: Step1Props) {
       )}
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
-          <CostView guests={data.guests} productId={chosenSchedule?.productId || data.productId} roomId={data.roomId} />
+          <CostView
+            guests={data.guests}
+            bookedDate={chosenDate || undefined}
+            productId={chosenSchedule?.productId || data.productId}
+            roomId={data.roomId}
+          />
         </Box>
       </Stack>
       <Stack direction='row' justifyContent='flex-end'>

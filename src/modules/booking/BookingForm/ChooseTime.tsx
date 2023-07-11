@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { Box, Skeleton, Stack, Text } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { trpc } from '@/utils/trpc';
-import { PHpeso, getISOFormatFromSchedule } from '@/utils/helper';
+import { PHpeso, getISOFormatFromSchedule, getProductPrice } from '@/utils/helper';
 import { IProduct } from '@/utils/types';
 import { GetApp } from '@/appspecs/theme';
 
@@ -46,7 +46,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
         mx='auto'
         overflowX='auto'
       >
-        {isFetchingProducts || isFetchingBookedDates ? (
+        {isFetchingProducts || isFetchingBookedDates || !chosenDate ? (
           <>
             <Skeleton height='40px' w='100%' />
             <Skeleton height='40px' w='100%' />
@@ -119,7 +119,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
                   fontWeight='semibold'
                   color={isActive ? 'white' : 'black'}
                 >
-                  {PHpeso.format(record.price)}
+                  {PHpeso.format(getProductPrice(chosenDate, record))}
                 </Text>
               </Stack>
             );

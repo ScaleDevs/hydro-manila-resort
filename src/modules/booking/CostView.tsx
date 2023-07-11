@@ -3,14 +3,16 @@ import { HStack, Box, Text, Center, SlideFade, Spinner } from '@chakra-ui/react'
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
+import { getProductPrice } from '@/utils/helper';
 
 export interface ICostViewProps {
+  bookedDate?: string; // temporary
   productId?: string;
   roomId?: string | null;
   guests?: number;
 }
 
-export default function CostView({ productId, roomId, guests }: ICostViewProps) {
+export default function CostView({ bookedDate, productId, roomId, guests }: ICostViewProps) {
   const [product, setProduct] = useState<IProduct | undefined>(undefined);
   const [room, setRoom] = useState<IRoom | undefined>(undefined);
 
@@ -25,7 +27,7 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
     if (!bookingSetting) return 0;
 
     let total = 0;
-    if (product) total += product.price;
+    if (product && bookedDate) total += getProductPrice(bookedDate, product);
     if (room) total += room.price;
     if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
     return total;
@@ -54,10 +56,10 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
     <>
       <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
         <Text>BREAKDOWN:</Text>
-        {product ? (
+        {product && bookedDate ? (
           <HStack mt='10px' justifyContent='space-between'>
             <Text>{product.name}:</Text>
-            <Text>{PHpeso.format(product.price)}</Text>
+            <Text>{PHpeso.format(getProductPrice(bookedDate, product))}</Text>
           </HStack>
         ) : (
           ''

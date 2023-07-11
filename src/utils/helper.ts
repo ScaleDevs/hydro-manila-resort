@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { IProduct } from './types';
 
 export const PHpeso = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -42,4 +43,16 @@ export const tzSchedToDayJsInsance = (bookingDate: string, schedule: string) => 
 
 export const buildGoogleCalendarDateTime = (utcDateTime: string | Date) => {
   return dayjs.utc(utcDateTime).format('YYYY-MM-DDTHH:mm:00.000') + 'Z';
+};
+
+// temporary helper
+export const getProductPrice = (bookingDate: string, product: IProduct) => {
+  const bookedDay = dayjs(bookingDate).day();
+  if (bookedDay > 0 && bookedDay < 6) {
+    if (product.name === 'DAY SWIMMING') return 7500;
+    if (product.name === 'NIGHT SWIMMING') return 7500;
+    if (product.name.includes('OVERNIGHT SWIMMING')) return 15000;
+  }
+
+  return product.price;
 };
