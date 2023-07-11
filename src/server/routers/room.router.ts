@@ -11,6 +11,11 @@ export const roomRouter = router({
         price: z.number(),
         description: z.string().nullable(),
         withBathroom: z.boolean(),
+        withAircon: z.boolean(),
+        withFan: z.boolean(),
+        bedSingle: z.number().min(0),
+        bedDouble: z.number().min(0),
+        bedQueen: z.number().min(0),
         guests: z.number(),
       }),
     )

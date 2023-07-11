@@ -41,7 +41,7 @@ export const bookingRouter = router({
         data: z.object({
           bookingDate: z.string().optional(),
           guests: z.number().optional(),
-          roomId: z.string().nullable().optional(),
+          rooms: z.array(z.string()).optional(),
           productId: z.string().optional(),
         }),
       }),

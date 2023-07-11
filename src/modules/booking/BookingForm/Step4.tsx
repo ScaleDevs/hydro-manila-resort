@@ -40,7 +40,7 @@ export interface IStep4Props {
 }
 
 export function Step4({ onPrev, onNext }: IStep4Props) {
-  const { data, selectedProduct, selectedRoom } = useBookingStore();
+  const { data, selectedProduct, selectedRooms } = useBookingStore();
   const { setPaymentStates } = usePaymentStoreTrack();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -52,6 +52,8 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
   } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
 
   const proceedToPayment = () => {
+    console.log('data', data);
+
     mutate(data, {
       onSuccess(data) {
         const paymentIntentResource = data.paymentIntentResource;
@@ -110,7 +112,10 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
               </Heading>
               <Stack spacing={-2}>
                 <FieldValueReport fieldName='Guests' value={`${data.guests}`} />
-                <FieldValueReport fieldName='Room' value={`${selectedRoom ? selectedRoom.roomIdentityName : 'N/A'}`} />
+                <FieldValueReport
+                  fieldName='Rooms'
+                  value={`${Array.from(selectedRooms, (entry) => entry[1].roomIdentityName).join(', ')}`}
+                />
               </Stack>
             </Box>
 
@@ -132,7 +137,7 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
-          <CostView guests={data.guests} productId={data.productId} roomId={data.roomId} />
+          <CostView guests={data.guests} product={selectedProduct} rooms={Array.from(selectedRooms, (entry) => entry[1])} />
         </Box>
       </Stack>
 

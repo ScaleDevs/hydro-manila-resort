@@ -12,7 +12,7 @@ export const paymentRouter = router({
         phoneNumber: z.string(),
         bookingDate: z.string(),
         guests: z.number(),
-        roomId: z.string().nullable(),
+        roomIds: z.array(z.string().min(1)),
         productId: z.string(),
       }),
     )

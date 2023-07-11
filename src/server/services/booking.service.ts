@@ -45,14 +45,15 @@ class Service {
 
       const product = await ProductRepository.findProductById(booking.productId);
 
-      const bookingResult: typeof booking & { product: IProduct } & { room?: IRoom } = {
+      const bookingResult: typeof booking & { product: IProduct } & { roomsObject: IRoom[] } = {
         ...booking,
         product,
+        roomsObject: [],
       };
 
-      if (booking.roomId) {
-        const room = await RoomRepository.findRoomById(booking.roomId);
-        bookingResult['room'] = room || undefined;
+      if (booking.rooms.length > 0) {
+        const rooms = await RoomRepository.findRoomsByIds(booking.rooms);
+        bookingResult['roomsObject'] = rooms;
       }
 
       return bookingResult;
@@ -67,9 +68,9 @@ class Service {
   public async buildBookingDetailsUpdateLog(
     bookingRecord: IBooking,
     data: {
-      guests?: number | undefined;
-      roomId?: string | null | undefined;
-      productId?: string | undefined;
+      guests?: number;
+      rooms?: string[];
+      productId?: string;
     },
     updatedBy: 'ADMIN' | 'CUSTOMER',
     transactionRefNo?: string,
@@ -113,24 +114,29 @@ class Service {
     product: IProduct;
   }) {
     try {
+      const updateLogs: BookingUpdateLog[] = [];
       const bookingDate = updatedBookedDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
-      const endDate = dayjs(bookingDate)
-        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
-        .format('YYYY-MM-DD');
+      const startSession = tzSchedToDayJsInsance(bookingDate, product.scheduleStart);
+      const endSession = tzSchedToDayJsInsance(
+        dayjs(bookingDate)
+          .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
+          .format('YYYY-MM-DD'),
+        product.scheduleEnd,
+      );
+      const startSessionISOString = startSession.toISOString();
+      const endSessionISOString = endSession.toISOString();
 
-      const startSession = tzSchedToDayJsInsance(bookingDate, product.scheduleStart).toISOString();
-      const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
-
-      if (!updatedBookedDate && !updatedProductId) return { updateLogs: [], startSession, endSession };
+      if (!updatedBookedDate && !updatedProductId)
+        return { updateLogs, startSession, endSession, startSessionISOString, endSessionISOString };
 
       const isBookingDateTaken = await BookingRepository.findBookingConflicts({
-        startDate: startSession,
-        endDate: endSession,
+        startDate: startSessionISOString,
+        endDate: endSessionISOString,
       });
 
       const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
-        startDate: startSession,
-        endDate: endSession,
+        startDate: startSessionISOString,
+        endDate: endSessionISOString,
       });
 
       if (isBookingDateTaken || isEventSchedTaken) {
@@ -144,13 +150,12 @@ class Service {
         throw new TRPCError({ code: 'CONFLICT', message: 'Schedule is not available! Kindly choose another date' });
       }
 
-      const updateLogs: BookingUpdateLog[] = [];
       updateLogs.push({
         transactionRefNo: paymentId ? paymentId : null,
         updatedBy,
         fieldUpdated: 'startSession',
         fromValue: `${bookingRecord.startSession}`,
-        toValue: startSession,
+        toValue: startSessionISOString,
         createdAt: dayjs().toDate(),
       });
 
@@ -159,11 +164,11 @@ class Service {
         updatedBy,
         fieldUpdated: 'endSession',
         fromValue: `${bookingRecord.endSession}`,
-        toValue: endSession,
+        toValue: endSessionISOString,
         createdAt: dayjs().toDate(),
       });
 
-      return { updateLogs, startSession, endSession };
+      return { updateLogs, startSession, endSession, startSessionISOString, endSessionISOString };
     } catch (err: any) {
       throw new TRPCError({
         code: err.code || 'INTERNAL_SERVER_ERROR',
@@ -175,13 +180,13 @@ class Service {
   public async updateBooking({
     bookingId,
     product,
-    room,
+    rooms,
     data,
     paymentId,
   }: {
     bookingId: string;
     product: IProduct;
-    room?: IRoom;
+    rooms: string[];
     data: Partial<IBooking>;
     paymentId?: string;
   }) {
@@ -190,9 +195,7 @@ class Service {
 
       const googleCalendarUpdates: calendar_v3.Schema$Event = {
         summary: updatedBooking.name,
-        description: `${product.name} / ${updatedBooking.guests ?? 0} PAX / ${
-          room?.roomIdentityName ?? (!!product.withRooms ? 'ALL ROOMS' : 'NO ROOM')
-        }`,
+        description: `${product.name} / ${updatedBooking.guests ?? 0} PAX / ${rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
       };
 
       if (!!data.startSession && !!data.endSession) {
@@ -224,25 +227,29 @@ class Service {
     }
   }
 
-  public async getBookingDetailsTotal({ product, room, guests }: { guests: number; product: IProduct; room?: IRoom }) {
+  public async getBookingDetailsTotal({ product, rooms, guests }: { guests: number; product: IProduct; rooms: IRoom[] }) {
     try {
       let newTotal = 0;
       let additionalHeadsPrice = 0;
+      let roomPrice = 0;
 
       if (!!guests) {
         const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-        if (!bookingSettings) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Booking Settings Not Found' });
         if (guests > bookingSettings.minPax) {
           newTotal = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
           additionalHeadsPrice = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
         }
       }
       if (product) newTotal += product.price;
-      if (room) newTotal += room.price;
+      rooms.forEach((recordInfo) => {
+        if (product.includedRooms.some((roomId) => roomId === recordInfo.roomId)) return;
+        roomPrice += recordInfo.price;
+        newTotal += recordInfo.price;
+      });
 
       return {
         productPrice: product.price || 0,
-        roomPrice: room?.price || 0,
+        roomPrice,
         additionalHeadsPrice,
         bookingFee: 0,
         total: newTotal,
@@ -258,9 +265,9 @@ class Service {
     customerInfo,
     newTotal,
     oldProduct,
-    oldRoom,
+    oldRooms,
     newProduct,
-    newRoom,
+    newRooms,
   }: {
     bookingRecord: IBooking;
     bookingRequestUpdate: CustomerUpdateBookingParams;
@@ -271,15 +278,12 @@ class Service {
     };
     oldProduct: IProduct;
     newProduct?: IProduct;
-    oldRoom?: IRoom | null;
-    newRoom?: IRoom | null;
+    oldRooms?: string[];
+    newRooms?: string[];
     newTotal: number;
   }) {
     try {
-      let currentRoom = oldRoom?.roomIdentityName || 'None';
       const modifications: { name: string; value: string }[] = [];
-
-      if (oldProduct.withRooms) currentRoom = 'ALL ROOMS';
 
       if (!!bookingRequestUpdate.guests)
         modifications.push({
@@ -287,19 +291,16 @@ class Service {
           value: `${bookingRequestUpdate.guests}`,
         });
 
-      if (!!newRoom)
+      if (!!newRooms)
         modifications.push({
           name: 'Rooms',
-          value: newRoom.roomIdentityName,
+          value: !!newRooms.length ? newRooms.join(', ') : 'None',
         });
 
       if (!!newProduct || bookingRequestUpdate.bookingDate) {
         const product = newProduct || oldProduct;
         const bookingDate =
           bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
-        const endDate = dayjs(bookingDate)
-          .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
-          .format('YYYY-MM-DD');
 
         modifications.push({
           name: 'Type of Booking',
@@ -315,9 +316,12 @@ class Service {
 
         modifications.push({
           name: 'Check-Out Date',
-          value: tzSchedToDayJsInsance(endDate, newProduct?.scheduleEnd || oldProduct.scheduleEnd).format(
-            'MMM DD, YYYY / hh:mm A',
-          ),
+          value: tzSchedToDayJsInsance(
+            dayjs(bookingDate)
+              .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
+              .format('YYYY-MM-DD'),
+            newProduct?.scheduleEnd || oldProduct.scheduleEnd,
+          ).format('MMM DD, YYYY / hh:mm A'),
         });
       }
 
@@ -326,7 +330,7 @@ class Service {
         reference_no: bookingRecord.ref_no,
         guests: `${bookingRecord.guests}`,
         booking_type: oldProduct.name,
-        room: currentRoom,
+        room: !!oldRooms?.length ? oldRooms.join(', ') : 'None',
         check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         check_out_date: dayjs.utc(bookingRecord.endSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         modification: modifications,

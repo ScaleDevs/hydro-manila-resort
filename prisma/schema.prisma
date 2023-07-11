@@ -72,7 +72,7 @@ model Product {
   scheduleStart      String
   scheduleEnd        String
   scheduleEndNextDay Boolean
-  withRooms          Boolean
+  includedRooms      String[]
   description        String?
   updateLogs         UpdateLog[]
   Booking            Booking[]
@@ -82,9 +82,14 @@ model Room {
   roomId           String      @id @default(auto()) @map("_id") @db.ObjectId
   roomIdentityName String
   description      String?
-  withBathroom     Boolean
   guests           Int
   price            Float
+  withBathroom     Boolean
+  withAircon       Boolean
+  withFan          Boolean
+  bedSingle        Int
+  bedDouble        Int
+  bedQueen         Int
   updateLogs       UpdateLog[]
 }
 
@@ -97,7 +102,7 @@ model Booking {
   startSession    DateTime
   endSession      DateTime
   guests          Int
-  roomId          String?            @db.ObjectId
+  rooms           String[]
   product         Product            @relation(fields: [productId], references: [productId])
   productId       String             @db.ObjectId
   receipt         Receipt

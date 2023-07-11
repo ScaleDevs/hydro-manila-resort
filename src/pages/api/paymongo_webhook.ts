@@ -19,8 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // create booking
-    const paymentType = response.data?.attributes?.data?.attributes?.source.type;
-    await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId, paymentType);
+    await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
   }
 
   if (eventType === 'payment.refunded')

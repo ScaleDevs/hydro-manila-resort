@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Stack, Box, Text, VStack, Button } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
-import { IRoom } from '@/utils/types';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import useBookingStoreTrack from '@/store/booking.store';
 import { ChooseRoom } from './ChooseRoom';
@@ -14,9 +13,9 @@ export interface IStep2Props {
 }
 
 export function Step2({ onPrev, onNext }: IStep2Props) {
-  const { setBookingStateData, setBookingState, selectedRoom, data } = useBookingStoreTrack();
+  const { setBookingStateData, setBookingState, selectedRooms, data, selectedProduct } = useBookingStoreTrack();
   const [guests, setGuests] = useState(data.guests);
-  const [chosenRoom, setChosenRoom] = useState<IRoom | null>(selectedRoom);
+  const [chosenRoomsMap, setChosenRoomsMap] = useState<typeof selectedRooms>(selectedRooms);
   const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
 
   const isStepComplete = () => {
@@ -27,15 +26,15 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
     if (!guests) return;
 
     setBookingStateData({
-      roomId: chosenRoom?.roomId || null,
+      roomIds: Array.from(chosenRoomsMap, (entry) => entry[1].roomId),
       guests,
     });
 
-    setBookingState('selectedRoom', chosenRoom);
+    setBookingState('selectedRooms', chosenRoomsMap);
     onNext();
   };
 
-  if (bookingSettingLoader) return null;
+  if (bookingSettingLoader || !selectedProduct) return null;
 
   return (
     <Stack direction='column' spacing={5}>
@@ -44,7 +43,14 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
           Enter number of guests:
         </Text>
         <Box h='100%' w='30%'>
-          <NumberFieldV2 onChange={(v) => setGuests(parseInt(v, 10))} value={`${guests}`} />
+          <NumberFieldV2
+            onChange={(v) => {
+              if (v === '') setGuests(0);
+              else setGuests(parseInt(v, 10));
+            }}
+            value={`${guests}`}
+            property='guests'
+          />
         </Box>
         <Box w='70%' fontSize='12px' lineHeight={1.5}>
           <Text color='gray.400'>
@@ -61,11 +67,15 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
         </Stack>
       </VStack>
 
-      <ChooseRoom chosenRoom={chosenRoom} setChosenRoom={setChosenRoom} />
+      <ChooseRoom chosenSchedule={selectedProduct} chosenRoomsMap={chosenRoomsMap} setChosenRoomsMap={setChosenRoomsMap} />
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
-          <CostView guests={guests || data.guests} productId={data.productId} roomId={chosenRoom?.roomId || data.roomId} />
+          <CostView
+            guests={guests || data.guests}
+            product={selectedProduct}
+            rooms={Array.from(chosenRoomsMap, (entry) => entry[1])}
+          />
         </Box>
       </Stack>
 

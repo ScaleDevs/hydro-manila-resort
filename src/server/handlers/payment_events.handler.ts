@@ -41,7 +41,7 @@ const bookingDataSchema = z.object({
   startSession: z.string(),
   endSession: z.string(),
   guests: z.number(),
-  roomId: z.string().nullable(),
+  rooms: z.array(z.string().min(1)),
   productId: z.string(),
   receipt: receiptSchema,
 });
@@ -50,12 +50,12 @@ const bookingUpdatesSchema = z.object({
   guests: z.number().optional(),
   bookingDate: z.string().optional(),
   productId: z.string().optional(),
-  roomId: z.string().optional().nullable(),
+  rooms: z.array(z.string()).optional(),
 });
 
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
-export const handlePaymentPaidEvent = async (paymentIntentId: string, paymentType: string) => {
+export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   if (!paymentIntentId) {
     console.log('No Payment Intent Id!');
     return;
@@ -109,25 +109,41 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string, paymentTyp
     return;
   }
 
-  const product = await ProductRepository.findProductById(parsed.data.productId);
   const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-  const room = await RoomRepository.findManyRoom({ page: 1, limit: 10 });
-  const chosenRoom = room.records.find((v) => v.roomId === parsed.data.roomId);
-  const bothRooms = room.records.find((v) => v.roomIdentityName === 'ROOM 1 & 2');
-  const room1 = room.records.find((v) => v.roomIdentityName === 'ROOM 1');
-  const room2 = room.records.find((v) => v.roomIdentityName === 'ROOM 2');
-
-  const isRoom1 = () => parsed.data.roomId === room1?.roomId;
-  const isRoom2 = () => parsed.data.roomId === room2?.roomId;
-  const isBothRooms = () => parsed.data.roomId === bothRooms?.roomId;
-
+  const product = await ProductRepository.findProductById(parsed.data.productId);
+  const rooms = await RoomRepository.findRoomsByIds(parsed.data.rooms);
   const bookedDate = dayjs.utc(parsed.data.startSession);
   const checkOutDate = dayjs.utc(parsed.data.endSession);
+  const { guests } = parsed.data;
+  const additionalGuests = guests > bookingSettings.minPax ? (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee : 0;
+  let addonsTotal = additionalGuests;
+
+  const googleCalendarRoomsArr: string[] = [];
+  const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [
+    {
+      name: 'Additional Non-Overnight Guest',
+      price: PHpeso.format(bookingSettings.extraHeadFee),
+      qty: `${guests > bookingSettings.minPax ? guests - bookingSettings.minPax : 0}`,
+      summary: PHpeso.format(additionalGuests),
+    },
+  ];
+  rooms.forEach((info) => {
+    const isNotAddOn = product.includedRooms.some((val) => val === info.roomId);
+    addonsTotal += isNotAddOn ? 0 : info.price;
+    googleCalendarRoomsArr.push(info.roomIdentityName);
+    emailAddonsTable.push({
+      name: info.roomIdentityName,
+      price: PHpeso.format(info.price),
+      qty: '1',
+      summary: PHpeso.format(isNotAddOn ? 0 : info.price),
+    });
+  });
+  emailAddonsTable.push({ name: '', price: '', qty: 'Total Extra', summary: PHpeso.format(addonsTotal) });
 
   const calendarEventId = await GoogleCalendarRepository.createEvent({
     summary: parsed.data.name,
     description: `${product?.name} / ${parsed.data.guests ?? 0} PAX / ${
-      chosenRoom?.roomIdentityName ?? (!!product.withRooms ? 'ALL ROOMS' : 'NO ROOM')
+      rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'
     }`,
     start: {
       dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
@@ -164,36 +180,19 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string, paymentTyp
 
   console.log('SUCCESSFULLY ADDED BOOKING');
 
-  const sendSuccessEmail = async (email: string) => {
-    await sendBookingSuccessEmail({
-      recipientEmail: email,
-      guest_name: parsed.data.name,
-      reference_number: parsed.data.ref_no,
-      booking_type: product?.name || '',
-      number_of_rooms: !!product.withRooms ? 2 : 0,
-      number_of_guest: parsed.data.guests,
-      room_type: !!product.withRooms ? 'ALL ROOMS' : '-',
-      checkin_datetime: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
-      checkout_datetime: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
-      booking_type_rate: 'BEST AVAILABLE RATE',
-      product_price: PHpeso.format(parsed.data.receipt.productPrice),
-      extra_person_rate: !!bookingSettings?.extraHeadFee ? `${PHpeso.format(bookingSettings?.extraHeadFee)}` : 'N/A',
-      extra_person_qty: parsed.data.guests - (bookingSettings?.minPax || 25),
-      extra_person_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice),
-      room2_rate: room2 ? PHpeso.format(room2.price) : 'N/A',
-      room2_qty: isRoom2() || isBothRooms() ? 1 : 0,
-      room2_total: PHpeso.format(room2 && (isRoom2() || isBothRooms()) ? room2.price : 0),
-      room1_rate: room1 ? PHpeso.format(room1.price) : 'N/A',
-      room1_qty: isRoom1() || isBothRooms() ? 1 : 0,
-      room1_total: PHpeso.format(room1 && (isRoom1() || isBothRooms()) ? room1.price : 0),
-      addon_total: PHpeso.format(parsed.data.receipt.additionalHeadsPrice + parsed.data.receipt.roomPrice),
-      type_payment: paymentType,
-      total_payment: PHpeso.format(parsed.data.receipt.total),
-    });
-  };
-
-  await sendSuccessEmail(parsed.data.email);
-  await sendSuccessEmail(constants.mailerSend.supportEmail);
+  await sendBookingSuccessEmail({
+    recipientEmail: [parsed.data.email, constants.mailerSend.supportEmail],
+    reference_number: parsed.data.ref_no,
+    guest_name: parsed.data.name,
+    num_pax: parsed.data.guests,
+    checkin: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+    checkout: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+    booking_type: product?.name || '',
+    booking_rate: 'BEST AVAILABLE RATE',
+    product_price: PHpeso.format(parsed.data.receipt.productPrice),
+    elements: emailAddonsTable,
+    total_payment: PHpeso.format(parsed.data.receipt.total),
+  });
 
   console.log('EMAIL SUCCESSFULLY SENT');
 
@@ -320,8 +319,7 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
   const { bookingDate, ...data } = parsedUpdates.data;
   const paymentId = paymentIntentRecord.attributes.payments[0].id;
   const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
-  const roomId = data.roomId || bookingRecord.roomId;
-  const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
+  const rooms = parsedUpdates.data.rooms ? await RoomRepository.findRoomsByIds(parsedUpdates.data.rooms) : [];
   const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'CUSTOMER', paymentId);
   const result = await BookingService.buildScheduleAndUpdateLog({
     bookingRecord,
@@ -360,12 +358,11 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
   await BookingService.updateBooking({
     bookingId: bookingRecordId,
     product,
-    room,
+    rooms: rooms.map((info) => info.roomIdentityName),
     data: {
       ...data,
-      roomId,
-      startSession: result.startSession,
-      endSession: result.endSession,
+      startSession: result.startSessionISOString,
+      endSession: result.endSessionISOString,
       receipt: { ...parsedReceipt.data },
       updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
       transactionLogs,

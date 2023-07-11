@@ -8,22 +8,20 @@ export const productRouter = router({
     .input(
       z.object({
         name: z.string(),
-        details: z.object({
-          price: z.number(),
-          scheduleStartHour: z.number().max(12),
-          scheduleStartMin: z.number().max(59),
-          scheduleStartPost: z.enum(['AM', 'PM']),
-          scheduleEndHour: z.number().max(12),
-          scheduleEndMin: z.number().max(59),
-          scheduleEndPost: z.enum(['AM', 'PM']),
-          scheduleEndNextDay: z.boolean(),
-          withRooms: z.boolean(),
-          description: z.string().optional(),
-        }),
+        price: z.number(),
+        scheduleStartHour: z.number().max(12),
+        scheduleStartMin: z.number().max(59),
+        scheduleStartPost: z.enum(['AM', 'PM']),
+        scheduleEndHour: z.number().max(12),
+        scheduleEndMin: z.number().max(59),
+        scheduleEndPost: z.enum(['AM', 'PM']),
+        scheduleEndNextDay: z.boolean(),
+        includedRooms: z.array(z.string().min(1)),
+        description: z.string().optional(),
       }),
     )
     .mutation(({ input }) => {
-      return ProductHandler.createProductHandler({ ...input.details, name: input.name });
+      return ProductHandler.createProductHandler({ ...input });
     }),
   updateProduct: protectedProcedure
     .input(

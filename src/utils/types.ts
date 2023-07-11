@@ -37,8 +37,11 @@ export type CustomerUpdateBookingParams = {
   guests?: number;
   bookingDate?: string | Date;
   productId?: string;
-  roomId?: string | null;
+  roomIds?: string[];
 };
+
+// handlers
+export type ProductV2 = IProduct & { includedRoomsName: string[] };
 
 // inputs
 export type IPaginationInputs = {

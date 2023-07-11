@@ -1,54 +1,26 @@
-import { useEffect, useState } from 'react';
-import { HStack, Box, Text, Center, SlideFade, Spinner } from '@chakra-ui/react';
+import { HStack, Box, Text } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
 
 export interface ICostViewProps {
-  productId?: string;
-  roomId?: string | null;
+  product?: IProduct;
+  rooms?: IRoom[];
   guests?: number;
 }
 
-export default function CostView({ productId, roomId, guests }: ICostViewProps) {
-  const [product, setProduct] = useState<IProduct | undefined>(undefined);
-  const [room, setRoom] = useState<IRoom | undefined>(undefined);
-
+export default function CostView({ rooms = [], product, guests }: ICostViewProps) {
   const { data: bookingSetting } = trpc.bookingSetting.getBookingSetting.useQuery();
-  const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
-    page: 1,
-    limit: 100,
-  });
-  const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
 
   const getTotal = () => {
     if (!bookingSetting) return 0;
 
     let total = 0;
+    rooms.forEach((roomInfo) => (total += roomInfo.price));
     if (product) total += product.price;
-    if (room) total += room.price;
     if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
     return total;
   };
-
-  useEffect(() => {
-    const product = productsData?.records.find((row) => row.productId === productId);
-    const room = roomsData?.records.find((row) => row.roomId === roomId);
-
-    setProduct(product);
-    setRoom(room);
-  }, [productId, productsData?.records, roomId, roomsData?.records]);
-
-  if (fetchingProducts || fetchingRooms)
-    return (
-      <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
-        <SlideFade in>
-          <Center w='50%' h='300px' mx='auto'>
-            <Spinner size='xl' />
-          </Center>
-        </SlideFade>
-      </Box>
-    );
 
   return (
     <>
@@ -62,14 +34,14 @@ export default function CostView({ productId, roomId, guests }: ICostViewProps) 
         ) : (
           ''
         )}
-        {room ? (
-          <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL ROOM ({room.roomIdentityName})</Text>
-            <Text>{PHpeso.format(room.price)}</Text>
-          </HStack>
-        ) : (
-          ''
-        )}
+        {rooms.length > 0
+          ? rooms.map((roomInfo) => (
+              <HStack key={roomInfo.roomId} justifyContent='space-between'>
+                <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
+                <Text>{PHpeso.format(roomInfo.price)}</Text>
+              </HStack>
+            ))
+          : ''}
         {bookingSetting && guests && guests > bookingSetting.minPax ? (
           <HStack justifyContent='space-between'>
             <Text>ADDITIONAL PAX ({guests - bookingSetting.minPax})</Text>

@@ -117,7 +117,11 @@ function Component({ id }: Props) {
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
                     <Text>ROOM:</Text>
-                    <Text>{data?.room?.roomIdentityName || (data?.product.withRooms ? 'ALL ROOMS' : 'N/A')}</Text>
+                    <Text>
+                      {data?.roomsObject && data?.roomsObject.length > 0
+                        ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
+                        : 'N/A'}
+                    </Text>
                   </Stack>
 
                   <Divider borderColor='gray.400' />

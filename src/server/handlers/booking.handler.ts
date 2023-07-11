@@ -5,11 +5,10 @@ import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
-import { bookingDateChangeConfirmation } from '@/repo/mailersend.repo';
+import { bookingUpdateNoAdditionalPaymentConfirmation } from '@/repo/mailersend.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { BookingService } from '@/svc/booking.service';
-import { constants } from '@/server/constants';
 
 export * as BookingHandler from './booking.handler';
 
@@ -21,7 +20,7 @@ export const getBookingByRefNoPublic = async (refNo: string) => {
     startSession: bookingInfo.startSession,
     endSession: bookingInfo.endSession,
     productId: bookingInfo.productId,
-    roomId: bookingInfo.roomId,
+    rooms: bookingInfo.rooms,
     currentTotal: bookingInfo.receipt.total,
   };
 };
@@ -69,40 +68,40 @@ export const updateBookingHandler = async (
   data: {
     bookingDate?: string | undefined;
     guests?: number | undefined;
-    roomId?: string | null | undefined;
+    rooms?: string[];
     productId?: string | undefined;
   },
 ) => {
+  const { bookingDate, ...updateData } = data;
   const bookingRecord = await BookingRepository.findBookingById(bookingId);
-
-  const roomId = data.roomId || bookingRecord.roomId;
+  const roomIds = data.rooms || bookingRecord.rooms;
   const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
-  const room = roomId ? await RoomRepository.findRoomById(roomId) : undefined;
+  const rooms = await RoomRepository.findRoomsByIds(roomIds);
 
-  const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'ADMIN');
+  const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, updateData, 'ADMIN');
   const result = await BookingService.buildScheduleAndUpdateLog({
     bookingRecord,
-    updatedBookedDate: data.bookingDate,
+    updatedBookedDate: bookingDate,
     updatedProductId: data.productId,
     updatedBy: 'ADMIN',
     product,
   });
   const receipt = await BookingService.getBookingDetailsTotal({
     product,
-    room: room || undefined,
+    rooms,
     guests: data.guests || bookingRecord.guests,
   });
 
   await BookingService.updateBooking({
     bookingId: bookingRecord.id,
     product,
-    room,
+    rooms: rooms.map((info) => info.roomIdentityName),
     data: {
-      ...data,
-      roomId,
+      ...updateData,
+      rooms: data.rooms,
       updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
-      startSession: result.startSession,
-      endSession: result.endSession,
+      startSession: result.startSessionISOString,
+      endSession: result.endSessionISOString,
       receipt: { ...receipt },
     },
   });
@@ -119,23 +118,24 @@ export const customerUpdateRequestHandler = async (input: {
   bookingRefNo: string;
   bookingRequestUpdate: {
     productId?: string | undefined;
-    roomId?: string | null | undefined;
+    rooms?: string[] | undefined;
     guests?: number | undefined;
     bookingDate?: string | undefined;
   };
 }) => {
+  const { productId: newProductId, rooms: newRoomIds, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
   const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
-
-  const { productId: newProductId, roomId: newRoomId, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
   const newProduct = newProductId ? await ProductRepository.findProductById(newProductId) : undefined;
-  const newRoom = newRoomId ? await RoomRepository.findRoomById(newRoomId) : undefined;
+  const newRooms = newRoomIds ? await RoomRepository.findRoomsByIds(newRoomIds) : undefined;
   const oldProduct = await ProductRepository.findProductById(bookingRecord.productId);
-  const oldRoom = bookingRecord.roomId ? await RoomRepository.findRoomById(bookingRecord.roomId) : undefined;
-
+  const oldRooms = bookingRecord.rooms.length > 0 ? await RoomRepository.findRoomsByIds(bookingRecord.rooms) : undefined;
+  const oldRoomsNames = oldRooms?.map((info) => info.roomIdentityName);
+  const newRoomsNames = newRooms?.map((info) => info.roomIdentityName);
+  const roomNames = newRoomsNames || oldRoomsNames || [];
   const currentTotal = bookingRecord.receipt.total;
   const { total: newTotal } = await BookingService.getBookingDetailsTotal({
     product: newProduct || oldProduct,
-    room: newRoom || oldRoom || undefined,
+    rooms: newRooms || oldRooms || [],
     guests: updatedGuests || bookingRecord.guests,
   });
 
@@ -147,12 +147,17 @@ export const customerUpdateRequestHandler = async (input: {
       customerInfo: input.customerInfo,
       newTotal,
       oldProduct,
-      oldRoom,
+      oldRooms: oldRoomsNames,
       newProduct,
-      newRoom,
+      newRooms: newRoomsNames,
     });
-  } else if (currentTotal === newTotal && !!input.bookingRequestUpdate.bookingDate) {
-    // no additional payment / partial refund
+  } else if (currentTotal === newTotal) {
+    // no additional payment
+    const updateData = { ...input.bookingRequestUpdate };
+    if (!!updateData.bookingDate) delete updateData.bookingDate;
+
+    const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, updateData, 'ADMIN');
+
     const result = await BookingService.buildScheduleAndUpdateLog({
       bookingRecord,
       updatedBookedDate: bookingDate,
@@ -162,20 +167,24 @@ export const customerUpdateRequestHandler = async (input: {
 
     await BookingService.updateBooking({
       bookingId: bookingRecord.id,
-      product: oldProduct,
-      room: oldRoom,
+      product: newProduct || oldProduct,
+      rooms: roomNames || [],
       data: {
-        updateLogs: [...bookingRecord.updateLogs, ...result.updateLogs],
-        startSession: result.startSession,
-        endSession: result.endSession,
+        ...updateData,
+        startSession: result.startSessionISOString,
+        endSession: result.endSessionISOString,
+        updateLogs: [...bookingRecord.updateLogs, ...updateLogs, ...result.updateLogs],
       },
     });
 
-    await bookingDateChangeConfirmation(bookingRecord.email, {
-      customerName: bookingRecord.name,
+    await bookingUpdateNoAdditionalPaymentConfirmation(bookingRecord.email, {
       reference_no: bookingRecord.ref_no,
-      fromDate: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
-      toDate: dayjs.utc(result.startSession).tz(constants.general.timezone).format('MMM DD, YYYY hh:mm A'),
+      customer_name: bookingRecord.name,
+      guests: `${updatedGuests || bookingRecord.guests}`,
+      booking_type: (newProduct || oldProduct).name,
+      rooms: roomNames.length > 0 ? roomNames.join(', ') : 'No Rooms',
+      check_in_date: result.startSession.format('MMM DD, YYYY hh:mm A'),
+      check_out_date: result.endSession.format('MMM DD, YYYY hh:mm A'),
     });
   }
 
