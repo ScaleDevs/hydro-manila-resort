@@ -29,7 +29,9 @@ export type IBookingPublicOnly = {
   startSession: Date | string;
   endSession: Date | string;
   productId: string;
-  roomId: string | null;
+  rooms: string[];
+  product: IProduct;
+  roomsObject: IRoom[];
   currentTotal: number;
 };
 
@@ -37,7 +39,7 @@ export type CustomerUpdateBookingParams = {
   guests?: number;
   bookingDate?: string | Date;
   productId?: string;
-  roomIds?: string[];
+  rooms?: string[];
 };
 
 // handlers

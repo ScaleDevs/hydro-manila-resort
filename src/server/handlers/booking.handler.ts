@@ -13,7 +13,8 @@ import { BookingService } from '@/svc/booking.service';
 export * as BookingHandler from './booking.handler';
 
 export const getBookingByRefNoPublic = async (refNo: string) => {
-  const bookingInfo = await BookingService.findBookingByReferenceNo(refNo);
+  const booking = await BookingRepository.findBookingByReferenceNo(refNo);
+  const bookingInfo = await BookingService.extendedBookingInstance(booking);
 
   return {
     guests: bookingInfo.guests,
@@ -21,8 +22,16 @@ export const getBookingByRefNoPublic = async (refNo: string) => {
     endSession: bookingInfo.endSession,
     productId: bookingInfo.productId,
     rooms: bookingInfo.rooms,
+    product: bookingInfo.product,
+    roomsObject: bookingInfo.roomsObject,
     currentTotal: bookingInfo.receipt.total,
   };
+};
+
+export const getBookingByRefNo = async (refNo: string) => {
+  const booking = await BookingRepository.findBookingByReferenceNo(refNo);
+  const bookingInfo = await BookingService.extendedBookingInstance(booking);
+  return bookingInfo;
 };
 
 export const findAllBookingsByDates = async (inputs: { startDate: string; endDate: string }) => {
@@ -92,7 +101,7 @@ export const updateBookingHandler = async (
     guests: data.guests || bookingRecord.guests,
   });
 
-  await BookingService.updateBooking({
+  const newBookingData = await BookingService.updateBooking({
     bookingId: bookingRecord.id,
     product,
     rooms: rooms.map((info) => info.roomIdentityName),
@@ -105,16 +114,19 @@ export const updateBookingHandler = async (
       receipt: { ...receipt },
     },
   });
+
+  if (!newBookingData)
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Handler ==> updateBookingHandler()' });
+
+  return BookingService.extendedBookingInstance(newBookingData);
 };
 
 export const customerUpdateRequestHandler = async (input: {
-  customerInfo?:
-    | {
-        bankType: string;
-        accountNo: string;
-        accountName: string;
-      }
-    | undefined;
+  customerInfo?: {
+    bankType: string;
+    accountNo: string;
+    accountName: string;
+  };
   bookingRefNo: string;
   bookingRequestUpdate: {
     productId?: string | undefined;

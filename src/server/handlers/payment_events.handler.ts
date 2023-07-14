@@ -319,7 +319,7 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
   const { bookingDate, ...data } = parsedUpdates.data;
   const paymentId = paymentIntentRecord.attributes.payments[0].id;
   const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
-  const rooms = parsedUpdates.data.rooms ? await RoomRepository.findRoomsByIds(parsedUpdates.data.rooms) : [];
+  const rooms = await RoomRepository.findRoomsByIds(parsedUpdates.data.rooms || bookingRecord.rooms || []);
   const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, data, 'CUSTOMER', paymentId);
   const result = await BookingService.buildScheduleAndUpdateLog({
     bookingRecord,

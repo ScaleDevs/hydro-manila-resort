@@ -31,7 +31,7 @@ export const paymentRouter = router({
           guests: z.number().optional(),
           bookingDate: z.string().optional(),
           productId: z.string().optional(),
-          roomId: z.string().optional().nullable(),
+          rooms: z.array(z.string().min(1)).optional(),
         }),
       }),
     )

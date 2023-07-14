@@ -24,6 +24,7 @@ class Respository {
   }
 
   public async findRoomsByIds(ids: string[]) {
+    if (ids.length === 0) return [];
     const room = await prisma.room.findMany({ where: { roomId: { in: ids } } });
     return room;
   }

@@ -41,8 +41,17 @@ class Service {
 
   public async findBookingByReferenceNo(refNo: string) {
     try {
-      const booking = await BookingRepository.findBookingByReferenceNo(refNo);
+      return BookingRepository.findBookingByReferenceNo(refNo);
+    } catch (err: any) {
+      const code = err.code || 'INTERNAL_SERVER_ERROR';
+      const message = err.message || 'Something went wrong';
 
+      throw new TRPCError({ code, message });
+    }
+  }
+
+  public async extendedBookingInstance(booking: IBooking) {
+    try {
       const product = await ProductRepository.findProductById(booking.productId);
 
       const bookingResult: typeof booking & { product: IProduct } & { roomsObject: IRoom[] } = {
@@ -154,7 +163,7 @@ class Service {
         transactionRefNo: paymentId ? paymentId : null,
         updatedBy,
         fieldUpdated: 'startSession',
-        fromValue: `${bookingRecord.startSession}`,
+        fromValue: bookingRecord.startSession as string,
         toValue: startSessionISOString,
         createdAt: dayjs().toDate(),
       });
@@ -163,7 +172,7 @@ class Service {
         transactionRefNo: paymentId ? paymentId : null,
         updatedBy,
         fieldUpdated: 'endSession',
-        fromValue: `${bookingRecord.endSession}`,
+        fromValue: bookingRecord.endSession as string,
         toValue: endSessionISOString,
         createdAt: dayjs().toDate(),
       });

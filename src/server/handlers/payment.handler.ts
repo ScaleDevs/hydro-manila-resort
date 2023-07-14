@@ -125,7 +125,7 @@ export const initiatePaymentSessionForUpdateBooking = async (
     if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
 
     const product = await ProductRepository.findProductById(bookingUpdates.productId || bookingRecord.productId);
-    const roomIds = bookingUpdates.roomIds || bookingRecord.rooms;
+    const roomIds = bookingUpdates.rooms || bookingRecord.rooms;
     const rooms = await RoomRepository.findRoomsByIds(roomIds);
     const receipt = await BookingService.getBookingDetailsTotal({
       product,

@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { BookingHandler } from '@/server/handlers/booking.handler';
 import { BookingRepository } from '@/repo/booking.repo';
-import { BookingService } from '@/svc/booking.service';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -26,10 +25,7 @@ export const bookingRouter = router({
     return BookingRepository.findBookingById(input);
   }),
   getBookingByRefNo: protectedProcedure.input(z.string().min(1)).query(({ input }) => {
-    return BookingService.findBookingByReferenceNo(input);
-  }),
-  getBookingByRefNoPublic: procedure.input(z.string().min(1)).query(async ({ input }) => {
-    return BookingHandler.getBookingByRefNoPublic(input);
+    return BookingHandler.getBookingByRefNo(input);
   }),
   deleteBooking: protectedProcedure.input(z.string()).mutation(({ input }) => {
     return BookingRepository.deleteBooking(input);
@@ -57,7 +53,7 @@ export const bookingRouter = router({
           guests: z.number().optional(),
           bookingDate: z.string().optional(),
           productId: z.string().optional(),
-          roomId: z.string().optional().nullable(),
+          rooms: z.array(z.string().min(1)).optional(),
         }),
         customerInfo: z
           .object({
@@ -81,6 +77,9 @@ export const bookingRouter = router({
     .query(({ input }) => {
       return BookingHandler.findAllBookingsByDates(input);
     }),
+  getBookingByRefNoPublic: procedure.input(z.string().min(1)).mutation(async ({ input }) => {
+    return BookingHandler.getBookingByRefNoPublic(input);
+  }),
   checkBookingAvailability: procedure
     .input(
       z.object({

@@ -39,15 +39,23 @@ export interface IReviewDetailsProps {
 }
 
 export default function ReviewDetails({ previousStep, nextStep }: IReviewDetailsProps) {
-  const { customerBankInfo, bookingInfo, bookingUpdates, bookingReferenceNo, bookingUpdateCase, newTotal, setIsRequestSuccess } =
-    useBookingUpdateRequestStoreTrack();
+  const {
+    customerBankInfo,
+    bookingInfo,
+    enteredProduct,
+    enteredRooms,
+    bookingUpdates,
+    bookingReferenceNo,
+    bookingUpdateCase,
+    newTotal,
+    setIsRequestSuccess,
+  } = useBookingUpdateRequestStoreTrack();
   const { setPaymentStates } = usePaymentStoreTrack();
 
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
     limit: 100,
   });
-  const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
   const {
     mutate: sendUpdateRequest,
     isLoading: isSendingUpdateRequest,
@@ -92,7 +100,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
     }
   };
 
-  if (fetchingProducts || fetchingRooms)
+  if (fetchingProducts)
     return (
       <Box w='100%' mx='auto' p='25px'>
         <Heading textAlign='center'>EDIT BOOKING</Heading>
@@ -146,7 +154,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 />
                 <FieldValueReport
                   fieldName='Room'
-                  value={roomsData?.records.find((row) => row.roomId === bookingInfo.roomId)?.roomIdentityName || ''}
+                  value={bookingInfo.roomsObject.map((room) => room.roomIdentityName).join(', ') || 'N/A'}
                 />
               </Stack>
             </Box>
@@ -162,14 +170,11 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 {bookingUpdates.productId && (
                   <FieldValueReport
                     fieldName='Schedule'
-                    value={productsData?.records.find((row) => row.productId === bookingUpdates.productId)?.name || ''}
+                    value={productsData?.records.find((row) => row.productId === bookingUpdates.productId)?.name || 'N/A'}
                   />
                 )}
-                {bookingUpdates.roomId && (
-                  <FieldValueReport
-                    fieldName='Room'
-                    value={roomsData?.records.find((row) => row.roomId === bookingUpdates.roomId)?.roomIdentityName || ''}
-                  />
+                {bookingUpdates.rooms && (
+                  <FieldValueReport fieldName='Room' value={enteredRooms.map((room) => room.roomIdentityName).join(', ') || ''} />
                 )}
               </Stack>
             </Box>
@@ -200,11 +205,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
 
       <br />
 
-      <CostView
-        productId={bookingUpdates.productId || bookingInfo.productId}
-        roomId={bookingUpdates.roomId || bookingInfo.roomId || undefined}
-        guests={bookingUpdates.guests || bookingInfo.guests}
-      />
+      <CostView product={enteredProduct} rooms={enteredRooms} guests={bookingUpdates.guests || bookingInfo.guests} />
 
       <br />
 
