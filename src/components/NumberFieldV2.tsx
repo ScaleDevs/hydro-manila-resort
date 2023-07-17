@@ -28,7 +28,6 @@ export function NumberFieldV2(props: INumberFieldV2Props) {
   const { label, required, register, property, onBlur, onChange, value, errMsg } = props;
 
   const setFormValue = (v: string) => {
-    console.log('hey');
     if (v === '') return 0;
     if (v === '0') return parseFloat(v);
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;

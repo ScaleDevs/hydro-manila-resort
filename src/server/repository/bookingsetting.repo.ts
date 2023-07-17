@@ -7,13 +7,27 @@ class Respository {
     return prisma.bookingSetting.create({ data: { ...data } });
   }
 
+  public async checkBookingSetting() {
+    try {
+      const result = await prisma.bookingSetting.findFirst();
+      return result;
+    } catch (error: any) {
+      throw new TRPCError({
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        message: error.message || 'Error :: Repo ==> checkBookingSetting()',
+      });
+    }
+  }
   public async findFirstBookingSetting() {
     try {
       const result = await prisma.bookingSetting.findFirst();
       if (!result) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Settings not found' });
       return result;
-    } catch (error) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Repo ==> findFirstBookingSetting()' });
+    } catch (error: any) {
+      throw new TRPCError({
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        message: error.message || 'Error :: Repo ==> findFirstBookingSetting()',
+      });
     }
   }
 
