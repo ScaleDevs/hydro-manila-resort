@@ -139,7 +139,7 @@ export default function TableBookingRecords() {
                     <Td>
                       {tableFormatTimeDisplay(v.startSession)} - {tableFormatTimeDisplay(v.endSession)}
                     </Td>
-                    <Td>{v.guests}</Td>
+                    <Td>{v.guests.nonOverNightGuests}</Td>
                     <Td>{v.ref_no}</Td>
                     <Td>{v.refundId ? 'REFUNDED' : 'BOOKED'}</Td>
                   </Tr>

@@ -8,12 +8,15 @@ import { Box, SlideFade, Heading, Skeleton, Stack, Button, Alert, AlertIcon } fr
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
 import { SelectField } from '@/components/SelectField';
-import { NumberField } from '@/components/NumberField';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { DateTimeField } from '@/components/DateTimeField';
 import ControlledChooseRooms from '@/components/ControlledChooseRooms';
 
 const schema = z.object({
-  guests: z.number(),
+  guests: z.object({
+    overNightGuests: z.number(),
+    nonOverNightGuests: z.number(),
+  }),
   productId: z.string().min(1, 'Required'),
   rooms: z.array(z.string().min(1)),
   bookingDate: z.string().min(1, 'Required'),
@@ -47,6 +50,7 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
+      guests: bookingInfo?.guests,
       rooms: !!fetchingBookingInfo || !bookingInfo ? [] : bookingInfo.rooms,
     },
   });
@@ -57,12 +61,17 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
 
   const submitUpdate = (data: FormSchemaType) => {
     if (!bookingInfo || !bookingSetting) return;
+    const { guests: guestSetting } = bookingSetting;
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
       setFormError('Schedule is not available! Kindly choose another date');
       return;
     }
-    if (bookingSetting.maxPax < data.guests) {
-      setFormError(`Max guests allowed is ${bookingSetting.maxPax}!`);
+    if (guestSetting.maxNonOverNightGuestPax < data.guests.nonOverNightGuests) {
+      setFormError(`Max Guests (Non-Overnight) allowed is ${guestSetting.maxNonOverNightGuestPax}!`);
+      return;
+    }
+    if (guestSetting.maxOverNightGuestPax < data.guests.overNightGuests) {
+      setFormError(`Max Guests (Overnight) allowed is ${guestSetting.maxOverNightGuestPax}!`);
       return;
     }
 
@@ -72,6 +81,11 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     Object.keys(dirtyFields).forEach((key) => {
       updates[key] = data[key as keyof typeof data];
     });
+
+    if (Object.keys(updates).length === 0) {
+      setFormError(`No changes were made on the booking details`);
+      return;
+    }
 
     mutate(
       {
@@ -112,36 +126,10 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
 
       <SlideFade in>
         <Box w={{ base: '95%', md: '90%' }} mx='auto'>
-          {isSuccess && (
-            <>
-              <Alert status='success' borderRadius='sm' color='green.600'>
-                <AlertIcon />
-                Booking Successfuly updated!
-              </Alert>
-              <br />
-            </>
-          )}
-
-          {(!!formError || error) && (
-            <>
-              <Alert status='error' borderRadius='sm' color='red.600'>
-                <AlertIcon />
-                {formError || error?.message || ''}
-              </Alert>
-              <br />
-            </>
-          )}
-
           <form onSubmit={handleSubmit(submitUpdate)}>
             <Stack spacing={5}>
-              <NumberField
-                register={register}
-                property='guests'
-                placeholder='*PAX'
-                label='Guests'
-                required
-                defaultvalue={bookingInfo?.guests}
-              />
+              <NumberFieldV2 register={register} property='guests.overNightGuests' label='Guests (Overnight)' />
+              <NumberFieldV2 register={register} property='guests.nonOverNightGuests' label='Guests (Non-Overnight)' />
 
               <DateTimeField
                 type='date'
@@ -181,6 +169,26 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
             </Stack>
 
             <br />
+
+            {isSuccess && (
+              <>
+                <Alert status='success' borderRadius='sm' color='green.600'>
+                  <AlertIcon />
+                  Booking Successfuly updated!
+                </Alert>
+                <br />
+              </>
+            )}
+
+            {(!!formError || error) && (
+              <>
+                <Alert status='error' borderRadius='sm' color='red.600'>
+                  <AlertIcon />
+                  {formError || error?.message || ''}
+                </Alert>
+                <br />
+              </>
+            )}
 
             <Button type='submit' isLoading={isUpdating}>
               UPDATE BOOKING

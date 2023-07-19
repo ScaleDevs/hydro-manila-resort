@@ -121,6 +121,12 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
         if (data[key] !== (bookingInfo.startSession as string).split('T')[0]) updates[key] = data[key];
       } else if (key === 'rooms') {
         if (data[key].join(', ') !== bookingInfo.rooms.join(', ')) updates[key] = data[key];
+      } else if (key === 'guests') {
+        if (
+          data[key].nonOverNightGuests !== bookingInfo.guests.nonOverNightGuests ||
+          data[key].overNightGuests !== bookingInfo.guests.overNightGuests
+        )
+          updates[key] = data[key];
       } else if (data[key] !== bookingInfo[key]) {
         updates[key] = data[key];
       }

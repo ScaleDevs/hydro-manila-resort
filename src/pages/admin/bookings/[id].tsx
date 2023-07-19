@@ -110,8 +110,15 @@ function Component({ id }: Props) {
                   <Divider borderColor='gray.400' />
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
-                    <Text>Guests:</Text>
-                    <Text>{data?.guests}</Text>
+                    <Text>Guests (Non-Overnight):</Text>
+                    <Text>{data?.guests.nonOverNightGuests || 0}</Text>
+                  </Stack>
+
+                  <Divider borderColor='gray.400' />
+
+                  <Stack spacing={0} direction='row' justifyContent='space-between'>
+                    <Text>Guests (Overnight):</Text>
+                    <Text>{data?.guests.overNightGuests || 0}</Text>
                   </Stack>
 
                   <Divider borderColor='gray.400' />

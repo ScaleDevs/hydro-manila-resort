@@ -24,6 +24,7 @@ import {
   updateBookingPartialRefundEmail,
 } from '@/server/repository/mailersend.repo';
 import { constants } from '../constants';
+import { createGuestsSummary } from '../util';
 
 class Service {
   public async checkScheduleAvailability({ startDate, endDate }: { startDate: string | Date; endDate: string | Date }) {
@@ -97,14 +98,24 @@ class Service {
       for (const entry of entries) {
         const fieldUpdated = entry[0] as keyof typeof data;
 
-        updateLog.push({
-          transactionRefNo: transactionRefNo ? transactionRefNo : null,
-          updatedBy,
-          fieldUpdated,
-          fromValue: `${bookingRecord[fieldUpdated]}`,
-          toValue: `${entry[1]}`,
-          createdAt: dayjs().toDate(),
-        });
+        if (fieldUpdated === 'guests')
+          updateLog.push({
+            transactionRefNo: transactionRefNo ? transactionRefNo : null,
+            updatedBy,
+            fieldUpdated,
+            fromValue: createGuestsSummary(bookingRecord.guests),
+            toValue: createGuestsSummary(data.guests),
+            createdAt: dayjs().toDate(),
+          });
+        else
+          updateLog.push({
+            transactionRefNo: transactionRefNo ? transactionRefNo : null,
+            updatedBy,
+            fieldUpdated,
+            fromValue: `${bookingRecord[fieldUpdated]}`,
+            toValue: `${entry[1]}`,
+            createdAt: dayjs().toDate(),
+          });
       }
 
       return updateLog;
@@ -314,7 +325,7 @@ class Service {
       if (!!bookingRequestUpdate.guests)
         modifications.push({
           name: 'No. of Guests',
-          value: `${bookingRequestUpdate.guests}`,
+          value: createGuestsSummary(bookingRequestUpdate.guests),
         });
 
       if (!!newRooms)
@@ -354,7 +365,7 @@ class Service {
       // send email to both hydro team & customer
       await updateBookingPartialRefundEmail(bookingRecord, PHpeso.format(bookingRecord.receipt.total - newTotal), {
         reference_no: bookingRecord.ref_no,
-        guests: `${bookingRecord.guests}`,
+        guests: createGuestsSummary(bookingRecord.guests),
         booking_type: oldProduct.name,
         room: !!oldRooms?.length ? oldRooms.join(', ') : 'None',
         check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),

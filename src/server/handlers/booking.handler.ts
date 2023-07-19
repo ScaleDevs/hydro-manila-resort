@@ -10,6 +10,7 @@ import { bookingUpdateNoAdditionalPaymentConfirmation } from '@/repo/mailersend.
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { BookingService } from '@/svc/booking.service';
+import { createGuestsSummary } from '../util';
 
 export * as BookingHandler from './booking.handler';
 
@@ -190,10 +191,12 @@ export const customerUpdateRequestHandler = async (input: {
       },
     });
 
+    const newGuests = updatedGuests || bookingRecord.guests;
+
     await bookingUpdateNoAdditionalPaymentConfirmation(bookingRecord.email, {
       reference_no: bookingRecord.ref_no,
       customer_name: bookingRecord.name,
-      guests: `${updatedGuests || bookingRecord.guests}`,
+      guests: createGuestsSummary(newGuests),
       booking_type: (newProduct || oldProduct).name,
       rooms: roomNames.length > 0 ? roomNames.join(', ') : 'No Rooms',
       check_in_date: result.startSession.format('MMM DD, YYYY hh:mm A'),

@@ -1,3 +1,4 @@
+import { Guests } from '@prisma/client';
 import * as trpc from '@trpc/server';
 import genString from 'randomstring';
 import dayjs from 'dayjs';
@@ -118,4 +119,11 @@ export const createReferenceNumber = () => {
   const dayjsInstance = dayjs();
 
   return dayjsInstance.format('MMMDDYY').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(6) + randomString(2);
+};
+
+export const createGuestsSummary = (guests?: Guests) => {
+  if (!guests) return 'No Guests';
+  const nonOvernightString = `Non-Overnight Guests (${guests.nonOverNightGuests || 0})`;
+  if (guests.overNightGuests > 0) return nonOvernightString + ' ' + `Overnight Guests (${guests.overNightGuests})`;
+  return nonOvernightString;
 };

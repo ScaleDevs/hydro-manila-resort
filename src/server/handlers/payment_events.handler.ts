@@ -22,6 +22,7 @@ import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
 import { BookingStatusDisplay } from '@/utils/types';
 import { TransactionLog } from '@prisma/client';
+import { createGuestsSummary } from '../util';
 
 export * as PaymentEventsHandler from './payment_events.handler';
 
@@ -372,9 +373,7 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
     if (!!metadata.bookedSchedule) await BookingAttemptRepository.deleteBookingAttemptWithRefNo(statusDisplay.ref_no);
     await updateBookingConfirmation(bookingRecord.email, {
       customer_name: statusDisplay.customerName,
-      guests:
-        `Non-Overnight Guests (${statusDisplay.guests.nonOverNightGuests || 0}) ` +
-        (statusDisplay.guests.overNightGuests > 0 ? `Overnight Guests (${statusDisplay.guests.overNightGuests})` : ''),
+      guests: createGuestsSummary(statusDisplay.guests),
       booking_type: statusDisplay.scheduleType,
       reference_no: statusDisplay.ref_no,
       check_in_date: statusDisplay.bookedDate,
