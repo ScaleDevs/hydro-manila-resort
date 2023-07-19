@@ -4,11 +4,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import dayjs from 'dayjs';
 
+import { getExtraHeadsTotal } from '@/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
 import { SelectField } from '@/components/SelectField';
 import { DateTimeField } from '@/components/DateTimeField';
-import { NumberField } from '@/components/NumberField';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import ControlledChooseRooms from '@/components/ControlledChooseRooms';
 import useBookingUpdateRequestStoreTrack, {
   bookingRequestUpdatesSchema,
@@ -72,6 +73,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
   const getUpdatedTotal = (data: BookingRequestUpdates) => {
     if (!bookingSetting || !productsData || !roomsData) return 0;
 
+    const { guests: guestSetting } = bookingSetting;
     const { rooms, guests } = data;
     const roomsInstance = roomsData.records.filter((row) => rooms.includes(row.roomId));
 
@@ -83,7 +85,13 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
       newTotal += recordInfo.price;
     });
 
-    if (guests && guests > bookingSetting.minPax) newTotal += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
+    newTotal += getExtraHeadsTotal(
+      guests.nonOverNightGuests,
+      guestSetting.minNonOverNightGuestPax,
+      guestSetting.nonOverNightGuestFee,
+    );
+
+    newTotal += getExtraHeadsTotal(guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee);
 
     setNewTotal(newTotal);
     return newTotal;
@@ -91,12 +99,18 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
 
   const proceed = (data: BookingRequestUpdates) => {
     if (!dirtyFields || !bookingInfo || !bookingSetting) return;
+    const { guests: guestSetting } = bookingSetting;
+
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
       setFormError('Date is not available! Kindly choose another date');
       return;
     }
-    if (bookingSetting.maxPax < data.guests) {
-      setFormError(`Max guests allowed is ${bookingSetting.maxPax}!`);
+    if (guestSetting.maxNonOverNightGuestPax < data.guests.nonOverNightGuests) {
+      setFormError(`Max Guests (Non-Overnight) allowed is ${guestSetting.maxNonOverNightGuestPax}!`);
+      return;
+    }
+    if (guestSetting.maxOverNightGuestPax < data.guests.overNightGuests) {
+      setFormError(`Max Guests (Overnight) allowed is ${guestSetting.maxOverNightGuestPax}!`);
       return;
     }
 
@@ -189,8 +203,11 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
           <form onSubmit={handleSubmit(proceed)}>
             <Stack spacing={5}>
               <Stack direction={{ base: 'column', xl: 'row' }}>
-                <NumberField register={register} property='guests' placeholder='*PAX' label='Guests' required />
+                <NumberFieldV2 label='Guests (Overnight)' register={register} property='guests.overNightGuests' />
+                <NumberFieldV2 label='Guests (Non-Overnight)' register={register} property='guests.nonOverNightGuests' />
+              </Stack>
 
+              <Stack direction={{ base: 'column', xl: 'row' }}>
                 <DateTimeField
                   type='date'
                   required
@@ -199,9 +216,6 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
                   property='bookingDate'
                   errMsg={errors?.bookingDate?.message}
                 />
-              </Stack>
-
-              <Stack direction={{ base: 'column', xl: 'row' }}>
                 <SelectField
                   handleOnChange={handleSelectProduct}
                   register={register}

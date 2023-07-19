@@ -210,7 +210,9 @@ class Service {
 
       const googleCalendarUpdates: calendar_v3.Schema$Event = {
         summary: updatedBooking.name,
-        description: `${product.name} / ${updatedBooking.guests ?? 0} PAX / ${rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
+        description: `${product.name} / ${updatedBooking.guests.nonOverNightGuests ?? 0} Non-Overnight PAX /  ${
+          updatedBooking.guests.overNightGuests ?? 0
+        } Overnight PAX / ${rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
       };
 
       if (!!data.startSession && !!data.endSession) {

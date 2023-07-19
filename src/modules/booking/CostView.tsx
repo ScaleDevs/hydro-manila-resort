@@ -69,7 +69,9 @@ export default function CostView({ rooms = [], product, guests }: ICostViewProps
         )}
         {bookingSetting && guests && guests.nonOverNightGuests > bookingSetting.guests.minNonOverNightGuestPax && (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL OVERNIGHT PAX ({guests.nonOverNightGuests - bookingSetting.guests.minNonOverNightGuestPax})</Text>
+            <Text>
+              ADDITIONAL NON-OVERNIGHT PAX ({guests.nonOverNightGuests - bookingSetting.guests.minNonOverNightGuestPax})
+            </Text>
             <Text>
               {PHpeso.format(
                 getExtraHeadsTotal(

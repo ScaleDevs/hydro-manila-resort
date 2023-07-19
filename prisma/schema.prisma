@@ -54,6 +54,20 @@ type TransactionLog {
   amount          Int
 }
 
+type Guests {
+  nonOverNightGuests Int
+  overNightGuests    Int
+}
+
+type GuestSettings {
+  overNightGuestFee       Int
+  minNonOverNightGuestPax Int
+  maxNonOverNightGuestPax Int
+  nonOverNightGuestFee    Int
+  minOverNightGuestPax    Int
+  maxOverNightGuestPax    Int
+}
+
 enum BookingRefundStatus {
   FAILED
   PROCESSING
@@ -75,7 +89,6 @@ model Product {
   includedRooms      String[]
   description        String?
   updateLogs         UpdateLog[]
-  Booking            Booking[]
 }
 
 model Room {
@@ -101,9 +114,8 @@ model Booking {
   phoneNumber     String
   startSession    DateTime
   endSession      DateTime
-  guests          Int
+  guests          Guests
   rooms           String[]
-  product         Product            @relation(fields: [productId], references: [productId])
   productId       String             @db.ObjectId
   receipt         Receipt
   updateLogs      BookingUpdateLog[]
@@ -116,13 +128,11 @@ model Booking {
 }
 
 model BookingSetting {
-  bookingSettingId String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingSettingId String        @id @default(auto()) @map("_id") @db.ObjectId
   bookingFee       Int
-  extraHeadFee     Int
-  minPax           Int
-  maxPax           Int
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime? @updatedAt
+  guests           GuestSettings
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime?     @updatedAt
 }
 
 model BookingRefund {

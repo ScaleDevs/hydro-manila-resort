@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Guests } from '@prisma/client';
 import { Control, Controller } from 'react-hook-form';
 import { Grid, Skeleton, GridItem, Center, Stack, List, ListItem, ListIcon, Text } from '@chakra-ui/react';
 import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
@@ -11,7 +12,7 @@ export interface IControlledChooseRoomsProps {
   control: Control<
     {
       productId: string;
-      guests: number;
+      guests: Guests;
       rooms: string[];
       bookingDate: string;
     },

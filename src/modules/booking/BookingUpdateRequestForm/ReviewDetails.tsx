@@ -146,7 +146,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
               </Heading>
               <Stack spacing={-2}>
                 <FieldValueReport fieldName='Reference No' value={bookingReferenceNo} />
-                <FieldValueReport fieldName='Guests' value={`${bookingInfo.guests}`} />
+                {!!bookingInfo.guests.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingInfo.guests.overNightGuests}`} />
+                )}
+                <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingInfo.guests.nonOverNightGuests}`} />
                 <FieldValueReport fieldName='Booked Date' value={(bookingInfo.startSession as string).split('T')[0]} />
                 <FieldValueReport
                   fieldName='Schedule'
@@ -163,7 +166,12 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 Booking Changes
               </Heading>
               <Stack spacing={-2}>
-                {bookingUpdates.guests && <FieldValueReport fieldName='Guests' value={`${bookingUpdates.guests}`} />}
+                {!!bookingUpdates?.guests?.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
+                )}
+                {!!bookingUpdates?.guests?.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingUpdates.guests.nonOverNightGuests}`} />
+                )}
                 {bookingUpdates.bookingDate && (
                   <FieldValueReport fieldName='Booked Date' value={`${bookingUpdates.bookingDate}`} />
                 )}

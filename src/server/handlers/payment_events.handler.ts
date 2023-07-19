@@ -143,7 +143,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     emailAddonsTable.push({
       name: 'Additional Overnight Guest',
       price: PHpeso.format(guestSetting.overNightGuestFee),
-      qty: `${getExtraHeads(guests.overNightGuests, guestSetting.overNightGuestFee)}`,
+      qty: `${getExtraHeads(guests.overNightGuests, guestSetting.minOverNightGuestPax)}`,
       summary: PHpeso.format(extraOverNightGuestsTotal),
     });
 
@@ -151,7 +151,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     emailAddonsTable.push({
       name: 'Additional Non-Overnight Guest',
       price: PHpeso.format(guestSetting.nonOverNightGuestFee),
-      qty: `${getExtraHeads(guests.nonOverNightGuests, guestSetting.nonOverNightGuestFee)}`,
+      qty: `${getExtraHeads(guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax)}`,
       summary: PHpeso.format(extraNonOverNightGuestsTotal),
     });
 
@@ -372,7 +372,9 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
     if (!!metadata.bookedSchedule) await BookingAttemptRepository.deleteBookingAttemptWithRefNo(statusDisplay.ref_no);
     await updateBookingConfirmation(bookingRecord.email, {
       customer_name: statusDisplay.customerName,
-      guests: `${statusDisplay.guests || 0}`,
+      guests:
+        `Non-Overnight Guests (${statusDisplay.guests.nonOverNightGuests || 0}) ` +
+        (statusDisplay.guests.overNightGuests > 0 ? `Overnight Guests (${statusDisplay.guests.overNightGuests})` : ''),
       booking_type: statusDisplay.scheduleType,
       reference_no: statusDisplay.ref_no,
       check_in_date: statusDisplay.bookedDate,

@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { IBookingPublicOnly, IProduct, IRoom } from '@/utils/types';
 
 export const bookingRequestUpdatesSchema = z.object({
-  guests: z.number(),
+  guests: z.object({
+    overNightGuests: z.number(),
+    nonOverNightGuests: z.number(),
+  }),
   productId: z.string().min(1, 'Required'),
   rooms: z.array(z.string().min(1)),
   bookingDate: z.string().min(1, 'Required'),
