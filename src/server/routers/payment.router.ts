@@ -11,7 +11,10 @@ export const paymentRouter = router({
         email: z.string().email(),
         phoneNumber: z.string(),
         bookingDate: z.string(),
-        guests: z.number(),
+        guests: z.object({
+          overNightGuests: z.number(),
+          nonOverNightGuests: z.number(),
+        }),
         roomIds: z.array(z.string().min(1)),
         productId: z.string(),
       }),
@@ -28,7 +31,12 @@ export const paymentRouter = router({
       z.object({
         bookingRefNo: z.string(),
         bookingUpdates: z.object({
-          guests: z.number().optional(),
+          guests: z
+            .object({
+              overNightGuests: z.number(),
+              nonOverNightGuests: z.number(),
+            })
+            .optional(),
           bookingDate: z.string().optional(),
           productId: z.string().optional(),
           rooms: z.array(z.string().min(1)).optional(),

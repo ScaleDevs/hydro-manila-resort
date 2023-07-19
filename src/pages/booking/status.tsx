@@ -90,10 +90,16 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
                       <Td fontWeight='semibold'>SCHEDULE</Td>
                       <Td>{statusDisplay?.scheduleType}</Td>
                     </Tr>
-                    {statusDisplay?.guests && (
+                    {statusDisplay && statusDisplay.guests.nonOverNightGuests > 0 && (
                       <Tr>
-                        <Td fontWeight='semibold'>GUESTS</Td>
-                        <Td>{statusDisplay.guests}</Td>
+                        <Td fontWeight='semibold'>GUESTS (Non-Overnight)</Td>
+                        <Td>{statusDisplay.guests.nonOverNightGuests}</Td>
+                      </Tr>
+                    )}
+                    {statusDisplay && statusDisplay.guests.overNightGuests > 0 && (
+                      <Tr>
+                        <Td fontWeight='semibold'>GUESTS (Overnight)</Td>
+                        <Td>{statusDisplay.guests.overNightGuests}</Td>
                       </Tr>
                     )}
                     {statusDisplay?.roomName && (

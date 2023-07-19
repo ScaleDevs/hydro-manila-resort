@@ -1,3 +1,4 @@
+import { Guests } from '@prisma/client';
 import create, { StateCreator } from 'zustand';
 import { createTrackedSelector } from 'react-tracked';
 import { devtools } from 'zustand/middleware';
@@ -15,7 +16,7 @@ export type BookingPayload = {
   email: string;
   phoneNumber: string;
   bookingDate: string;
-  guests: number;
+  guests: Guests;
   roomIds: string[];
   productId: string;
 };
@@ -44,7 +45,10 @@ const initState: BookingState = {
     email: '',
     phoneNumber: '',
     bookingDate: '',
-    guests: 0,
+    guests: {
+      nonOverNightGuests: 0,
+      overNightGuests: 0,
+    },
     roomIds: [],
     productId: '',
   },

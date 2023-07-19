@@ -36,7 +36,12 @@ export const bookingRouter = router({
         bookingId: z.string(),
         data: z.object({
           bookingDate: z.string().optional(),
-          guests: z.number().optional(),
+          guests: z
+            .object({
+              overNightGuests: z.number(),
+              nonOverNightGuests: z.number(),
+            })
+            .optional(),
           rooms: z.array(z.string()).optional(),
           productId: z.string().optional(),
         }),
@@ -50,7 +55,12 @@ export const bookingRouter = router({
       z.object({
         bookingRefNo: z.string(),
         bookingRequestUpdate: z.object({
-          guests: z.number().optional(),
+          guests: z
+            .object({
+              overNightGuests: z.number(),
+              nonOverNightGuests: z.number(),
+            })
+            .optional(),
           bookingDate: z.string().optional(),
           productId: z.string().optional(),
           rooms: z.array(z.string().min(1)).optional(),

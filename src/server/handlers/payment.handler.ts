@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import dayjs from 'dayjs';
+import { Guests } from '@prisma/client';
 
 import {
   AttachPaymentMethodToIntentAttr,
@@ -27,7 +28,7 @@ export const initiatePaymentSessionForBooking = async (input: {
   name: string;
   email: string;
   phoneNumber: string;
-  guests: number;
+  guests: Guests;
   roomIds: string[];
   productId: string;
   bookingDate: string;

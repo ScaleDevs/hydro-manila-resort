@@ -1,12 +1,14 @@
+import { Guests } from '@prisma/client';
 import { HStack, Box, Text } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
+import { getExtraHeadsTotal } from '@/utils/helper';
 
 export interface ICostViewProps {
   product?: IProduct;
   rooms?: IRoom[];
-  guests?: number;
+  guests?: Guests;
 }
 
 export default function CostView({ rooms = [], product, guests }: ICostViewProps) {
@@ -14,11 +16,20 @@ export default function CostView({ rooms = [], product, guests }: ICostViewProps
 
   const getTotal = () => {
     if (!bookingSetting) return 0;
-
+    const { guests: guestSettings } = bookingSetting;
     let total = 0;
     rooms.forEach((roomInfo) => (total += roomInfo.price));
     if (product) total += product.price;
-    if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
+    if (guests) {
+      if (guests.overNightGuests > guestSettings.minOverNightGuestPax)
+        total += getExtraHeadsTotal(guests.overNightGuests, guestSettings.minOverNightGuestPax, guestSettings.overNightGuestFee);
+      if (guests.nonOverNightGuests > guestSettings.minNonOverNightGuestPax)
+        total += getExtraHeadsTotal(
+          guests.nonOverNightGuests,
+          guestSettings.minNonOverNightGuestPax,
+          guestSettings.nonOverNightGuestFee,
+        );
+    }
     return total;
   };
 
@@ -42,15 +53,34 @@ export default function CostView({ rooms = [], product, guests }: ICostViewProps
               </HStack>
             ))
           : ''}
-        {bookingSetting && guests && guests > bookingSetting.minPax ? (
+        {bookingSetting && guests && guests.overNightGuests > bookingSetting.guests.minOverNightGuestPax && (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL PAX ({guests - bookingSetting.minPax})</Text>
-            <Text>{PHpeso.format((guests - bookingSetting.minPax) * bookingSetting.extraHeadFee)}</Text>
+            <Text>ADDITIONAL OVERNIGHT PAX ({guests.overNightGuests - bookingSetting.guests.minOverNightGuestPax})</Text>
+            <Text>
+              {PHpeso.format(
+                getExtraHeadsTotal(
+                  guests.overNightGuests,
+                  bookingSetting.guests.minOverNightGuestPax,
+                  bookingSetting.guests.overNightGuestFee,
+                ),
+              )}
+            </Text>
           </HStack>
-        ) : (
-          ''
         )}
-
+        {bookingSetting && guests && guests.nonOverNightGuests > bookingSetting.guests.minNonOverNightGuestPax && (
+          <HStack justifyContent='space-between'>
+            <Text>ADDITIONAL OVERNIGHT PAX ({guests.nonOverNightGuests - bookingSetting.guests.minNonOverNightGuestPax})</Text>
+            <Text>
+              {PHpeso.format(
+                getExtraHeadsTotal(
+                  guests.nonOverNightGuests,
+                  bookingSetting.guests.minNonOverNightGuestPax,
+                  bookingSetting.guests.nonOverNightGuestFee,
+                ),
+              )}
+            </Text>
+          </HStack>
+        )}
         {bookingSetting ? (
           <Box w='100%' fontSize='18px' bg='primary.1' mt='20px' p='10px'>
             <Text fontWeight='bold' color='white' textAlign='center'>

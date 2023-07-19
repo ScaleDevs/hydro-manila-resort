@@ -43,3 +43,13 @@ export const tzSchedToDayJsInsance = (bookingDate: string, schedule: string) => 
 export const buildGoogleCalendarDateTime = (utcDateTime: string | Date) => {
   return dayjs.utc(utcDateTime).format('YYYY-MM-DDTHH:mm:00.000') + 'Z';
 };
+
+export const getExtraHeadsTotal = (guests: number, min: number, fee: number) => {
+  if (guests > min) return (guests - min) * fee;
+  return 0;
+};
+
+export const getExtraHeads = (guests: number, min: number) => {
+  if (guests > min) return guests - min;
+  return 0;
+};

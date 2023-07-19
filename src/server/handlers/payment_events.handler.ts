@@ -18,7 +18,7 @@ import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { BookingService } from '@/svc/booking.service';
-import { PHpeso } from '@/utils/helper';
+import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
 import { BookingStatusDisplay } from '@/utils/types';
 import { TransactionLog } from '@prisma/client';
@@ -40,14 +40,22 @@ const bookingDataSchema = z.object({
   phoneNumber: z.string(),
   startSession: z.string(),
   endSession: z.string(),
-  guests: z.number(),
+  guests: z.object({
+    overNightGuests: z.number(),
+    nonOverNightGuests: z.number(),
+  }),
   rooms: z.array(z.string().min(1)),
   productId: z.string(),
   receipt: receiptSchema,
 });
 
 const bookingUpdatesSchema = z.object({
-  guests: z.number().optional(),
+  guests: z
+    .object({
+      overNightGuests: z.number(),
+      nonOverNightGuests: z.number(),
+    })
+    .optional(),
   bookingDate: z.string().optional(),
   productId: z.string().optional(),
   rooms: z.array(z.string()).optional(),
@@ -110,23 +118,43 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   }
 
   const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
+  const { guests: guestSetting } = bookingSettings;
+  const { guests } = parsed.data;
   const product = await ProductRepository.findProductById(parsed.data.productId);
   const rooms = await RoomRepository.findRoomsByIds(parsed.data.rooms);
   const bookedDate = dayjs.utc(parsed.data.startSession);
   const checkOutDate = dayjs.utc(parsed.data.endSession);
-  const { guests } = parsed.data;
-  const additionalGuests = guests > bookingSettings.minPax ? (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee : 0;
-  let addonsTotal = additionalGuests;
+  const extraOverNightGuestsTotal = getExtraHeadsTotal(
+    guests.overNightGuests,
+    guestSetting.minOverNightGuestPax,
+    guestSetting.overNightGuestFee,
+  );
+  const extraNonOverNightGuestsTotal = getExtraHeadsTotal(
+    guests.nonOverNightGuests,
+    guestSetting.minNonOverNightGuestPax,
+    guestSetting.nonOverNightGuestFee,
+  );
+  let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
 
   const googleCalendarRoomsArr: string[] = [];
-  const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [
-    {
+  const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [];
+
+  if (extraOverNightGuestsTotal > 0)
+    emailAddonsTable.push({
+      name: 'Additional Overnight Guest',
+      price: PHpeso.format(guestSetting.overNightGuestFee),
+      qty: `${getExtraHeads(guests.overNightGuests, guestSetting.overNightGuestFee)}`,
+      summary: PHpeso.format(extraOverNightGuestsTotal),
+    });
+
+  if (extraNonOverNightGuestsTotal > 0)
+    emailAddonsTable.push({
       name: 'Additional Non-Overnight Guest',
-      price: PHpeso.format(bookingSettings.extraHeadFee),
-      qty: `${guests > bookingSettings.minPax ? guests - bookingSettings.minPax : 0}`,
-      summary: PHpeso.format(additionalGuests),
-    },
-  ];
+      price: PHpeso.format(guestSetting.nonOverNightGuestFee),
+      qty: `${getExtraHeads(guests.nonOverNightGuests, guestSetting.nonOverNightGuestFee)}`,
+      summary: PHpeso.format(extraNonOverNightGuestsTotal),
+    });
+
   rooms.forEach((info) => {
     const isNotAddOn = product.includedRooms.some((val) => val === info.roomId);
     addonsTotal += isNotAddOn ? 0 : info.price;
@@ -142,9 +170,9 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
 
   const calendarEventId = await GoogleCalendarRepository.createEvent({
     summary: parsed.data.name,
-    description: `${product?.name} / ${parsed.data.guests ?? 0} PAX / ${
-      rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'
-    }`,
+    description: `${product?.name} / ${guests.nonOverNightGuests ?? 0} Non-Overnight Guests / ${
+      guests.overNightGuests ?? 0
+    } Overnight Guests / ${rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'}`,
     start: {
       dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
       timeZone: constants.general.timezone,
@@ -184,7 +212,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     recipientEmail: [parsed.data.email, constants.mailerSend.supportEmail],
     reference_number: parsed.data.ref_no,
     guest_name: parsed.data.name,
-    num_pax: parsed.data.guests,
+    num_pax: parsed.data.guests.nonOverNightGuests,
     checkin: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
     checkout: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
     booking_type: product?.name || '',
@@ -195,7 +223,6 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   });
 
   console.log('EMAIL SUCCESSFULLY SENT');
-
   console.log('CLEANUP BOOKING ATTEMP RECORD ...');
 
   await BookingAttemptRepository.deleteBookingAttemptWithRefNo(parsed.data.ref_no);

@@ -14,65 +14,106 @@ export interface IStep2Props {
 
 export function Step2({ onPrev, onNext }: IStep2Props) {
   const { setBookingStateData, setBookingState, selectedRooms, data, selectedProduct } = useBookingStoreTrack();
-  const [guests, setGuests] = useState(data.guests);
+  const [nonOverNightGuests, setNonOverNightGuests] = useState(data.guests.nonOverNightGuests);
+  const [overNightGuests, setOverNightGuests] = useState(data.guests.overNightGuests);
   const [chosenRoomsMap, setChosenRoomsMap] = useState<typeof selectedRooms>(selectedRooms);
   const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
 
   const isStepComplete = () => {
-    return !!guests && guests > 0 && bookingSetting && guests <= bookingSetting.maxPax;
+    if (!bookingSetting) return false;
+    const { guests: guestSetting } = bookingSetting;
+    return !!nonOverNightGuests && nonOverNightGuests > 0 && nonOverNightGuests <= guestSetting.maxNonOverNightGuestPax;
   };
 
   const proceed = () => {
-    if (!guests) return;
+    if (!nonOverNightGuests) return;
 
     setBookingStateData({
       roomIds: Array.from(chosenRoomsMap, (entry) => entry[1].roomId),
-      guests,
+      guests: {
+        nonOverNightGuests,
+        overNightGuests,
+      },
     });
 
     setBookingState('selectedRooms', chosenRoomsMap);
     onNext();
   };
 
-  if (bookingSettingLoader || !selectedProduct) return null;
+  if (bookingSettingLoader || !selectedProduct || !bookingSetting) return null;
+
+  const { guests: guestSetting } = bookingSetting;
 
   return (
     <Stack direction='column' spacing={5}>
       <VStack alignItems='left' spacing={2}>
         <Text fontSize='lg' fontWeight='semibold'>
-          Enter number of guests:
+          Enter number of guests (Non-Overnight):
         </Text>
         <Box h='100%' w='30%'>
           <NumberFieldV2
             onChange={(v) => {
-              if (v === '') setGuests(0);
-              else setGuests(parseInt(v, 10));
+              if (v === '') setNonOverNightGuests(0);
+              else setNonOverNightGuests(parseInt(v, 10));
             }}
-            value={`${guests}`}
-            property='guests'
+            value={`${nonOverNightGuests}`}
+            property='nonOverNightGuests'
           />
         </Box>
         <Box w='70%' fontSize='12px' lineHeight={1.5}>
           <Text color='gray.400'>
-            MAX OF {bookingSetting?.minPax || 25} PAX EXTRA PERSON ₱{bookingSetting?.extraHeadFee || 250}/HEAD
+            MAX OF {guestSetting.minNonOverNightGuestPax} PAX. EXTRA PERSON ₱{guestSetting.nonOverNightGuestFee}/HEAD
           </Text>
           <Text color='gray.400'>CHILDREN 2 YEARS BELOW ARE FREE Do not add in # of pax</Text>
         </Box>
         <Stack w='100%'>
           <Text color='red.500' textAlign='left'>
-            {bookingSetting && guests > bookingSetting.maxPax
-              ? `Extra Heads Allowed are only ${bookingSetting.maxPax - bookingSetting.minPax}!`
-              : ''}
+            {nonOverNightGuests > guestSetting.maxNonOverNightGuestPax &&
+              `Extra Heads Allowed are only ${guestSetting.maxNonOverNightGuestPax - guestSetting.minNonOverNightGuestPax}!`}
           </Text>
         </Stack>
       </VStack>
+
+      {guestSetting.minOverNightGuestPax > 0 && (
+        <VStack alignItems='left' spacing={2}>
+          <Text fontSize='lg' fontWeight='semibold'>
+            Enter number of guests (Overnight):
+          </Text>
+          <Box h='100%' w='30%'>
+            <NumberFieldV2
+              onChange={(v) => {
+                if (v === '') setOverNightGuests(0);
+                else setOverNightGuests(parseInt(v, 10));
+              }}
+              value={`${overNightGuests}`}
+              property='overNightGuests'
+            />
+          </Box>
+          <Box w='70%' fontSize='12px' lineHeight={1.5}>
+            <Text color='gray.400'>
+              MAX OF {guestSetting.minOverNightGuestPax} PAX. EXTRA PERSON ₱{guestSetting.overNightGuestFee}/HEAD
+            </Text>
+            <Text color='gray.400'>CHILDREN 2 YEARS BELOW ARE FREE Do not add in # of pax</Text>
+          </Box>
+          <Stack w='100%'>
+            <Text color='red.500' textAlign='left'>
+              {overNightGuests > guestSetting.maxOverNightGuestPax
+                ? `Extra Heads Allowed are only ${guestSetting.maxOverNightGuestPax - guestSetting.minOverNightGuestPax}!`
+                : ''}
+            </Text>
+          </Stack>
+        </VStack>
+      )}
 
       <ChooseRoom chosenSchedule={selectedProduct} chosenRoomsMap={chosenRoomsMap} setChosenRoomsMap={setChosenRoomsMap} />
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
           <CostView
-            guests={guests || data.guests}
+            guests={{
+              nonOverNightGuests,
+              overNightGuests,
+            }}
             product={selectedProduct}
             rooms={Array.from(chosenRoomsMap, (entry) => entry[1])}
           />

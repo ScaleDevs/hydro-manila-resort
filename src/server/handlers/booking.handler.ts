@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
+import { Guests } from '@prisma/client';
 
 import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
@@ -76,7 +77,7 @@ export const updateBookingHandler = async (
   bookingId: string,
   data: {
     bookingDate?: string | undefined;
-    guests?: number | undefined;
+    guests?: Guests | undefined;
     rooms?: string[];
     productId?: string | undefined;
   },
@@ -131,7 +132,7 @@ export const customerUpdateRequestHandler = async (input: {
   bookingRequestUpdate: {
     productId?: string | undefined;
     rooms?: string[] | undefined;
-    guests?: number | undefined;
+    guests?: Guests | undefined;
     bookingDate?: string | undefined;
   };
 }) => {

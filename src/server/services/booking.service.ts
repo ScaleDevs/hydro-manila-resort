@@ -1,9 +1,15 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { BookingUpdateLog } from '@prisma/client';
+import { BookingUpdateLog, Guests } from '@prisma/client';
 import { calendar_v3 } from 'googleapis';
 
-import { utcDateToTzDayInstance, tzSchedToDayJsInsance, buildGoogleCalendarDateTime, PHpeso } from '@/utils/helper';
+import {
+  utcDateToTzDayInstance,
+  tzSchedToDayJsInsance,
+  buildGoogleCalendarDateTime,
+  PHpeso,
+  getExtraHeadsTotal,
+} from '@/utils/helper';
 import { IBooking, IProduct, IRoom, CustomerUpdateBookingParams } from '@/utils/types';
 import { BookingRepository } from '@/server/repository/booking.repo';
 import { ProductRepository } from '@/server/repository/product.repo';
@@ -77,7 +83,7 @@ class Service {
   public async buildBookingDetailsUpdateLog(
     bookingRecord: IBooking,
     data: {
-      guests?: number;
+      guests?: Guests;
       rooms?: string[];
       productId?: string;
     },
@@ -236,7 +242,7 @@ class Service {
     }
   }
 
-  public async getBookingDetailsTotal({ product, rooms, guests }: { guests: number; product: IProduct; rooms: IRoom[] }) {
+  public async getBookingDetailsTotal({ product, rooms, guests }: { guests: Guests; product: IProduct; rooms: IRoom[] }) {
     try {
       let newTotal = 0;
       let additionalHeadsPrice = 0;
@@ -244,10 +250,19 @@ class Service {
 
       if (!!guests) {
         const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-        if (guests > bookingSettings.minPax) {
-          newTotal = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
-          additionalHeadsPrice = (guests - bookingSettings.minPax) * bookingSettings.extraHeadFee;
-        }
+        const { guests: guestSettings } = bookingSettings;
+        const extraOverNightPaxTotal = getExtraHeadsTotal(
+          guests.overNightGuests,
+          guestSettings.minOverNightGuestPax,
+          guestSettings.overNightGuestFee,
+        );
+        const extraNonOverNightPaxTotal = getExtraHeadsTotal(
+          guests.nonOverNightGuests,
+          guestSettings.minNonOverNightGuestPax,
+          guestSettings.nonOverNightGuestFee,
+        );
+        newTotal += extraNonOverNightPaxTotal + extraOverNightPaxTotal;
+        additionalHeadsPrice = extraNonOverNightPaxTotal + extraOverNightPaxTotal;
       }
       if (product) newTotal += product.price;
       rooms.forEach((recordInfo) => {
