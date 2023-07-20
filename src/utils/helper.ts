@@ -57,7 +57,6 @@ export const getExtraHeads = (guests: number, min: number) => {
 
 // temporary helper
 export const getProductPrice = (bookingDate: string, product: IProduct) => {
-  console.log('ENV', process.env.GENERAL_APP_NAME, process.env.NEXT_PUBLIC_APP);
   if (process.env.GENERAL_APP_NAME === 'HydroResortManila' || process.env.NEXT_PUBLIC_APP === 'HydroResortManila') {
     const bookedDay = dayjs(bookingDate).day();
     if (bookedDay > 0 && bookedDay < 6) {
