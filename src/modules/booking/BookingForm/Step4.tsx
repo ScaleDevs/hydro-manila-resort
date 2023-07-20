@@ -137,7 +137,12 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
-          <CostView guests={data.guests} product={selectedProduct} rooms={Array.from(selectedRooms, (entry) => entry[1])} />
+          <CostView
+            guests={data.guests}
+            product={selectedProduct}
+            rooms={Array.from(selectedRooms, (entry) => entry[1])}
+            bookedDate={data.bookingDate || undefined}
+          />
         </Box>
       </Stack>
 

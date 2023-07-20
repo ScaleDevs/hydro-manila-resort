@@ -116,6 +116,7 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
             }}
             product={selectedProduct}
             rooms={Array.from(chosenRoomsMap, (entry) => entry[1])}
+            bookedDate={data.bookingDate || undefined}
           />
         </Box>
       </Stack>

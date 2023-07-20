@@ -17,7 +17,7 @@ import {
 import dayjs from 'dayjs';
 import { AiOutlineCheck } from 'react-icons/ai';
 import { trpc } from '@/utils/trpc';
-import { PHpeso, getISOFormatFromSchedule } from '@/utils/helper';
+import { PHpeso, getISOFormatFromSchedule, getProductPrice } from '@/utils/helper';
 import { ProductV2 } from '@/utils/types';
 import { GetApp } from '@/appspecs/theme';
 
@@ -115,7 +115,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
                     {record.name}
                   </Text>
                   <Text textAlign='center' fontSize={{ base: 'xs', md: 'sm' }} fontWeight='semibold' color='white'>
-                    {PHpeso.format(record.price)}
+                    {PHpeso.format(chosenDate ? getProductPrice(chosenDate, record) : 0)}
                   </Text>
                 </Center>
                 <Stack py='7' textAlign='left' px='25px' fontSize={{ base: 'xs', md: 'sm' }}>

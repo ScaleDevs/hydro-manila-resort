@@ -61,7 +61,12 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
 
         <Stack direction='row' justifyContent='flex-end'>
           <Box w='400px'>
-            <CostView guests={data.guests} product={selectedProduct} rooms={Array.from(selectedRooms, (entry) => entry[1])} />
+            <CostView
+              guests={data.guests}
+              product={selectedProduct}
+              rooms={Array.from(selectedRooms, (entry) => entry[1])}
+              bookedDate={data.bookingDate || undefined}
+            />
           </Box>
         </Stack>
 

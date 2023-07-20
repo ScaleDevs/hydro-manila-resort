@@ -43,7 +43,6 @@ export const initiatePaymentSessionForBooking = async (input: {
       (entry) => entry[1],
     );
     const rooms = await RoomRepository.findRoomsByIds(finalRoomIds);
-    const receipt = await BookingService.getBookingDetailsTotal({ product, rooms, guests: input.guests });
     const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
     const endSessionDayInstance = tzSchedToDayJsInsance(
       dayjs(input.bookingDate)
@@ -51,6 +50,12 @@ export const initiatePaymentSessionForBooking = async (input: {
         .format('YYYY-MM-DD'),
       product.scheduleEnd,
     );
+    const receipt = await BookingService.getBookingDetailsTotal({
+      bookedDate: startSessionDayInstance.format('YYYY-MM-DD'),
+      product,
+      rooms,
+      guests: input.guests,
+    });
 
     const data = {
       name: input.name,
@@ -128,12 +133,9 @@ export const initiatePaymentSessionForUpdateBooking = async (
     const product = await ProductRepository.findProductById(bookingUpdates.productId || bookingRecord.productId);
     const roomIds = bookingUpdates.rooms || bookingRecord.rooms;
     const rooms = await RoomRepository.findRoomsByIds(roomIds);
-    const receipt = await BookingService.getBookingDetailsTotal({
-      product,
-      rooms,
-      guests: bookingUpdates.guests || bookingRecord.guests,
-    });
     let bookedSchedule = '';
+    const bookingDate =
+      (bookingUpdates.bookingDate as string) || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
     const statusDisplay = {
       ref_no: bookingRecord.ref_no,
       customerName: bookingRecord.name,
@@ -145,9 +147,6 @@ export const initiatePaymentSessionForUpdateBooking = async (
     } as BookingStatusDisplay;
 
     if (bookingUpdates.bookingDate || bookingUpdates.productId) {
-      const bookingDate =
-        (bookingUpdates.bookingDate as string) || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD');
-
       const startSessionDayInstance = tzSchedToDayJsInsance(bookingDate, product.scheduleStart);
       const endSessionDayInstance = tzSchedToDayJsInsance(
         dayjs(bookingDate)
@@ -184,6 +183,13 @@ export const initiatePaymentSessionForUpdateBooking = async (
         .tz(constants.general.timezone)
         .format('MMM DD, YYYY hh:mm A');
     }
+
+    const receipt = await BookingService.getBookingDetailsTotal({
+      bookedDate: (bookingUpdates.bookingDate as string) || bookingDate,
+      product,
+      rooms,
+      guests: bookingUpdates.guests || bookingRecord.guests,
+    });
 
     return {
       paymentIntentResource: await createPaymentIntent({

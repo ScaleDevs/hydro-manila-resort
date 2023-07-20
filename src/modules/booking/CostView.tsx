@@ -3,15 +3,16 @@ import { HStack, Box, Text } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
-import { getExtraHeadsTotal } from '@/utils/helper';
+import { getExtraHeadsTotal, getProductPrice } from '@/utils/helper';
 
 export interface ICostViewProps {
   product?: IProduct;
   rooms?: IRoom[];
   guests?: Guests;
+  bookedDate?: string;
 }
 
-export default function CostView({ rooms = [], product, guests }: ICostViewProps) {
+export default function CostView({ bookedDate, rooms = [], product, guests }: ICostViewProps) {
   const { data: bookingSetting } = trpc.bookingSetting.getBookingSetting.useQuery();
 
   const getTotal = () => {
@@ -19,7 +20,7 @@ export default function CostView({ rooms = [], product, guests }: ICostViewProps
     const { guests: guestSettings } = bookingSetting;
     let total = 0;
     rooms.forEach((roomInfo) => (total += roomInfo.price));
-    if (product) total += product.price;
+    if (product && bookedDate) total += getProductPrice(bookedDate, product);
     if (guests) {
       if (guests.overNightGuests > guestSettings.minOverNightGuestPax)
         total += getExtraHeadsTotal(guests.overNightGuests, guestSettings.minOverNightGuestPax, guestSettings.overNightGuestFee);
@@ -37,10 +38,10 @@ export default function CostView({ rooms = [], product, guests }: ICostViewProps
     <>
       <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
         <Text>BREAKDOWN:</Text>
-        {product ? (
+        {product && bookedDate ? (
           <HStack mt='10px' justifyContent='space-between'>
             <Text>{product.name}:</Text>
-            <Text>{PHpeso.format(product.price)}</Text>
+            <Text>{PHpeso.format(getProductPrice(bookedDate, product))}</Text>
           </HStack>
         ) : (
           ''

@@ -45,6 +45,7 @@ export function Step1({ onNext }: Step1Props) {
             guests={data.guests}
             product={chosenSchedule || selectedProduct}
             rooms={Array.from(selectedRooms, (entry) => entry[1])}
+            bookedDate={chosenDate || undefined}
           />
         </Box>
       </Stack>

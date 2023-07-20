@@ -9,6 +9,7 @@ import {
   buildGoogleCalendarDateTime,
   PHpeso,
   getExtraHeadsTotal,
+  getProductPrice,
 } from '@/utils/helper';
 import { IBooking, IProduct, IRoom, CustomerUpdateBookingParams } from '@/utils/types';
 import { BookingRepository } from '@/server/repository/booking.repo';
@@ -255,12 +256,24 @@ class Service {
     }
   }
 
-  public async getBookingDetailsTotal({ product, rooms, guests }: { guests: Guests; product: IProduct; rooms: IRoom[] }) {
+  public async getBookingDetailsTotal({
+    bookedDate,
+    product,
+    rooms,
+    guests,
+  }: {
+    bookedDate: string;
+    guests: Guests;
+    product: IProduct;
+    rooms: IRoom[];
+  }) {
     try {
       let newTotal = 0;
       let additionalHeadsPrice = 0;
       let roomPrice = 0;
+      const productPrice = getProductPrice(bookedDate, product);
 
+      newTotal += productPrice;
       if (!!guests) {
         const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
         const { guests: guestSettings } = bookingSettings;
@@ -277,7 +290,6 @@ class Service {
         newTotal += extraNonOverNightPaxTotal + extraOverNightPaxTotal;
         additionalHeadsPrice = extraNonOverNightPaxTotal + extraOverNightPaxTotal;
       }
-      if (product) newTotal += product.price;
       rooms.forEach((recordInfo) => {
         if (product.includedRooms.some((roomId) => roomId === recordInfo.roomId)) return;
         roomPrice += recordInfo.price;
@@ -285,7 +297,7 @@ class Service {
       });
 
       return {
-        productPrice: product.price || 0,
+        productPrice,
         roomPrice,
         additionalHeadsPrice,
         bookingFee: 0,
