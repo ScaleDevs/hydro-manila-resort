@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { Guests } from '@prisma/client';
 
-import { tzSchedToDayJsInsance } from '@/utils/helper';
+import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
@@ -98,6 +98,7 @@ export const updateBookingHandler = async (
     product,
   });
   const receipt = await BookingService.getBookingDetailsTotal({
+    bookedDate: bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD'),
     product,
     rooms,
     guests: data.guests || bookingRecord.guests,
@@ -148,6 +149,7 @@ export const customerUpdateRequestHandler = async (input: {
   const roomNames = newRoomsNames || oldRoomsNames || [];
   const currentTotal = bookingRecord.receipt.total;
   const { total: newTotal } = await BookingService.getBookingDetailsTotal({
+    bookedDate: bookingDate || utcDateToTzDayInstance(bookingRecord.startSession).format('YYYY-MM-DD'),
     product: newProduct || oldProduct,
     rooms: newRooms || oldRooms || [],
     guests: updatedGuests || bookingRecord.guests,

@@ -111,7 +111,10 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
                 Addons
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Guests' value={`${data.guests}`} />
+                <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${data.guests.nonOverNightGuests}`} />
+                {!!data.guests.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Overnight)' value={`${data.guests.overNightGuests}`} />
+                )}
                 <FieldValueReport
                   fieldName='Rooms'
                   value={`${Array.from(selectedRooms, (entry) => entry[1].roomIdentityName).join(', ')}`}
