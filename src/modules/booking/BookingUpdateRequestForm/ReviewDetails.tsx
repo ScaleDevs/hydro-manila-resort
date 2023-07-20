@@ -39,15 +39,23 @@ export interface IReviewDetailsProps {
 }
 
 export default function ReviewDetails({ previousStep, nextStep }: IReviewDetailsProps) {
-  const { customerBankInfo, bookingInfo, bookingUpdates, bookingReferenceNo, bookingUpdateCase, newTotal, setIsRequestSuccess } =
-    useBookingUpdateRequestStoreTrack();
+  const {
+    customerBankInfo,
+    bookingInfo,
+    enteredProduct,
+    enteredRooms,
+    bookingUpdates,
+    bookingReferenceNo,
+    bookingUpdateCase,
+    newTotal,
+    setIsRequestSuccess,
+  } = useBookingUpdateRequestStoreTrack();
   const { setPaymentStates } = usePaymentStoreTrack();
 
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
     limit: 100,
   });
-  const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
   const {
     mutate: sendUpdateRequest,
     isLoading: isSendingUpdateRequest,
@@ -92,7 +100,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
     }
   };
 
-  if (fetchingProducts || fetchingRooms)
+  if (fetchingProducts)
     return (
       <Box w='100%' mx='auto' p='25px'>
         <Heading textAlign='center'>EDIT BOOKING</Heading>
@@ -138,7 +146,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
               </Heading>
               <Stack spacing={-2}>
                 <FieldValueReport fieldName='Reference No' value={bookingReferenceNo} />
-                <FieldValueReport fieldName='Guests' value={`${bookingInfo.guests}`} />
+                {!!bookingInfo.guests.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingInfo.guests.overNightGuests}`} />
+                )}
+                <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingInfo.guests.nonOverNightGuests}`} />
                 <FieldValueReport fieldName='Booked Date' value={(bookingInfo.startSession as string).split('T')[0]} />
                 <FieldValueReport
                   fieldName='Schedule'
@@ -146,7 +157,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 />
                 <FieldValueReport
                   fieldName='Room'
-                  value={roomsData?.records.find((row) => row.roomId === bookingInfo.roomId)?.roomIdentityName || ''}
+                  value={bookingInfo.roomsObject.map((room) => room.roomIdentityName).join(', ') || 'N/A'}
                 />
               </Stack>
             </Box>
@@ -155,21 +166,23 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 Booking Changes
               </Heading>
               <Stack spacing={-2}>
-                {bookingUpdates.guests && <FieldValueReport fieldName='Guests' value={`${bookingUpdates.guests}`} />}
+                {!!bookingUpdates?.guests?.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
+                )}
+                {!!bookingUpdates?.guests?.overNightGuests && (
+                  <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingUpdates.guests.nonOverNightGuests}`} />
+                )}
                 {bookingUpdates.bookingDate && (
                   <FieldValueReport fieldName='Booked Date' value={`${bookingUpdates.bookingDate}`} />
                 )}
                 {bookingUpdates.productId && (
                   <FieldValueReport
                     fieldName='Schedule'
-                    value={productsData?.records.find((row) => row.productId === bookingUpdates.productId)?.name || ''}
+                    value={productsData?.records.find((row) => row.productId === bookingUpdates.productId)?.name || 'N/A'}
                   />
                 )}
-                {bookingUpdates.roomId && (
-                  <FieldValueReport
-                    fieldName='Room'
-                    value={roomsData?.records.find((row) => row.roomId === bookingUpdates.roomId)?.roomIdentityName || ''}
-                  />
+                {bookingUpdates.rooms && (
+                  <FieldValueReport fieldName='Room' value={enteredRooms.map((room) => room.roomIdentityName).join(', ') || ''} />
                 )}
               </Stack>
             </Box>
@@ -201,9 +214,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
       <br />
 
       <CostView
-        productId={bookingUpdates.productId || bookingInfo.productId}
-        roomId={bookingUpdates.roomId || bookingInfo.roomId || undefined}
+        product={enteredProduct}
+        rooms={enteredRooms}
         guests={bookingUpdates.guests || bookingInfo.guests}
+        bookedDate={bookingUpdates.bookingDate || (bookingInfo.startSession as string).split('T')[0]}
       />
 
       <br />

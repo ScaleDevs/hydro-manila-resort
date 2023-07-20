@@ -2,10 +2,12 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { Box, Button, Divider, Heading, SlideFade, Spinner, Stack, Text } from '@chakra-ui/react';
+
 import Layout from '@/layouts/admin';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, tableFormatTimeDisplay } from '@/modules/utils/helper';
 import AdminEditBookingForm from '@/modules/booking/AdminEditBookingForm';
+import { GetApp } from '@/appspecs/theme';
 
 interface Props {
   id: string;
@@ -32,7 +34,7 @@ function Component({ id }: Props) {
       <Head>
         <title>Admin | Bookings Details</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack w='100%' alignItems='flex-end'>
@@ -108,15 +110,26 @@ function Component({ id }: Props) {
                   <Divider borderColor='gray.400' />
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
-                    <Text>Guests:</Text>
-                    <Text>{data?.guests}</Text>
+                    <Text>Guests (Non-Overnight):</Text>
+                    <Text>{data?.guests.nonOverNightGuests || 0}</Text>
+                  </Stack>
+
+                  <Divider borderColor='gray.400' />
+
+                  <Stack spacing={0} direction='row' justifyContent='space-between'>
+                    <Text>Guests (Overnight):</Text>
+                    <Text>{data?.guests.overNightGuests || 0}</Text>
                   </Stack>
 
                   <Divider borderColor='gray.400' />
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
                     <Text>ROOM:</Text>
-                    <Text>{data?.room?.roomIdentityName || (data?.product.withRooms ? 'ALL ROOMS' : 'N/A')}</Text>
+                    <Text>
+                      {data?.roomsObject && data?.roomsObject.length > 0
+                        ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
+                        : 'N/A'}
+                    </Text>
                   </Stack>
 
                   <Divider borderColor='gray.400' />

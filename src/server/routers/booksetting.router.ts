@@ -8,14 +8,20 @@ export const bookingSettingRouter = router({
     .input(
       z.object({
         bookingFee: z.number(),
-        minPax: z.number(),
-        maxPax: z.number(),
-        extraHeadFee: z.number(),
+        guests: z.object({
+          overNightGuestFee: z.number(),
+          minNonOverNightGuestPax: z.number(),
+          maxNonOverNightGuestPax: z.number(),
+          nonOverNightGuestFee: z.number(),
+          minOverNightGuestPax: z.number(),
+          maxOverNightGuestPax: z.number(),
+        }),
       }),
     )
     .mutation(async ({ input }) => {
-      const bookingRecord = await BookingSettingRepository.findFirstBookingSetting();
-      if (bookingRecord) return BookingSettingRepository.updateBookingSettingById(bookingRecord.bookingSettingId, input);
+      const checkBookingSetting = await BookingSettingRepository.checkBookingSetting();
+      if (checkBookingSetting)
+        return BookingSettingRepository.updateBookingSettingById(checkBookingSetting.bookingSettingId, input);
       return BookingSettingService.createBookingSetting(input);
     }),
   getBookingSetting: procedure.query(() => {

@@ -5,7 +5,7 @@ import { BookingSettingRepository } from '@/server/repository/bookingsetting.rep
 class Service {
   public async createBookingSetting(data: Omit<IBookingSetting, 'bookingSettingId' | 'createdAt' | 'updatedAt'>) {
     try {
-      const checkIfRecordExist = await BookingSettingRepository.findFirstBookingSetting();
+      const checkIfRecordExist = await BookingSettingRepository.checkBookingSetting();
       if (checkIfRecordExist)
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -15,6 +15,7 @@ class Service {
         ...data,
       });
     } catch (err) {
+      console.log(err);
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }

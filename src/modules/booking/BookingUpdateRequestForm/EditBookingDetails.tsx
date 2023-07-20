@@ -4,11 +4,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import dayjs from 'dayjs';
 
+import { getExtraHeadsTotal } from '@/utils/helper';
 import { trpc } from '@/utils/trpc';
-import { IProduct } from '@/utils/types';
+import { IProduct, IRoom } from '@/utils/types';
 import { SelectField } from '@/components/SelectField';
 import { DateTimeField } from '@/components/DateTimeField';
-import { NumberField } from '@/components/NumberField';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
+import ControlledChooseRooms from '@/components/ControlledChooseRooms';
 import useBookingUpdateRequestStoreTrack, {
   bookingRequestUpdatesSchema,
   BookingRequestUpdates,
@@ -30,9 +32,14 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
     setBookingUpdateCase,
     setNewTotal,
     setBookingUpdateStates,
+    enteredRooms,
+    setEnteredRooms,
+    enteredProduct,
+    setEnteredProduct,
   } = useBookingUpdateRequestStoreTrack();
 
-  const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(enteredProduct);
+  const [selectedRooms, setSelectedRooms] = useState<IRoom[]>(enteredRooms);
   const [formError, setFormError] = useState<string | null>(null);
 
   const { data: bookingSetting } = trpc.bookingSetting.getBookingSetting.useQuery();
@@ -47,6 +54,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
     register,
     handleSubmit,
     formState: { errors, dirtyFields },
+    control,
     watch,
   } = useForm<BookingRequestUpdates>({
     resolver: zodResolver(schema),
@@ -54,7 +62,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
       guests: savedValues?.guests || bookingInfo?.guests,
       bookingDate: savedValues?.bookingDate || (bookingInfo?.startSession as string).split('T')[0],
       productId: savedValues?.productId || bookingInfo?.productId,
-      roomId: savedValues?.roomId || bookingInfo?.roomId,
+      rooms: savedValues?.rooms || bookingInfo?.rooms,
     },
   });
 
@@ -65,15 +73,25 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
   const getUpdatedTotal = (data: BookingRequestUpdates) => {
     if (!bookingSetting || !productsData || !roomsData) return 0;
 
-    const { productId, roomId, guests } = data;
-
-    const product = productsData?.records.find((row) => row.productId === productId);
-    const room = roomsData.records.find((row) => row.roomId === roomId);
+    const { guests: guestSetting } = bookingSetting;
+    const { rooms, guests } = data;
+    const roomsInstance = roomsData.records.filter((row) => rooms.includes(row.roomId));
 
     let newTotal = 0;
-    if (product) newTotal += product.price;
-    if (room) newTotal += room.price;
-    if (guests && guests > bookingSetting.minPax) newTotal += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
+    if (selectedProduct) newTotal += selectedProduct.price;
+
+    roomsInstance.forEach((recordInfo) => {
+      if (selectedProduct?.includedRooms.some((roomId) => roomId === recordInfo.roomId)) return;
+      newTotal += recordInfo.price;
+    });
+
+    newTotal += getExtraHeadsTotal(
+      guests.nonOverNightGuests,
+      guestSetting.minNonOverNightGuestPax,
+      guestSetting.nonOverNightGuestFee,
+    );
+
+    newTotal += getExtraHeadsTotal(guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee);
 
     setNewTotal(newTotal);
     return newTotal;
@@ -81,12 +99,18 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
 
   const proceed = (data: BookingRequestUpdates) => {
     if (!dirtyFields || !bookingInfo || !bookingSetting) return;
+    const { guests: guestSetting } = bookingSetting;
+
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
       setFormError('Date is not available! Kindly choose another date');
       return;
     }
-    if (bookingSetting.maxPax < data.guests) {
-      setFormError(`Max guests allowed is ${bookingSetting.maxPax}!`);
+    if (guestSetting.maxNonOverNightGuestPax < data.guests.nonOverNightGuests) {
+      setFormError(`Max Guests (Non-Overnight) allowed is ${guestSetting.maxNonOverNightGuestPax}!`);
+      return;
+    }
+    if (guestSetting.maxOverNightGuestPax < data.guests.overNightGuests) {
+      setFormError(`Max Guests (Overnight) allowed is ${guestSetting.maxOverNightGuestPax}!`);
       return;
     }
 
@@ -94,9 +118,15 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
 
     (Object.keys(data) as Array<keyof typeof data>).forEach((key) => {
       if (key === 'bookingDate') {
-        if (data[key] !== (bookingInfo.startSession as string).split('T')[0]) {
+        if (data[key] !== (bookingInfo.startSession as string).split('T')[0]) updates[key] = data[key];
+      } else if (key === 'rooms') {
+        if (data[key].join(', ') !== bookingInfo.rooms.join(', ')) updates[key] = data[key];
+      } else if (key === 'guests') {
+        if (
+          data[key].nonOverNightGuests !== bookingInfo.guests.nonOverNightGuests ||
+          data[key].overNightGuests !== bookingInfo.guests.overNightGuests
+        )
           updates[key] = data[key];
-        }
       } else if (data[key] !== bookingInfo[key]) {
         updates[key] = data[key];
       }
@@ -106,8 +136,6 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
       setFormError('No Details Changed! You must edit a detail to proceed');
       return;
     }
-
-    console.log('data updates', updates);
 
     const setStates = () => {
       setBookingUpdates(updates);
@@ -126,6 +154,9 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
         setBookingUpdateCase('NORMAL');
         setBookingUpdateStates({ stepsLength: 3 });
       }
+
+      setEnteredRooms(selectedRooms);
+      setEnteredProduct(selectedProduct);
     };
 
     setFormError(null);
@@ -166,7 +197,7 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
 
   return (
     <SlideFade in={true} offsetY='20px'>
-      <Box w={{ base: '95%', md: '100%' }} mx='auto'>
+      <Box w={{ base: '95%', md: '100%' }} mx='auto' pb='40px'>
         <Alert status='info' borderRadius='sm' color='blue.600'>
           <AlertIcon />
           Kindly input the changes you want to update on your booking details
@@ -174,22 +205,15 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
 
         <br />
 
-        {!!formError && (
-          <>
-            <Alert status='error' borderRadius='sm' color='red.600'>
-              <AlertIcon />
-              {formError}
-            </Alert>
-            <br />
-          </>
-        )}
-
         <Stack>
           <form onSubmit={handleSubmit(proceed)}>
             <Stack spacing={5}>
               <Stack direction={{ base: 'column', xl: 'row' }}>
-                <NumberField register={register} property='guests' placeholder='*PAX' label='Guests' required />
+                <NumberFieldV2 label='Guests (Overnight)' register={register} property='guests.overNightGuests' />
+                <NumberFieldV2 label='Guests (Non-Overnight)' register={register} property='guests.nonOverNightGuests' />
+              </Stack>
 
+              <Stack direction={{ base: 'column', xl: 'row' }}>
                 <DateTimeField
                   type='date'
                   required
@@ -198,9 +222,6 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
                   property='bookingDate'
                   errMsg={errors?.bookingDate?.message}
                 />
-              </Stack>
-
-              <Stack direction={{ base: 'column', xl: 'row' }}>
                 <SelectField
                   handleOnChange={handleSelectProduct}
                   register={register}
@@ -217,24 +238,40 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
                   errMsg={!!errors.productId?.message ? 'Required!' : undefined}
                   required
                 />
+              </Stack>
 
-                <SelectField
-                  disabled={selectedProduct?.withRooms}
-                  register={register}
-                  property='roomId'
-                  placeholder='ROOM RENTAL(optional)'
-                  label='Room'
-                  options={roomsData?.records.map((v) => ({ label: `${v.roomIdentityName}`, value: v.roomId })) || []}
-                  value={watch('roomId') || bookingInfo?.roomId === null ? undefined : bookingInfo?.roomId}
-                  errMsg={!!errors.roomId?.message ? 'Required!' : undefined}
-                  required
-                />
+              <Stack direction='column'>
+                {roomsData?.records && (
+                  <ControlledChooseRooms
+                    control={control}
+                    isLoading={fetchingRooms}
+                    records={roomsData.records}
+                    selectedProduct={selectedProduct}
+                    onAdd={(room) => setSelectedRooms((curr) => [...curr, room])}
+                    onRemove={(roomId) => setSelectedRooms((curr) => [...curr].filter((room) => room.roomId !== roomId))}
+                  />
+                )}
               </Stack>
             </Stack>
 
             <br />
-            <CostView productId={watch('productId')} roomId={watch('roomId')} guests={watch('guests')} />
+            <CostView
+              rooms={selectedRooms}
+              product={selectedProduct}
+              guests={watch('guests')}
+              bookedDate={watch('bookingDate')}
+            />
             <br />
+
+            {!!formError && (
+              <>
+                <Alert status='error' borderRadius='sm' color='red.600'>
+                  <AlertIcon />
+                  {formError}
+                </Alert>
+                <br />
+              </>
+            )}
 
             <Stack direction={{ base: 'column', sm: 'row' }} justifyContent='space-between'>
               <Button onClick={previousStep}>BACK</Button>

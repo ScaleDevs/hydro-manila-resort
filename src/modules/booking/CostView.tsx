@@ -1,56 +1,43 @@
-import { useEffect, useState } from 'react';
-import { HStack, Box, Text, Center, SlideFade, Spinner } from '@chakra-ui/react';
+import { Guests } from '@prisma/client';
+import { HStack, Box, Text } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { trpc } from '@/utils/trpc';
 import { IProduct, IRoom } from '@/utils/types';
-import { getProductPrice } from '@/utils/helper';
+import { getExtraHeadsTotal, getProductPrice } from '@/utils/helper';
 
 export interface ICostViewProps {
-  bookedDate?: string; // temporary
-  productId?: string;
-  roomId?: string | null;
-  guests?: number;
+  product?: IProduct;
+  rooms?: IRoom[];
+  guests?: Guests;
+  bookedDate?: string;
 }
 
-export default function CostView({ bookedDate, productId, roomId, guests }: ICostViewProps) {
-  const [product, setProduct] = useState<IProduct | undefined>(undefined);
-  const [room, setRoom] = useState<IRoom | undefined>(undefined);
-
+export default function CostView({ bookedDate, rooms = [], product, guests }: ICostViewProps) {
   const { data: bookingSetting } = trpc.bookingSetting.getBookingSetting.useQuery();
-  const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
-    page: 1,
-    limit: 100,
-  });
-  const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
 
   const getTotal = () => {
     if (!bookingSetting) return 0;
-
+    const { guests: guestSettings } = bookingSetting;
     let total = 0;
+
+    rooms.forEach((roomInfo) => (total += roomInfo.price));
+
     if (product && bookedDate) total += getProductPrice(bookedDate, product);
-    if (room) total += room.price;
-    if (guests && guests > bookingSetting.minPax) total += (guests - bookingSetting.minPax) * bookingSetting.extraHeadFee;
+    else if (product) total += product.price;
+
+    if (guests) {
+      if (guests.overNightGuests > guestSettings.minOverNightGuestPax)
+        total += getExtraHeadsTotal(guests.overNightGuests, guestSettings.minOverNightGuestPax, guestSettings.overNightGuestFee);
+      if (guests.nonOverNightGuests > guestSettings.minNonOverNightGuestPax)
+        total += getExtraHeadsTotal(
+          guests.nonOverNightGuests,
+          guestSettings.minNonOverNightGuestPax,
+          guestSettings.nonOverNightGuestFee,
+        );
+    }
+
     return total;
   };
-
-  useEffect(() => {
-    const product = productsData?.records.find((row) => row.productId === productId);
-    const room = roomsData?.records.find((row) => row.roomId === roomId);
-
-    setProduct(product);
-    setRoom(room);
-  }, [productId, productsData?.records, roomId, roomsData?.records]);
-
-  if (fetchingProducts || fetchingRooms)
-    return (
-      <Box border='1px solid' borderColor='primary.1' mt='15px' p='10px'>
-        <SlideFade in>
-          <Center w='50%' h='300px' mx='auto'>
-            <Spinner size='xl' />
-          </Center>
-        </SlideFade>
-      </Box>
-    );
 
   return (
     <>
@@ -64,23 +51,44 @@ export default function CostView({ bookedDate, productId, roomId, guests }: ICos
         ) : (
           ''
         )}
-        {room ? (
+        {rooms.length > 0
+          ? rooms.map((roomInfo) => (
+              <HStack key={roomInfo.roomId} justifyContent='space-between'>
+                <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
+                <Text>{PHpeso.format(roomInfo.price)}</Text>
+              </HStack>
+            ))
+          : ''}
+        {bookingSetting && guests && guests.overNightGuests > bookingSetting.guests.minOverNightGuestPax && (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL ROOM ({room.roomIdentityName})</Text>
-            <Text>{PHpeso.format(room.price)}</Text>
+            <Text>ADDITIONAL OVERNIGHT PAX ({guests.overNightGuests - bookingSetting.guests.minOverNightGuestPax})</Text>
+            <Text>
+              {PHpeso.format(
+                getExtraHeadsTotal(
+                  guests.overNightGuests,
+                  bookingSetting.guests.minOverNightGuestPax,
+                  bookingSetting.guests.overNightGuestFee,
+                ),
+              )}
+            </Text>
           </HStack>
-        ) : (
-          ''
         )}
-        {bookingSetting && guests && guests > bookingSetting.minPax ? (
+        {bookingSetting && guests && guests.nonOverNightGuests > bookingSetting.guests.minNonOverNightGuestPax && (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL PAX ({guests - bookingSetting.minPax})</Text>
-            <Text>{PHpeso.format((guests - bookingSetting.minPax) * bookingSetting.extraHeadFee)}</Text>
+            <Text>
+              ADDITIONAL NON-OVERNIGHT PAX ({guests.nonOverNightGuests - bookingSetting.guests.minNonOverNightGuestPax})
+            </Text>
+            <Text>
+              {PHpeso.format(
+                getExtraHeadsTotal(
+                  guests.nonOverNightGuests,
+                  bookingSetting.guests.minNonOverNightGuestPax,
+                  bookingSetting.guests.nonOverNightGuestFee,
+                ),
+              )}
+            </Text>
           </HStack>
-        ) : (
-          ''
         )}
-
         {bookingSetting ? (
           <Box w='100%' fontSize='18px' bg='primary.1' mt='20px' p='10px'>
             <Text fontWeight='bold' color='white' textAlign='center'>

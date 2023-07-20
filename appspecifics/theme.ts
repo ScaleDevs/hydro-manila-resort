@@ -74,4 +74,12 @@ export const GetApp = {
     return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
   })(),
   HoverButton: 'whiteAlpha.800',
+  Favicon: (() => {
+    const result = {
+      VillaLeonora: '/VL_favicon.ico',
+      HydroResortManila: '/hydro_favicon.ico',
+    };
+
+    return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
+  })(),
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, AlertIcon, Box, Button, SlideFade } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,37 +19,31 @@ export interface IFindBookingInfoFormProps {
 }
 
 export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormProps) {
-  const { bookingReferenceNo, setBookingReferenceNo, setBookingInfo } = useBookingUpdateRequestStoreTrack();
+  const { setBookingReferenceNo, setBookingInfo, setEnteredProduct, setEnteredRooms } = useBookingUpdateRequestStoreTrack();
   const [errorMessage, setErrorMessage] = useState('');
 
-  const {
-    data: bookingInfo,
-    isFetching,
-    error,
-  } = trpc.booking.getBookingByRefNoPublic.useQuery(bookingReferenceNo, {
-    enabled: !!bookingReferenceNo,
-  });
+  const { mutate, isLoading } = trpc.booking.getBookingByRefNoPublic.useMutation();
 
   const { register, handleSubmit, setValue } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
   });
 
-  const searchBookingInfo = (data: FormSchemaType) => {
-    setBookingReferenceNo(data.refNo);
+  const searchBookingInfo = (payload: FormSchemaType) => {
+    mutate(payload.refNo, {
+      onSuccess(data) {
+        setBookingReferenceNo(payload.refNo);
+        setBookingInfo(data);
+        setEnteredProduct(data.product);
+        setEnteredRooms(data.roomsObject);
+        nextStep();
+      },
+      onError(error) {
+        setErrorMessage(error.message);
+        setBookingReferenceNo('');
+        setValue('refNo', '');
+      },
+    });
   };
-
-  useEffect(() => {
-    if (bookingInfo) {
-      setBookingInfo(bookingInfo);
-      nextStep();
-    }
-
-    if (error?.message) {
-      setErrorMessage(error.message);
-      setBookingReferenceNo('');
-      setValue('refNo', '');
-    }
-  }, [bookingInfo, setBookingInfo, nextStep, error, setBookingReferenceNo, setValue]);
 
   return (
     <>
@@ -68,7 +62,7 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
           <form onSubmit={handleSubmit(searchBookingInfo)}>
             <TextField register={register} property='refNo' placeholder='Reference No.' label='Enter Booking Reference No.' />
             <br />
-            <Button type='submit' isLoading={isFetching}>
+            <Button type='submit' isLoading={isLoading}>
               SEARCH
             </Button>
           </form>

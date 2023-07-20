@@ -19,10 +19,10 @@ export function RadioBooleanField({ value, setValue, property, errMsg }: IRadioB
     <Box w='100%'>
       <RadioGroup value={value === undefined ? undefined : value === true ? '1' : '0'}>
         <Stack direction='row'>
-          <Radio value='1' colorScheme='teal' onClick={() => setFormValue(true)}>
+          <Radio value='1' colorScheme='default' onClick={() => setFormValue(true)}>
             Yes
           </Radio>
-          <Radio value='0' colorScheme='teal' onClick={() => setFormValue(false)}>
+          <Radio value='0' colorScheme='default' onClick={() => setFormValue(false)}>
             No
           </Radio>
         </Stack>

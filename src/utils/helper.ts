@@ -45,13 +45,25 @@ export const buildGoogleCalendarDateTime = (utcDateTime: string | Date) => {
   return dayjs.utc(utcDateTime).format('YYYY-MM-DDTHH:mm:00.000') + 'Z';
 };
 
+export const getExtraHeadsTotal = (guests: number, min: number, fee: number) => {
+  if (guests > min) return (guests - min) * fee;
+  return 0;
+};
+
+export const getExtraHeads = (guests: number, min: number) => {
+  if (guests > min) return guests - min;
+  return 0;
+};
+
 // temporary helper
 export const getProductPrice = (bookingDate: string, product: IProduct) => {
-  const bookedDay = dayjs(bookingDate).day();
-  if (bookedDay > 0 && bookedDay < 6) {
-    if (product.name === 'DAY SWIMMING') return 7500;
-    if (product.name === 'NIGHT SWIMMING') return 7500;
-    if (product.name.includes('OVERNIGHT SWIMMING')) return 15000;
+  if (process.env.GENERAL_APP_NAME === 'HydroResortManila' || process.env.NEXT_PUBLIC_APP === 'HydroResortManila') {
+    const bookedDay = dayjs(bookingDate).day();
+    if (bookedDay > 0 && bookedDay < 6) {
+      if (product.name === 'DAY SWIMMING') return 7500;
+      if (product.name === 'NIGHT SWIMMING') return 7500;
+      if (product.name.includes('OVERNIGHT SWIMMING')) return 15000;
+    }
   }
 
   return product.price;

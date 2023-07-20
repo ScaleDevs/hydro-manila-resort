@@ -22,7 +22,7 @@ export interface IStep3Props {
 }
 
 export function Step3({ onPrev, onNext }: IStep3Props) {
-  const { setBookingStateData, data } = useBookingStoreTrack();
+  const { setBookingStateData, data, selectedProduct, selectedRooms } = useBookingStoreTrack();
 
   const {
     register,
@@ -63,9 +63,9 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
           <Box w='400px'>
             <CostView
               guests={data.guests}
+              product={selectedProduct}
+              rooms={Array.from(selectedRooms, (entry) => entry[1])}
               bookedDate={data.bookingDate || undefined}
-              productId={data.productId}
-              roomId={data.roomId}
             />
           </Box>
         </Stack>

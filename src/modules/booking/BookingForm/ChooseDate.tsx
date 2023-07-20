@@ -2,16 +2,16 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import dayjs from 'dayjs';
 import { Box, IconButton, Stack, Text, chakra } from '@chakra-ui/react';
 import { BsChevronLeft, BsChevronRight } from 'react-icons/bs';
-import { IProduct } from '@/utils/types';
+import { ProductV2 } from '@/utils/types';
 import { GetApp } from '@/appspecs/theme';
 
 const LeftArrowIcon = chakra(BsChevronLeft);
 const RightArrowIcon = chakra(BsChevronRight);
 
 export interface IChooseDateProps {
-  chosenDate: string | null;
-  setChosenDate: Dispatch<SetStateAction<string | null>>;
-  setChosenSchedule: Dispatch<SetStateAction<IProduct | null>>;
+  chosenDate: string | undefined;
+  setChosenDate: Dispatch<SetStateAction<string | undefined>>;
+  setChosenSchedule: Dispatch<SetStateAction<ProductV2 | undefined>>;
 }
 
 export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: IChooseDateProps) {
@@ -72,7 +72,7 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
                 transition='background-color 0.25s'
                 onClick={() => {
                   setChosenDate(dateDisplay.format('YYYY-MM-DD'));
-                  setChosenSchedule(null);
+                  setChosenSchedule(undefined);
                 }}
               >
                 <Text textAlign='center' color={isActive ? 'white' : 'gray.400'} fontSize={{ base: 'sm', lg: 'md' }}>

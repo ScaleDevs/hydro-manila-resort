@@ -54,6 +54,20 @@ type TransactionLog {
   amount          Int
 }
 
+type Guests {
+  nonOverNightGuests Int
+  overNightGuests    Int
+}
+
+type GuestSettings {
+  overNightGuestFee       Int
+  minNonOverNightGuestPax Int
+  maxNonOverNightGuestPax Int
+  nonOverNightGuestFee    Int
+  minOverNightGuestPax    Int
+  maxOverNightGuestPax    Int
+}
+
 enum BookingRefundStatus {
   FAILED
   PROCESSING
@@ -72,19 +86,23 @@ model Product {
   scheduleStart      String
   scheduleEnd        String
   scheduleEndNextDay Boolean
-  withRooms          Boolean
+  includedRooms      String[]
   description        String?
   updateLogs         UpdateLog[]
-  Booking            Booking[]
 }
 
 model Room {
   roomId           String      @id @default(auto()) @map("_id") @db.ObjectId
   roomIdentityName String
   description      String?
-  withBathroom     Boolean
   guests           Int
   price            Float
+  withBathroom     Boolean
+  withAircon       Boolean
+  withFan          Boolean
+  bedSingle        Int
+  bedDouble        Int
+  bedQueen         Int
   updateLogs       UpdateLog[]
 }
 
@@ -96,9 +114,8 @@ model Booking {
   phoneNumber     String
   startSession    DateTime
   endSession      DateTime
-  guests          Int
-  roomId          String?            @db.ObjectId
-  product         Product            @relation(fields: [productId], references: [productId])
+  guests          Guests
+  rooms           String[]
   productId       String             @db.ObjectId
   receipt         Receipt
   updateLogs      BookingUpdateLog[]
@@ -111,13 +128,11 @@ model Booking {
 }
 
 model BookingSetting {
-  bookingSettingId String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingSettingId String        @id @default(auto()) @map("_id") @db.ObjectId
   bookingFee       Int
-  extraHeadFee     Int
-  minPax           Int
-  maxPax           Int
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime? @updatedAt
+  guests           GuestSettings
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime?     @updatedAt
 }
 
 model BookingRefund {

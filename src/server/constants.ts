@@ -18,11 +18,9 @@ export const constants = {
   },
 
   mailerSend: {
-    reusableTempId: process.env.MAILER_SEND_REUSALBE_TEMPLATE_ID ?? '',
-    bookingConfirmationTempId: process.env.MAILER_SEND_BOOKING_CONFIRMATION_TEMPLATE_ID ?? '',
-    supportEmail: process.env.MAILER_SEND_HYDRO_SUPPORT_EMAIL ?? 'hydroresort.manila@gmail.com',
+    supportEmail: process.env.MAILER_SEND_SUPPORT_EMAIL ?? 'scaledevs@gmail.com',
     fromEmail: process.env.MAILER_SEND_FROM_EMAIL,
-    fromName: process.env.MAILER_SEND_FROM_NAME ?? 'Hydro Resort Manila Team',
+    fromName: process.env.MAILER_SEND_FROM_NAME ?? 'ScaleDevs Team',
     apiKey: process.env.MAILER_SEND_API_KEY,
   },
 

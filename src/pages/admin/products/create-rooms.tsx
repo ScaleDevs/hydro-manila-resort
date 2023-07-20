@@ -7,19 +7,27 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Layout from '@/layouts/admin';
-import { NumberField } from '@/components/NumberField';
 import { TextField } from '@/components/TextField';
 import { trpc } from '@/utils/trpc';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
+import { GetApp } from '@/appspecs/theme';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
 
 const schema = z.object({
   roomIdentityName: z.string().min(1, 'Required'),
   description: z.string().optional(),
-  price: z.number({
-    invalid_type_error: 'Must be a number',
-  }),
+  price: z
+    .number({
+      invalid_type_error: 'Must be a number',
+    })
+    .min(1),
   withBathroom: z.boolean(),
-  guests: z.number(),
+  withAircon: z.boolean(),
+  withFan: z.boolean(),
+  bedSingle: z.number().min(0),
+  bedDouble: z.number().min(0),
+  bedQueen: z.number().min(0),
+  guests: z.number().min(1),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -32,6 +40,14 @@ function Admin() {
   const { mutate, isLoading } = trpc.room.create.useMutation();
   const toast = useToast();
 
+  const defaultValues = {
+    bedSingle: 0,
+    bedDouble: 0,
+    bedQueen: 0,
+    price: 0,
+    guests: 0,
+  };
+
   const {
     register,
     handleSubmit,
@@ -41,6 +57,7 @@ function Admin() {
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
+    defaultValues,
   });
 
   const createAddOnSubmit = (data: FormSchemaType) => {
@@ -51,12 +68,10 @@ function Admin() {
       description: description ? description : null,
     };
 
-    console.log(payload);
-
     mutate(payload, {
       onSuccess() {
         toast({
-          title: 'Product created.',
+          title: 'Room created.',
           status: 'success',
           duration: 9000,
           isClosable: true,
@@ -73,7 +88,7 @@ function Admin() {
       <Head>
         <title>Admin | Create Room</title>
         <meta name='description' content='Sample Home page with nextjs' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <Stack spacing={7} w='100%' bg='gray.50' p='25px' borderRadius='sm' boxShadow='xl'>
@@ -90,28 +105,61 @@ function Admin() {
             <form onSubmit={handleSubmit(createAddOnSubmit)}>
               <Stack spacing={6}>
                 <Stack direction={{ base: 'column', md: 'row' }}>
-                  <NumberField
+                  <TextField
                     register={register}
                     property='roomIdentityName'
+                    label='Room ID'
                     placeholder='Room ID'
                     errMsg={errors.roomIdentityName?.message}
                   />
                   <TextField
                     register={register}
                     property='description'
+                    label='Room Description'
                     placeholder='Room Description'
                     errMsg={errors.description?.message}
                   />
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }}>
-                  <NumberField
+                  <NumberFieldV2
                     register={register}
+                    value={watch('guests')}
                     property='guests'
-                    placeholder='Number of guests'
+                    label='Number of guests'
                     errMsg={errors.guests?.message}
                   />
-                  <NumberField register={register} property='price' placeholder='Room Price' errMsg={errors.price?.message} />
+                  <NumberFieldV2
+                    register={register}
+                    value={watch('price')}
+                    property='price'
+                    label='Room Price'
+                    errMsg={errors.price?.message}
+                  />
+                </Stack>
+
+                <Stack direction={{ base: 'column', md: 'row' }} spacing={3}>
+                  <NumberFieldV2
+                    register={register}
+                    value={watch('bedSingle')}
+                    property='bedSingle'
+                    label='How many Single Bed?'
+                    errMsg={errors.bedSingle?.message}
+                  />
+                  <NumberFieldV2
+                    register={register}
+                    value={watch('bedDouble')}
+                    property='bedDouble'
+                    label='How many Double Bed?'
+                    errMsg={errors.bedDouble?.message}
+                  />
+                  <NumberFieldV2
+                    register={register}
+                    value={watch('bedQueen')}
+                    property='bedQueen'
+                    label='How many Queen Bed?'
+                    errMsg={errors.bedQueen?.message}
+                  />
                 </Stack>
 
                 <Stack>
@@ -121,6 +169,26 @@ function Admin() {
                     value={watch('withBathroom')}
                     property='withBathroom'
                     errMsg={errors.withBathroom?.message}
+                  />
+                </Stack>
+
+                <Stack>
+                  <Label>Does it have a Air Condition?:</Label>
+                  <RadioBooleanField
+                    setValue={setValue}
+                    value={watch('withAircon')}
+                    property='withAircon'
+                    errMsg={errors.withAircon?.message}
+                  />
+                </Stack>
+
+                <Stack>
+                  <Label>Does it have a Electric Fan?:</Label>
+                  <RadioBooleanField
+                    setValue={setValue}
+                    value={watch('withFan')}
+                    property='withFan'
+                    errMsg={errors.withFan?.message}
                   />
                 </Stack>
 

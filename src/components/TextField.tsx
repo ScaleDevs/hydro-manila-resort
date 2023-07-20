@@ -1,3 +1,4 @@
+import { GetApp } from '@/appspecs/theme';
 import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
 
@@ -35,12 +36,12 @@ export function TextField({ register, property, placeholder, errMsg, onBlur, lab
       <Input
         {...fieldProps}
         placeholder={placeholder || ''}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal.400',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>

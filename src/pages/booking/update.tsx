@@ -11,6 +11,7 @@ import CustomerBankInput from '@/modules/booking/BookingUpdateRequestForm/Custom
 import ReviewDetails from '@/modules/booking/BookingUpdateRequestForm/ReviewDetails';
 import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
 import PaymentForm from '@/modules/payment/PaymentForm';
+import { GetApp } from '@/appspecs/theme';
 
 const CheckIcon = chakra(BsPatchCheckFill);
 
@@ -105,7 +106,7 @@ export default function UpdateBooking() {
       <Head>
         <title>Booking | Update</title>
         <meta name='description' content='form to cancel booking' />
-        <link rel='icon' href='/favicon.ico' />
+        <link rel='icon' href={GetApp.Favicon} />
       </Head>
 
       <br />

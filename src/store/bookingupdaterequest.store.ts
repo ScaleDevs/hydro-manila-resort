@@ -2,12 +2,15 @@ import create, { StateCreator } from 'zustand';
 import { createTrackedSelector } from 'react-tracked';
 import { devtools } from 'zustand/middleware';
 import { z } from 'zod';
-import { IBookingPublicOnly } from '@/utils/types';
+import { IBookingPublicOnly, IProduct, IRoom } from '@/utils/types';
 
 export const bookingRequestUpdatesSchema = z.object({
-  guests: z.number(),
+  guests: z.object({
+    overNightGuests: z.number(),
+    nonOverNightGuests: z.number(),
+  }),
   productId: z.string().min(1, 'Required'),
-  roomId: z.string().optional().nullable(),
+  rooms: z.array(z.string().min(1)),
   bookingDate: z.string().min(1, 'Required'),
 });
 
@@ -29,6 +32,8 @@ export type BookingUpdateRequestStates = {
   bookingUpdateCase: BookingUpdateCase;
   newTotal: number;
   isRequestSuccess: boolean;
+  enteredProduct?: IProduct;
+  enteredRooms: IRoom[];
   stepDescription: string;
   stepsLength: number;
 };
@@ -43,6 +48,8 @@ type BookingUpdateRequestActions = {
   setNewTotal: (amount: number) => void;
   setStepDescription: (desc: string) => void;
   setBookingUpdateStates: (data: Partial<BookingUpdateRequestStates>) => void;
+  setEnteredProduct: (product?: IProduct) => void;
+  setEnteredRooms: (rooms: IRoom[]) => void;
   resetStates: () => void;
 };
 
@@ -56,6 +63,7 @@ const initState: BookingUpdateRequestStates = {
   bookingUpdateCase: 'NORMAL',
   newTotal: 0,
   isRequestSuccess: false,
+  enteredRooms: [],
   stepDescription: 'Find Booking Record',
   stepsLength: 3,
 };
@@ -100,6 +108,14 @@ const stateStore = devtools((set) => ({
 
   setBookingUpdateCase: (data) => {
     set({ bookingUpdateCase: data });
+  },
+
+  setEnteredProduct: (product) => {
+    set({ enteredProduct: product });
+  },
+
+  setEnteredRooms: (rooms) => {
+    set({ enteredRooms: rooms });
   },
 
   resetStates: () => set({ ...initState }),

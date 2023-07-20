@@ -1,7 +1,8 @@
+import { Guests } from '@prisma/client';
 import create, { StateCreator } from 'zustand';
 import { createTrackedSelector } from 'react-tracked';
 import { devtools } from 'zustand/middleware';
-import { IProduct, IRoom } from '@/utils/types';
+import { ProductV2, IRoom } from '@/utils/types';
 
 export enum BookingSteps {
   step1 = 'Date & Time',
@@ -15,15 +16,15 @@ export type BookingPayload = {
   email: string;
   phoneNumber: string;
   bookingDate: string;
-  guests: number;
-  roomId: string | null;
+  guests: Guests;
+  roomIds: string[];
   productId: string;
 };
 
 export type BookingState = {
   data: BookingPayload;
-  selectedProduct: IProduct | null;
-  selectedRoom: IRoom | null;
+  selectedProduct: ProductV2 | undefined;
+  selectedRooms: Map<string, IRoom>;
   stepDescription: string;
   stepsLength: number;
 };
@@ -44,12 +45,15 @@ const initState: BookingState = {
     email: '',
     phoneNumber: '',
     bookingDate: '',
-    guests: 0,
-    roomId: null,
+    guests: {
+      nonOverNightGuests: 0,
+      overNightGuests: 0,
+    },
+    roomIds: [],
     productId: '',
   },
-  selectedProduct: null,
-  selectedRoom: null,
+  selectedProduct: undefined,
+  selectedRooms: new Map(),
   stepDescription: BookingSteps.step1,
   stepsLength: 5,
 };

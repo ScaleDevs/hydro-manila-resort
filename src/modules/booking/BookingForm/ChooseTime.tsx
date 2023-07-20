@@ -1,9 +1,24 @@
 import { Dispatch, SetStateAction } from 'react';
-import { Box, Skeleton, Stack, Text } from '@chakra-ui/react';
+import {
+  Alert,
+  AlertIcon,
+  Box,
+  Center,
+  Collapse,
+  Grid,
+  GridItem,
+  List,
+  ListIcon,
+  ListItem,
+  Skeleton,
+  Stack,
+  Text,
+} from '@chakra-ui/react';
 import dayjs from 'dayjs';
+import { AiOutlineCheck } from 'react-icons/ai';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, getISOFormatFromSchedule, getProductPrice } from '@/utils/helper';
-import { IProduct } from '@/utils/types';
+import { ProductV2 } from '@/utils/types';
 import { GetApp } from '@/appspecs/theme';
 
 const transformSchedule = (schedule: string) => {
@@ -14,9 +29,9 @@ const transformSchedule = (schedule: string) => {
 };
 
 export interface IChooseScheduleProps {
-  chosenDate: string | null;
-  chosenSchedule: IProduct | null;
-  setChosenSchedule: Dispatch<SetStateAction<IProduct | null>>;
+  chosenDate: string | undefined;
+  chosenSchedule: ProductV2 | undefined;
+  setChosenSchedule: Dispatch<SetStateAction<ProductV2 | undefined>>;
 }
 
 export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }: IChooseScheduleProps) {
@@ -30,7 +45,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
     endDate: dayjs(chosenDate).add(2, 'd').format(),
   });
 
-  const handleChosenSchedule = (product: IProduct) => setChosenSchedule(product);
+  const handleChosenSchedule = (product: ProductV2) => setChosenSchedule(product);
 
   return (
     <Box w='100%' mx='auto'>
@@ -38,15 +53,8 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
         Choose Time:
       </Text>
       <br />
-      <Stack
-        direction='column'
-        justifyContent={{ base: 'start', md: 'center' }}
-        alignItems='center'
-        spacing={1.5}
-        mx='auto'
-        overflowX='auto'
-      >
-        {isFetchingProducts || isFetchingBookedDates || !chosenDate ? (
+      <Grid templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={4} p='10px'>
+        {isFetchingProducts || isFetchingBookedDates ? (
           <>
             <Skeleton height='40px' w='100%' />
             <Skeleton height='40px' w='100%' />
@@ -84,48 +92,58 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
             }
 
             return (
-              <Stack
+              <GridItem
+                colSpan={1}
                 key={index}
-                direction='row'
-                bg={isActive ? GetApp.ActiveColor : isBlocked ? 'blackAlpha.500' : 'blackAlpha.100'}
-                borderRadius='10px'
-                w='100%'
-                py='7'
-                justifyContent='space-around'
+                borderRadius='md'
+                boxShadow='lg'
+                overflow='hidden'
+                transition='outline 0.1s linear'
                 cursor={isBlocked ? 'not-allowed' : 'pointer'}
-                _hover={isActive || isBlocked ? {} : { bg: 'blackAlpha.300' }}
-                transition='background-color 0.25s'
+                _hover={isActive || isBlocked ? {} : { outline: 'solid 2px', outlineColor: 'primary.1' }}
+                outline={isActive ? 'solid 4px' : '2px'}
+                outlineColor={isActive ? GetApp.ActiveColor : ''}
                 onClick={() => !isBlocked && handleChosenSchedule(record)}
               >
-                <Text
-                  textAlign='center'
-                  fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  fontWeight='semibold'
-                  color={isActive ? 'white' : 'black'}
+                <Center
+                  bg={isBlocked ? 'gray.300' : isActive ? GetApp.ActiveColor : 'primary.1'}
+                  py='7'
+                  flexDirection='column'
+                  transition='background-color 0.1s ease-in'
                 >
-                  {`${transformSchedule(record.scheduleStart)} - ${transformSchedule(record.scheduleEnd)}`}
-                </Text>
-                <Text
-                  textAlign='center'
-                  fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  fontWeight='semibold'
-                  color={isActive ? 'white' : 'black'}
-                >
-                  {record.withRooms ? 'WITH ROOMS' : 'NO ROOMS'}
-                </Text>
-                <Text
-                  textAlign='center'
-                  fontSize={{ base: 'xs', sm: 'sm', lg: 'md' }}
-                  fontWeight='semibold'
-                  color={isActive ? 'white' : 'black'}
-                >
-                  {PHpeso.format(getProductPrice(chosenDate, record))}
-                </Text>
-              </Stack>
+                  <Text textAlign='center' fontSize={{ base: 'xs', md: 'sm' }} fontWeight='semibold' color='white'>
+                    {record.name}
+                  </Text>
+                  <Text textAlign='center' fontSize={{ base: 'xs', md: 'sm' }} fontWeight='semibold' color='white'>
+                    {PHpeso.format(chosenDate ? getProductPrice(chosenDate, record) : 0)}
+                  </Text>
+                </Center>
+                <Stack py='7' textAlign='left' px='25px' fontSize={{ base: 'xs', md: 'sm' }}>
+                  <List spacing={3}>
+                    <ListItem listStyleType='none'>
+                      <ListIcon as={AiOutlineCheck} color='green.800' />
+                      {`${transformSchedule(record.scheduleStart)} - ${transformSchedule(record.scheduleEnd)}`}
+                    </ListItem>
+                    <ListItem>
+                      <ListIcon as={AiOutlineCheck} color='green.800' />
+                      {record.includedRooms.length > 0 ? 'Rooms' : 'No Rooms'}
+                    </ListItem>
+                  </List>
+                </Stack>
+              </GridItem>
             );
           })
         )}
-      </Stack>
+      </Grid>
+
+      <Collapse in={!!chosenSchedule && chosenSchedule.includedRooms.length > 0} animateOpacity>
+        <Stack p='10px'>
+          <Alert status='info' fontFamily='primary'>
+            <AlertIcon />
+            {chosenSchedule?.includedRoomsName.join(', ')} are the rooms for this schedule
+          </Alert>
+        </Stack>
+      </Collapse>
     </Box>
   );
 }

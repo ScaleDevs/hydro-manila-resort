@@ -8,6 +8,7 @@ import {
   BookingAttempt,
   Receipt,
   UpdateLog,
+  Guests,
 } from '@prisma/client';
 
 export type DateSession = {
@@ -25,20 +26,25 @@ export type IBookingRefund = BookingRefund;
 export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & DateSession;
 export type IBookingAttempt = Omit<BookingAttempt, 'startSession' | 'endSession'> & DateSession;
 export type IBookingPublicOnly = {
-  guests: number;
+  guests: Guests;
   startSession: Date | string;
   endSession: Date | string;
   productId: string;
-  roomId: string | null;
+  rooms: string[];
+  product: IProduct;
+  roomsObject: IRoom[];
   currentTotal: number;
 };
 
 export type CustomerUpdateBookingParams = {
-  guests?: number;
+  guests?: Guests;
   bookingDate?: string | Date;
   productId?: string;
-  roomId?: string | null;
+  rooms?: string[];
 };
+
+// handlers
+export type ProductV2 = IProduct & { includedRoomsName: string[] };
 
 // inputs
 export type IPaginationInputs = {
@@ -125,7 +131,7 @@ export type BookingStatusDisplay = {
   checkOutDate: string;
   scheduleType: string;
   roomName?: string;
-  guests?: number;
+  guests: Guests;
 };
 
 export interface PayMongoPaymentIntentMetaData {

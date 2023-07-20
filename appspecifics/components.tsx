@@ -33,6 +33,14 @@ const GetAppComp = {
 
     return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
   })(),
+  ImgSrcLogoNonWhite: (() => {
+    const result = {
+      VillaLeonora: '/VL_logo.png',
+      HydroResortManila: '/HYDRO_logo_crop.png',
+    };
+
+    return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
+  })(),
 };
 
 export default GetAppComp;

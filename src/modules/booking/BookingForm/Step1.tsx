@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Stack, Button, Box, Collapse } from '@chakra-ui/react';
 
-import { IProduct } from '@/utils/types';
+import { ProductV2 } from '@/utils/types';
 import useBookingStoreTrack from '@/store/booking.store';
 import CostView from '../CostView';
 import { ChooseDate } from './ChooseDate';
@@ -12,9 +12,9 @@ interface Step1Props {
 }
 
 export function Step1({ onNext }: Step1Props) {
-  const { setBookingStateData, setBookingState, data, selectedProduct } = useBookingStoreTrack();
-  const [chosenDate, setChosenDate] = useState<string | null>(data.bookingDate || null);
-  const [chosenSchedule, setChosenSchedule] = useState<IProduct | null>(selectedProduct);
+  const { setBookingStateData, setBookingState, data, selectedProduct, selectedRooms } = useBookingStoreTrack();
+  const [chosenDate, setChosenDate] = useState<string | undefined>(data.bookingDate || undefined);
+  const [chosenSchedule, setChosenSchedule] = useState<ProductV2 | undefined>(selectedProduct);
 
   const isDisabled = () => !chosenDate || !chosenSchedule;
 
@@ -43,9 +43,9 @@ export function Step1({ onNext }: Step1Props) {
         <Box w='400px'>
           <CostView
             guests={data.guests}
+            product={chosenSchedule || selectedProduct}
+            rooms={Array.from(selectedRooms, (entry) => entry[1])}
             bookedDate={chosenDate || undefined}
-            productId={chosenSchedule?.productId || data.productId}
-            roomId={data.roomId}
           />
         </Box>
       </Stack>

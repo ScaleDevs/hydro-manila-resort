@@ -2,7 +2,8 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { UpdateLog } from '@prisma/client';
 import { IFindProductsInput, ProductRepository } from '@/repo/product.repo';
-import { IProduct } from '@/utils/types';
+import { ProductV2, IProduct } from '@/utils/types';
+import { RoomRepository } from '../repository/room.repo';
 
 export * as ProductHandler from './product.handler';
 
@@ -17,7 +18,7 @@ export const createProductHandler = async (details: {
   description?: string | undefined;
   price: number;
   scheduleEndNextDay: boolean;
-  withRooms: boolean;
+  includedRooms: string[];
   scheduleStartHour: number;
   scheduleStartMin: number;
   scheduleStartPost: 'AM' | 'PM';
@@ -36,7 +37,7 @@ export const createProductHandler = async (details: {
       scheduleEndMin,
       scheduleEndPost,
       scheduleEndNextDay,
-      withRooms,
+      includedRooms,
       description,
     } = details;
 
@@ -46,7 +47,7 @@ export const createProductHandler = async (details: {
       scheduleStart: `${scheduleStartHour}:${scheduleStartMin === 0 ? '00' : scheduleStartMin}:00 ${scheduleStartPost}`,
       scheduleEnd: `${scheduleEndHour}:${scheduleEndMin === 0 ? '00' : scheduleEndMin}:00 ${scheduleEndPost}`,
       scheduleEndNextDay,
-      withRooms,
+      includedRooms,
       description: description === undefined ? null : description,
       updateLogs: [],
     };
@@ -59,7 +60,26 @@ export const createProductHandler = async (details: {
 
 export const getProductsHandler = async (inputs: IFindProductsInput) => {
   try {
-    return ProductRepository.findProducts(inputs);
+    const result = await ProductRepository.findProducts(inputs);
+    const roomsResult = await RoomRepository.findManyRoom({ limit: 100, page: 1 });
+    const roomsMap = new Map(roomsResult.records.map((val) => [val.roomId, val.roomIdentityName]));
+    const products: ProductV2[] = [];
+
+    for (const product of result.records) {
+      const includedRoomsName: string[] = [];
+
+      for (const roomId of product.includedRooms) includedRoomsName.push(roomsMap.get(roomId) || '');
+
+      products.push({
+        ...product,
+        includedRoomsName,
+      });
+    }
+
+    return {
+      pageCount: result.pageCount,
+      records: products,
+    };
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }

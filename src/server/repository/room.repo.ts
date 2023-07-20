@@ -8,7 +8,7 @@ export type IFindManyroomInput = {
 } & IPaginationInputs;
 
 class Respository {
-  public async createRoom(data: Omit<IRoom, 'roomId' | 'activeVersion'>) {
+  public async createRoom(data: Omit<IRoom, 'roomId'>) {
     try {
       const room = await prisma.room.create({ data: { ...data } });
       return room;
@@ -20,6 +20,12 @@ class Respository {
   public async findRoomById(id: string) {
     const room = await prisma.room.findFirst({ where: { roomId: id } });
     if (!room) throw new TRPCError({ code: 'NOT_FOUND', message: 'Room not found!' });
+    return room;
+  }
+
+  public async findRoomsByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    const room = await prisma.room.findMany({ where: { roomId: { in: ids } } });
     return room;
   }
 
