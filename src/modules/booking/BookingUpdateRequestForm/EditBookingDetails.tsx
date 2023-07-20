@@ -255,7 +255,12 @@ export default function UpdateBookingRequestForm({ previousStep, nextStep }: IUp
             </Stack>
 
             <br />
-            <CostView rooms={selectedRooms} product={selectedProduct} guests={watch('guests')} />
+            <CostView
+              rooms={selectedRooms}
+              product={selectedProduct}
+              guests={watch('guests')}
+              bookedDate={watch('bookingDate')}
+            />
             <br />
 
             {!!formError && (

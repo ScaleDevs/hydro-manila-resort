@@ -19,8 +19,12 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
     if (!bookingSetting) return 0;
     const { guests: guestSettings } = bookingSetting;
     let total = 0;
+
     rooms.forEach((roomInfo) => (total += roomInfo.price));
+
     if (product && bookedDate) total += getProductPrice(bookedDate, product);
+    else if (product) total += product.price;
+
     if (guests) {
       if (guests.overNightGuests > guestSettings.minOverNightGuestPax)
         total += getExtraHeadsTotal(guests.overNightGuests, guestSettings.minOverNightGuestPax, guestSettings.overNightGuestFee);
@@ -31,6 +35,7 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
           guestSettings.nonOverNightGuestFee,
         );
     }
+
     return total;
   };
 

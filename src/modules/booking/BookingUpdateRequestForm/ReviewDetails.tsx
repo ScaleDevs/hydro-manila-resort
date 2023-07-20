@@ -213,7 +213,12 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
 
       <br />
 
-      <CostView product={enteredProduct} rooms={enteredRooms} guests={bookingUpdates.guests || bookingInfo.guests} />
+      <CostView
+        product={enteredProduct}
+        rooms={enteredRooms}
+        guests={bookingUpdates.guests || bookingInfo.guests}
+        bookedDate={bookingUpdates.bookingDate || (bookingInfo.startSession as string).split('T')[0]}
+      />
 
       <br />
 
