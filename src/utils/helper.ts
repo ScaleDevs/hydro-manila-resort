@@ -66,5 +66,13 @@ export const getProductPrice = (bookingDate: string, product: IProduct) => {
     }
   }
 
+  if (process.env.GENERAL_APP_NAME === 'VillaLeonora' || process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
+    const bookedDay = dayjs(bookingDate).day();
+    if (product.name.includes('OVERNIGHT')) {
+      if (bookedDay > 0 && bookedDay < 5) return 12000;
+      else return 15000;
+    }
+  }
+
   return product.price;
 };
