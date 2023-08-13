@@ -22,13 +22,15 @@ export interface INumberFieldV2Props {
   errMsg?: string;
   onChange?: (value: any) => void;
   onBlur?: () => void;
+  maxValue?: number;
+  disabled?: boolean;
 }
 
 export function NumberFieldV2(props: INumberFieldV2Props) {
-  const { label, required, register, property, onBlur, onChange, value, errMsg } = props;
+  const { label, required, register, property, onBlur, onChange, value, errMsg, maxValue, disabled } = props;
 
   const setFormValue = (v: string) => {
-    if (v === '') return 0;
+    if (v === '') return undefined;
     if (v === '0') return parseFloat(v);
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
   };
@@ -54,9 +56,10 @@ export function NumberFieldV2(props: INumberFieldV2Props) {
           </Text>
         )}
       </Text>
-      <NumberInput value={value} onChange={onChange}>
+      <NumberInput value={value} onChange={onChange} max={maxValue} min={0}>
         <NumberInputField
           {...inputProps}
+          disabled={!!disabled}
           borderRadius='sm'
           transition='outline 0.1s linear'
           borderColor='blackAlpha.500'

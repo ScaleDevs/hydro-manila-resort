@@ -37,8 +37,9 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     limit: 100,
   });
   const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate, isLoading: isUpdating, isSuccess, error } = trpc.booking.updateBooking.useMutation();
-  const { data: bookingSetting, isLoading: bookingSettingLoader } = trpc.bookingSetting.getBookingSetting.useQuery();
+  const { mutate: updateBookingMutate, isLoading: isUpdating, isSuccess, error } = trpc.booking.updateBooking.useMutation();
+  const { mutate: checkAvailabilityMutate, isLoading: isCheckingScheduleLoading } =
+    trpc.booking.checkBookingAvailability.useMutation();
   const ctx = trpc.useContext();
 
   const {
@@ -59,11 +60,13 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     if (productsData) setSelectedProduct(productsData.records.find((v) => v.productId === value));
   };
 
-  const submitUpdate = (data: FormSchemaType) => {
-    if (!bookingInfo || !bookingSetting) return;
-    const { guests: guestSetting } = bookingSetting;
+  const submitUpdate = async (data: FormSchemaType) => {
+    if (!bookingInfo) return;
+
+    const { guestSetting } = selectedProduct || bookingInfo.product;
+
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
-      setFormError('Schedule is not available! Kindly choose another date');
+      setFormError('Schedule is done and not editable!');
       return;
     }
     if (guestSetting.maxNonOverNightGuestPax < data.guests.nonOverNightGuests) {
@@ -87,7 +90,25 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
       return;
     }
 
-    mutate(
+    if (!!updates.bookingDate || !!updates.productId) {
+      const isSchedTaken = await new Promise((resolve) => {
+        checkAvailabilityMutate(
+          {
+            bookingDate: updates.bookingDate || data.bookingDate,
+            productId: updates.productId || data.productId,
+          },
+          {
+            onSuccess(isSchedTaken) {
+              resolve(isSchedTaken);
+            },
+          },
+        );
+      });
+
+      if (!!isSchedTaken) setFormError('Schedule is taken! Kindly choose another schedule');
+    }
+
+    updateBookingMutate(
       {
         bookingId: bookingInfo.id,
         data: updates,
@@ -102,7 +123,7 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     );
   };
 
-  if (fetchingBookingInfo || fetchingProducts || fetchingRooms || bookingSettingLoader)
+  if (fetchingBookingInfo || fetchingProducts || fetchingRooms)
     return (
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         <Heading textAlign='center'>EDIT BOOKING</Heading>
@@ -190,7 +211,7 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
               </>
             )}
 
-            <Button type='submit' isLoading={isUpdating}>
+            <Button type='submit' isLoading={isUpdating || isCheckingScheduleLoading}>
               UPDATE BOOKING
             </Button>
           </form>

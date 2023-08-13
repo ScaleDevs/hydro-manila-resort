@@ -23,6 +23,7 @@ export type BookingPayload = {
 
 export type BookingState = {
   data: BookingPayload;
+  freeGuests: number;
   selectedProduct: ProductV2 | undefined;
   selectedRooms: Map<string, IRoom>;
   stepDescription: string;
@@ -52,6 +53,7 @@ const initState: BookingState = {
     roomIds: [],
     productId: '',
   },
+  freeGuests: 0,
   selectedProduct: undefined,
   selectedRooms: new Map(),
   stepDescription: BookingSteps.step1,

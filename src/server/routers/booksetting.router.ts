@@ -8,14 +8,6 @@ export const bookingSettingRouter = router({
     .input(
       z.object({
         bookingFee: z.number(),
-        guests: z.object({
-          overNightGuestFee: z.number(),
-          minNonOverNightGuestPax: z.number(),
-          maxNonOverNightGuestPax: z.number(),
-          nonOverNightGuestFee: z.number(),
-          minOverNightGuestPax: z.number(),
-          maxOverNightGuestPax: z.number(),
-        }),
       }),
     )
     .mutation(async ({ input }) => {

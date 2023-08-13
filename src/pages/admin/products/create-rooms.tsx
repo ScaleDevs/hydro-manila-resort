@@ -53,7 +53,6 @@ function Admin() {
     handleSubmit,
     setValue,
     formState: { errors },
-    watch,
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
@@ -80,9 +79,6 @@ function Admin() {
       },
     });
   };
-
-  console.log(errors);
-
   return (
     <Layout>
       <Head>
@@ -122,40 +118,25 @@ function Admin() {
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }}>
-                  <NumberFieldV2
-                    register={register}
-                    value={watch('guests')}
-                    property='guests'
-                    label='Number of guests'
-                    errMsg={errors.guests?.message}
-                  />
-                  <NumberFieldV2
-                    register={register}
-                    value={watch('price')}
-                    property='price'
-                    label='Room Price'
-                    errMsg={errors.price?.message}
-                  />
+                  <NumberFieldV2 register={register} property='guests' label='Number of guests' errMsg={errors.guests?.message} />
+                  <NumberFieldV2 register={register} property='price' label='Room Price' errMsg={errors.price?.message} />
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }} spacing={3}>
                   <NumberFieldV2
                     register={register}
-                    value={watch('bedSingle')}
                     property='bedSingle'
                     label='How many Single Bed?'
                     errMsg={errors.bedSingle?.message}
                   />
                   <NumberFieldV2
                     register={register}
-                    value={watch('bedDouble')}
                     property='bedDouble'
                     label='How many Double Bed?'
                     errMsg={errors.bedDouble?.message}
                   />
                   <NumberFieldV2
                     register={register}
-                    value={watch('bedQueen')}
                     property='bedQueen'
                     label='How many Queen Bed?'
                     errMsg={errors.bedQueen?.message}
@@ -164,32 +145,17 @@ function Admin() {
 
                 <Stack>
                   <Label>Does it have a bathroom:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withBathroom')}
-                    property='withBathroom'
-                    errMsg={errors.withBathroom?.message}
-                  />
+                  <RadioBooleanField setValue={setValue} property='withBathroom' errMsg={errors.withBathroom?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Air Condition?:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withAircon')}
-                    property='withAircon'
-                    errMsg={errors.withAircon?.message}
-                  />
+                  <RadioBooleanField setValue={setValue} property='withAircon' errMsg={errors.withAircon?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Electric Fan?:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withFan')}
-                    property='withFan'
-                    errMsg={errors.withFan?.message}
-                  />
+                  <RadioBooleanField setValue={setValue} property='withFan' errMsg={errors.withFan?.message} />
                 </Stack>
 
                 <Button type='submit' borderRadius='sm' isLoading={isLoading}>

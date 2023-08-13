@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import useBookingStoreTrack from '@/store/booking.store';
 import { TextField } from '@/components/TextField';
-import CostView from '../CostView';
+import CostView from '../components/CostView';
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),

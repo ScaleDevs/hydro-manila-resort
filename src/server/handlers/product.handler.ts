@@ -25,6 +25,15 @@ export const createProductHandler = async (details: {
   scheduleEndHour: number;
   scheduleEndMin: number;
   scheduleEndPost: 'AM' | 'PM';
+  isAllRooms: boolean;
+  guestSetting: {
+    nonOverNightGuestFee: number;
+    minNonOverNightGuestPax: number;
+    maxNonOverNightGuestPax: number;
+    overNightGuestFee: number;
+    minOverNightGuestPax: number;
+    maxOverNightGuestPax: number;
+  };
 }) => {
   try {
     const {
@@ -39,6 +48,7 @@ export const createProductHandler = async (details: {
       scheduleEndNextDay,
       includedRooms,
       description,
+      ...rest
     } = details;
 
     const data: Omit<IProduct, 'productId'> = {
@@ -50,6 +60,7 @@ export const createProductHandler = async (details: {
       includedRooms,
       description: description === undefined ? null : description,
       updateLogs: [],
+      ...rest,
     };
 
     return ProductRepository.createProduct(data);

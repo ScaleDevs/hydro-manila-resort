@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { trpc } from '@/utils/trpc';
+import useUpdateBookingStoreTrack from '@/store/update_booking.store';
 import { TextField } from '@/components/TextField';
-import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
 
 const schema = z.object({
   refNo: z.string().min(1, 'Required'),
@@ -19,7 +19,7 @@ export interface IFindBookingInfoFormProps {
 }
 
 export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormProps) {
-  const { setBookingReferenceNo, setBookingInfo, setEnteredProduct, setEnteredRooms } = useBookingUpdateRequestStoreTrack();
+  const { setBookingReferenceNo, setBookingInfo, setStateField } = useUpdateBookingStoreTrack();
   const [errorMessage, setErrorMessage] = useState('');
 
   const { mutate, isLoading } = trpc.booking.getBookingByRefNoPublic.useMutation();
@@ -33,8 +33,20 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
       onSuccess(data) {
         setBookingReferenceNo(payload.refNo);
         setBookingInfo(data);
-        setEnteredProduct(data.product);
-        setEnteredRooms(data.roomsObject);
+
+        setStateField('selectedProduct', data.product);
+        setStateField('selectedRooms', new Map(Array.from(data.roomsObject, (v) => [v.roomId, v])));
+        setStateField(
+          'currentFreeGuests',
+          (() => {
+            const guests = !!data.product.scheduleEndNextDay ? data.guests.overNightGuests : data.guests.nonOverNightGuests;
+            const minGuestsAllowed = !!data.product.scheduleEndNextDay
+              ? data.product.guestSetting.minOverNightGuestPax
+              : data.product.guestSetting.minNonOverNightGuestPax;
+
+            return guests > minGuestsAllowed ? minGuestsAllowed : guests;
+          })(),
+        );
         nextStep();
       },
       onError(error) {
@@ -47,6 +59,13 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
 
   return (
     <>
+      <Alert status='info' borderRadius='sm' color='blue.600'>
+        <AlertIcon />
+        You are only allowed to update the Date, Guests, & Rooms
+      </Alert>
+
+      <br />
+
       {!!errorMessage && (
         <>
           <Alert status='error' borderRadius='sm' color='red.600'>

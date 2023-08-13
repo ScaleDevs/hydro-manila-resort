@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Text, useToast, SlideFade, Center } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Text, useToast, SlideFade, Center, Collapse } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,20 +14,111 @@ import { SelectField } from '@/components/SelectField';
 import { RadioBooleanField } from '@/components/RadioBooleanField';
 import { trpc } from '@/utils/trpc';
 import { GetApp } from '@/appspecs/theme';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
 
-const schema = z.object({
-  name: z.string().min(1, 'Required'),
-  description: z.string().optional(),
-  price: z.number(),
-  scheduleStartHour: z.number().max(12, 'Max value is 12'),
-  scheduleStartMin: z.number().max(59, 'Max value is 59'),
-  scheduleStartPost: z.enum(['AM', 'PM']),
-  scheduleEndHour: z.number().max(12, 'Max value is 12'),
-  scheduleEndMin: z.number().max(59, 'Max value is 59'),
-  scheduleEndPost: z.enum(['AM', 'PM']),
-  scheduleEndNextDay: z.boolean(),
-  includedRooms: z.map(z.string().min(1), z.string().min(1)),
-});
+const schema = z
+  .object({
+    name: z.string().min(1, 'Required'),
+    description: z.string().optional(),
+    price: z.number(),
+    scheduleStartHour: z.number().max(12, 'Max value is 12'),
+    scheduleStartMin: z.number().max(59, 'Max value is 59'),
+    scheduleStartPost: z.enum(['AM', 'PM']),
+    scheduleEndHour: z.number().max(12, 'Max value is 12'),
+    scheduleEndMin: z.number().max(59, 'Max value is 59'),
+    scheduleEndPost: z.enum(['AM', 'PM']),
+    scheduleEndNextDay: z.boolean(),
+    guestSetting: z.object({
+      nonOverNightGuestFee: z.number(),
+      minNonOverNightGuestPax: z.number(),
+      maxNonOverNightGuestPax: z.number(),
+      overNightGuestFee: z.number(),
+      minOverNightGuestPax: z.number(),
+      maxOverNightGuestPax: z.number(),
+    }),
+    isAllRooms: z.boolean(),
+    includedRooms: z.map(z.string().min(1), z.string().min(1)),
+  })
+  .superRefine((data, ctx) => {
+    const { guestSetting, scheduleEndNextDay } = data;
+
+    // if schedule is overnight
+    if (!!scheduleEndNextDay) {
+      if (guestSetting.minOverNightGuestPax === 0)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minOverNightGuestPax'],
+          message: 'Should be greater than 0',
+        });
+
+      if (guestSetting.maxOverNightGuestPax === 0)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.maxOverNightGuestPax'],
+          message: 'Should be greater than 0',
+        });
+
+      if (
+        guestSetting.minOverNightGuestPax > guestSetting.maxOverNightGuestPax ||
+        guestSetting.minOverNightGuestPax === guestSetting.maxOverNightGuestPax
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minOverNightGuestPax'],
+          message: 'Should be lower than Max Overnight Pax Field',
+        });
+
+      // allow non overnight to have 0 values
+      if (
+        !(guestSetting.minNonOverNightGuestPax === 0 && guestSetting.maxNonOverNightGuestPax === 0) &&
+        (guestSetting.minNonOverNightGuestPax > guestSetting.maxNonOverNightGuestPax ||
+          guestSetting.minNonOverNightGuestPax === guestSetting.maxNonOverNightGuestPax)
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minNonOverNightGuestPax'],
+          message: 'Should be lower than Max Non Overnight Pax Field',
+        });
+    }
+    // if schedule is non-overnight
+    else {
+      if (guestSetting.minNonOverNightGuestPax === 0)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minNonOverNightGuestPax'],
+          message: 'Should be greater than 0',
+        });
+
+      if (guestSetting.maxNonOverNightGuestPax === 0)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.maxNonOverNightGuestPax'],
+          message: 'Should be greater than 0',
+        });
+
+      if (
+        guestSetting.minNonOverNightGuestPax > guestSetting.maxNonOverNightGuestPax ||
+        guestSetting.minNonOverNightGuestPax === guestSetting.maxNonOverNightGuestPax
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minNonOverNightGuestPax'],
+          message: 'Should be lower than Max Overnight Pax Field',
+        });
+
+      // allow overnight to have 0 values
+      if (
+        !(guestSetting.minOverNightGuestPax === 0 && guestSetting.maxOverNightGuestPax === 0) &&
+        (guestSetting.minOverNightGuestPax > guestSetting.maxOverNightGuestPax ||
+          guestSetting.minOverNightGuestPax === guestSetting.maxOverNightGuestPax)
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['guestSetting.minOverNightGuestPax'],
+          message: 'Should be lower than Max Non Overnight Pax Field',
+        });
+    }
+  });
 
 type FormSchemaType = z.infer<typeof schema>;
 
@@ -52,6 +143,14 @@ function CreateProduct() {
     resolver: zodResolver(schema),
     defaultValues: {
       includedRooms: new Map(),
+      guestSetting: {
+        minNonOverNightGuestPax: 0,
+        maxNonOverNightGuestPax: 0,
+        nonOverNightGuestFee: 0,
+        minOverNightGuestPax: 0,
+        maxOverNightGuestPax: 0,
+        overNightGuestFee: 0,
+      },
     },
   });
 
@@ -189,41 +288,100 @@ function CreateProduct() {
                   <Label>Does Schedule End Next Day?:</Label>
                   <RadioBooleanField
                     setValue={setValue}
-                    value={watch('scheduleEndNextDay')}
                     property='scheduleEndNextDay'
                     errMsg={errors.scheduleEndNextDay?.message}
                   />
                 </Stack>
 
+                {/* apply guests settings */}
                 <Stack>
-                  <Label>Pick Rooms Included with this schedule:</Label>
-                  <Stack direction={{ base: 'column', sm: 'row' }}>
-                    {data?.records.map((info) => {
-                      const isActive = !!watch('includedRooms')?.get(info.roomId);
+                  <Label>NON-OVERNIGHT GUEST SETTINGS:</Label>
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <NumberFieldV2
+                      label='Minimum Pax'
+                      register={register}
+                      property='guestSetting.minNonOverNightGuestPax'
+                      errMsg={errors.guestSetting?.minNonOverNightGuestPax?.message}
+                    />
 
-                      return (
-                        <Center
-                          key={info.roomId}
-                          bg={isActive ? GetApp.ActiveColor : 'blackAlpha.200'}
-                          p='15px'
-                          rounded='lg'
-                          _hover={{ cursor: 'pointer', bg: isActive ? '' : 'blackAlpha.300' }}
-                          transition='background-color 0.25s'
-                          onClick={() => {
-                            const newMapValue = watch('includedRooms');
-                            if (isActive) newMapValue.delete(info.roomId);
-                            else newMapValue.set(info.roomId, info.roomId);
+                    <NumberFieldV2
+                      label='Maximum Pax'
+                      register={register}
+                      property='guestSetting.maxNonOverNightGuestPax'
+                      errMsg={errors.guestSetting?.maxNonOverNightGuestPax?.message}
+                    />
 
-                            setValue('includedRooms', newMapValue);
-                          }}
-                        >
-                          {info.roomIdentityName}
-                        </Center>
-                      );
-                    })}
+                    <NumberFieldV2
+                      label='Per Head Fee'
+                      register={register}
+                      property='guestSetting.nonOverNightGuestFee'
+                      errMsg={errors.guestSetting?.nonOverNightGuestFee?.message}
+                    />
                   </Stack>
-                  {errors.includedRooms ? <Text color='red'>{errors.includedRooms.message}!</Text> : ''}
                 </Stack>
+
+                <Stack>
+                  <Label>OVERNIGHT GUEST SETTINGS:</Label>
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <NumberFieldV2
+                      label='Minimum Pax'
+                      register={register}
+                      property='guestSetting.minOverNightGuestPax'
+                      errMsg={errors.guestSetting?.minOverNightGuestPax?.message}
+                    />
+
+                    <NumberFieldV2
+                      label='Maximum Pax'
+                      register={register}
+                      property='guestSetting.maxOverNightGuestPax'
+                      errMsg={errors.guestSetting?.maxOverNightGuestPax?.message}
+                    />
+
+                    <NumberFieldV2
+                      label='Per Head Fee'
+                      register={register}
+                      property='guestSetting.overNightGuestFee'
+                      errMsg={errors.guestSetting?.overNightGuestFee?.message}
+                    />
+                  </Stack>
+                </Stack>
+
+                <Stack>
+                  <Label>Does Include All Rooms?:</Label>
+                  <RadioBooleanField setValue={setValue} property='isAllRooms' errMsg={errors.scheduleEndNextDay?.message} />
+                </Stack>
+
+                <Collapse in={watch('isAllRooms') === false} animateOpacity>
+                  <Stack>
+                    <Label>Pick Rooms Included with this schedule:</Label>
+                    <Stack direction={{ base: 'column', sm: 'row' }}>
+                      {data?.records.map((info) => {
+                        const isActive = !!watch('includedRooms')?.get(info.roomId);
+
+                        return (
+                          <Center
+                            key={info.roomId}
+                            bg={isActive ? GetApp.ActiveColor : 'blackAlpha.200'}
+                            p='15px'
+                            rounded='lg'
+                            _hover={{ cursor: 'pointer', bg: isActive ? '' : 'blackAlpha.300' }}
+                            transition='background-color 0.25s'
+                            onClick={() => {
+                              const newMapValue = watch('includedRooms');
+                              if (isActive) newMapValue.delete(info.roomId);
+                              else newMapValue.set(info.roomId, info.roomId);
+
+                              setValue('includedRooms', newMapValue);
+                            }}
+                          >
+                            {info.roomIdentityName}
+                          </Center>
+                        );
+                      })}
+                    </Stack>
+                    {errors.includedRooms ? <Text color='red'>{errors.includedRooms.message}!</Text> : ''}
+                  </Stack>
+                </Collapse>
 
                 <Button type='submit' borderRadius='sm' isLoading={isLoading}>
                   Add Product

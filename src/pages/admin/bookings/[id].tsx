@@ -125,11 +125,15 @@ function Component({ id }: Props) {
 
                   <Stack spacing={0} direction='row' justifyContent='space-between'>
                     <Text>ROOM:</Text>
-                    <Text>
-                      {data?.roomsObject && data?.roomsObject.length > 0
-                        ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
-                        : 'N/A'}
-                    </Text>
+                    {!!data?.product.isAllRooms ? (
+                      <Text>All Rooms</Text>
+                    ) : (
+                      <Text>
+                        {data?.roomsObject && data?.roomsObject.length > 0
+                          ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
+                          : 'N/A'}
+                      </Text>
+                    )}
                   </Stack>
 
                   <Divider borderColor='gray.400' />

@@ -18,7 +18,6 @@ import { ScheduledEventRepository } from '@/server/repository/scheduledevent.rep
 import { RoomRepository } from '@/server/repository/room.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
-import { BookingSettingRepository } from '@/server/repository/bookingsetting.repo';
 import {
   notificationUpdateFailed,
   sendRefundEmailConflictBooking,
@@ -61,16 +60,22 @@ class Service {
   public async extendedBookingInstance(booking: IBooking) {
     try {
       const product = await ProductRepository.findProductById(booking.productId);
-
-      const bookingResult: typeof booking & { product: IProduct } & { roomsObject: IRoom[] } = {
+      const bookingResult: typeof booking & { product: IProduct & { includedRoomsName: string[] } } & { roomsObject: IRoom[] } = {
         ...booking,
-        product,
+        product: {
+          ...product,
+          includedRoomsName: [],
+        },
         roomsObject: [],
       };
 
       if (booking.rooms.length > 0) {
         const rooms = await RoomRepository.findRoomsByIds(booking.rooms);
         bookingResult['roomsObject'] = rooms;
+        bookingResult.product = {
+          ...product,
+          includedRoomsName: rooms.map((v) => v.roomIdentityName),
+        };
       }
 
       return bookingResult;
@@ -224,7 +229,7 @@ class Service {
         summary: updatedBooking.name,
         description: `${product.name} / ${updatedBooking.guests.nonOverNightGuests ?? 0} Non-Overnight PAX /  ${
           updatedBooking.guests.overNightGuests ?? 0
-        } Overnight PAX / ${rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
+        } Overnight PAX / ${product.isAllRooms ? 'All Rooms' : rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
       };
 
       if (!!data.startSession && !!data.endSession) {
@@ -275,17 +280,16 @@ class Service {
 
       newTotal += productPrice;
       if (!!guests) {
-        const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-        const { guests: guestSettings } = bookingSettings;
+        const { guestSetting } = product;
         const extraOverNightPaxTotal = getExtraHeadsTotal(
           guests.overNightGuests,
-          guestSettings.minOverNightGuestPax,
-          guestSettings.overNightGuestFee,
+          guestSetting.minOverNightGuestPax,
+          guestSetting.overNightGuestFee,
         );
         const extraNonOverNightPaxTotal = getExtraHeadsTotal(
           guests.nonOverNightGuests,
-          guestSettings.minNonOverNightGuestPax,
-          guestSettings.nonOverNightGuestFee,
+          guestSetting.minNonOverNightGuestPax,
+          guestSetting.nonOverNightGuestFee,
         );
         newTotal += extraNonOverNightPaxTotal + extraOverNightPaxTotal;
         additionalHeadsPrice = extraNonOverNightPaxTotal + extraOverNightPaxTotal;
@@ -343,7 +347,7 @@ class Service {
       if (!!newRooms)
         modifications.push({
           name: 'Rooms',
-          value: !!newRooms.length ? newRooms.join(', ') : 'None',
+          value: newProduct?.isAllRooms ? 'All Rooms' : !!newRooms.length ? newRooms.join(', ') : 'None',
         });
 
       if (!!newProduct || bookingRequestUpdate.bookingDate) {
@@ -374,12 +378,12 @@ class Service {
         });
       }
 
-      // send email to both hydro team & customer
+      // send email to both support team & customer
       await updateBookingPartialRefundEmail(bookingRecord, PHpeso.format(bookingRecord.receipt.total - newTotal), {
         reference_no: bookingRecord.ref_no,
         guests: createGuestsSummary(bookingRecord.guests),
         booking_type: oldProduct.name,
-        room: !!oldRooms?.length ? oldRooms.join(', ') : 'None',
+        room: oldProduct.isAllRooms ? 'All Rooms' : !!oldRooms?.length ? oldRooms.join(', ') : 'None',
         check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         check_out_date: dayjs.utc(bookingRecord.endSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         modification: modifications,

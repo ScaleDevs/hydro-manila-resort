@@ -25,6 +25,7 @@ export function NumberField({
 }: INumberFieldProps) {
   const setFormValue = (v: string) => {
     if (v === '') return undefined;
+    if (v === '0') return parseFloat(v);
     return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
   };
 

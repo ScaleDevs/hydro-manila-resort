@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import { z } from 'zod';
 
-import { BookingSettingRepository } from '@/repo/bookingsetting.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
 import { BookingRepository } from '@/repo/booking.repo';
@@ -118,10 +117,9 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     return;
   }
 
-  const bookingSettings = await BookingSettingRepository.findFirstBookingSetting();
-  const { guests: guestSetting } = bookingSettings;
   const { guests } = parsed.data;
   const product = await ProductRepository.findProductById(parsed.data.productId);
+  const { guestSetting } = product;
   const rooms = await RoomRepository.findRoomsByIds(parsed.data.rooms);
   const bookedDate = dayjs.utc(parsed.data.startSession);
   const checkOutDate = dayjs.utc(parsed.data.endSession);
@@ -173,7 +171,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     summary: parsed.data.name,
     description: `${product?.name} / ${guests.nonOverNightGuests ?? 0} Non-Overnight Guests / ${
       guests.overNightGuests ?? 0
-    } Overnight Guests / ${rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'}`,
+    } Overnight Guests / ${product.isAllRooms ? 'All Rooms' : rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'}`,
     start: {
       dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
       timeZone: constants.general.timezone,
@@ -213,7 +211,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     recipientEmail: [parsed.data.email, constants.mailerSend.supportEmail],
     reference_number: parsed.data.ref_no,
     guest_name: parsed.data.name,
-    num_pax: parsed.data.guests.nonOverNightGuests,
+    num_pax: parsed.data.guests.overNightGuests + parsed.data.guests.nonOverNightGuests,
     checkin: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
     checkout: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
     booking_type: product?.name || '',

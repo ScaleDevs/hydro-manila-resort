@@ -1,4 +1,5 @@
 import * as React from 'react';
+import dayjs from 'dayjs';
 import {
   Box,
   Button,
@@ -10,15 +11,14 @@ import {
   Text,
   SlideFade,
   Center,
-  Spinner,
   Alert,
   AlertIcon,
 } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
-import { PHpeso } from '@/utils/helper';
-import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
+import { PHpeso, tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
+import useBookingUpdateRequestStoreTrack from '@/store/update_booking.store';
 import usePaymentStoreTrack from '@/store/payment.store';
-import CostView from '../CostView';
+import CostView from '../components/CostView';
 
 const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: string }) => {
   return (
@@ -42,20 +42,16 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
   const {
     customerBankInfo,
     bookingInfo,
-    enteredProduct,
-    enteredRooms,
+    selectedProduct,
+    selectedRooms,
     bookingUpdates,
     bookingReferenceNo,
     bookingUpdateCase,
     newTotal,
-    setIsRequestSuccess,
+    setStateField,
   } = useBookingUpdateRequestStoreTrack();
   const { setPaymentStates } = usePaymentStoreTrack();
 
-  const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
-    page: 1,
-    limit: 100,
-  });
   const {
     mutate: sendUpdateRequest,
     isLoading: isSendingUpdateRequest,
@@ -93,29 +89,17 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
         },
         {
           onSuccess() {
-            setIsRequestSuccess(true);
+            setStateField('isRequestSuccess', true);
           },
         },
       );
     }
   };
 
-  if (fetchingProducts)
+  if (!bookingInfo || !bookingUpdates || !selectedProduct)
     return (
       <Box w='100%' mx='auto' p='25px'>
-        <Heading textAlign='center'>EDIT BOOKING</Heading>
-        <SlideFade in>
-          <Center w='50%' h='300px' mx='auto'>
-            <Spinner size='xl' />
-          </Center>
-        </SlideFade>
-      </Box>
-    );
-
-  if (!bookingInfo || !bookingUpdates)
-    return (
-      <Box w='100%' mx='auto' p='25px'>
-        <Heading textAlign='center'>EDIT BOOKING</Heading>
+        <Heading textAlign='center'>REVIEW DETAILS</Heading>
         <SlideFade in>
           <Center w='50%' h='300px' mx='auto'>
             <Heading size='md' textTransform='uppercase'>
@@ -150,15 +134,21 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingInfo.guests.overNightGuests}`} />
                 )}
                 <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingInfo.guests.nonOverNightGuests}`} />
-                <FieldValueReport fieldName='Booked Date' value={(bookingInfo.startSession as string).split('T')[0]} />
                 <FieldValueReport
-                  fieldName='Schedule'
-                  value={productsData?.records.find((row) => row.productId === bookingInfo.productId)?.name || ''}
+                  fieldName='Check-In Date'
+                  value={utcDateToTzDayInstance(bookingInfo.startSession).format('MMM DD, YYYY hh:mm A')}
                 />
                 <FieldValueReport
-                  fieldName='Room'
-                  value={bookingInfo.roomsObject.map((room) => room.roomIdentityName).join(', ') || 'N/A'}
+                  fieldName='Check-Out Date'
+                  value={utcDateToTzDayInstance(bookingInfo.endSession).format('MMM DD, YYYY hh:mm A')}
                 />
+                <FieldValueReport fieldName='Schedule' value={selectedProduct.name || ''} />
+                {!selectedProduct?.isAllRooms && (
+                  <FieldValueReport
+                    fieldName='Room'
+                    value={bookingInfo.roomsObject.map((room) => room.roomIdentityName).join(', ') || 'N/A'}
+                  />
+                )}
               </Stack>
             </Box>
             <Box>
@@ -173,16 +163,26 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                   <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingUpdates.guests.nonOverNightGuests}`} />
                 )}
                 {bookingUpdates.bookingDate && (
-                  <FieldValueReport fieldName='Booked Date' value={`${bookingUpdates.bookingDate}`} />
+                  <>
+                    <FieldValueReport
+                      fieldName='Check-In Date'
+                      value={`${tzSchedToDayJsInsance(bookingUpdates.bookingDate, selectedProduct.scheduleStart).format(
+                        'MMM DD, YYYY hh:mm A',
+                      )}`}
+                    />
+                    <FieldValueReport
+                      fieldName='Check-Out Date'
+                      value={`${tzSchedToDayJsInsance(
+                        dayjs(bookingUpdates.bookingDate)
+                          .add(!!selectedProduct.scheduleEndNextDay ? 1 : 0, 'day')
+                          .format('YYYY-MM-DD'),
+                        selectedProduct.scheduleEnd,
+                      ).format('MMM DD, YYYY hh:mm A')}`}
+                    />
+                  </>
                 )}
-                {bookingUpdates.productId && (
-                  <FieldValueReport
-                    fieldName='Schedule'
-                    value={productsData?.records.find((row) => row.productId === bookingUpdates.productId)?.name || 'N/A'}
-                  />
-                )}
-                {bookingUpdates.rooms && (
-                  <FieldValueReport fieldName='Room' value={enteredRooms.map((room) => room.roomIdentityName).join(', ') || ''} />
+                {!selectedProduct.isAllRooms && bookingUpdates.rooms && (
+                  <FieldValueReport fieldName='Room' value={Array.from(selectedRooms, (v) => v[1].roomIdentityName).join(', ')} />
                 )}
               </Stack>
             </Box>
@@ -214,8 +214,8 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
       <br />
 
       <CostView
-        product={enteredProduct}
-        rooms={enteredRooms}
+        product={selectedProduct}
+        rooms={Array.from(selectedRooms, (v) => v[1])}
         guests={bookingUpdates.guests || bookingInfo.guests}
         bookedDate={bookingUpdates.bookingDate || (bookingInfo.startSession as string).split('T')[0]}
       />
@@ -226,7 +226,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
         <Alert status='info' borderRadius='sm' color='blue.600'>
           <AlertIcon />
           Note: Since you will be refunded a partial amount of {PHpeso.format(Math.abs(newTotal - bookingInfo.currentTotal))} this
-          will send a request to the hydro team for updating the booking details and refund. You will receive an email response
+          will send a request to the support team for updating the booking details and refund. You will receive an email response
           from them if the update and refund is successful.
         </Alert>
       )}

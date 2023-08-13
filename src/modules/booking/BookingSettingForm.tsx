@@ -22,40 +22,15 @@ import { BsPencilSquare, BsX } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
 import { PHpeso } from '@/modules/utils/helper';
-import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { GetApp } from '@/appspecs/theme';
+import { NumberField } from '@/components/NumberField';
 
 const PencilIcon = chakra(BsPencilSquare);
 const XIcon = chakra(BsX);
 
-const schema = z
-  .object({
-    overNightGuestFee: z.number(),
-    minNonOverNightGuestPax: z.number(),
-    maxNonOverNightGuestPax: z.number({ invalid_type_error: 'must be a number' }),
-    nonOverNightGuestFee: z.number(),
-    minOverNightGuestPax: z.number(),
-    maxOverNightGuestPax: z.number(),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      data.minNonOverNightGuestPax > data.maxNonOverNightGuestPax ||
-      data.minNonOverNightGuestPax === data.maxNonOverNightGuestPax
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['minNonOverNightGuestPax'],
-        message: 'Minimum Non Overnight Pax field should be lower than Max Non Overnight Pax Field',
-      });
-    }
-    if (data.minOverNightGuestPax > data.maxOverNightGuestPax || data.minOverNightGuestPax === data.maxOverNightGuestPax) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['minOverNightGuestPax'],
-        message: 'Minimum Overnight Pax field should be lower than Max Overnight Pax Field',
-      });
-    }
-  });
+const schema = z.object({
+  bookingFee: z.number(),
+});
 
 type FormSchemaType = z.infer<typeof schema>;
 
@@ -67,12 +42,7 @@ export default function BookingSetting({}: IBookingSettingProps) {
   const { data, isLoading, refetch } = trpc.bookingSetting.getBookingSetting.useQuery();
   const { mutate, isLoading: processingSettings } = trpc.bookingSetting.upsertBookingSetting.useMutation();
   const defaultValues = {
-    nonOverNightGuestFee: data?.guests.nonOverNightGuestFee,
-    minNonOverNightGuestPax: data?.guests.minNonOverNightGuestPax,
-    maxNonOverNightGuestPax: data?.guests.maxNonOverNightGuestPax,
-    overNightGuestFee: data?.guests.overNightGuestFee,
-    minOverNightGuestPax: data?.guests.minOverNightGuestPax,
-    maxOverNightGuestPax: data?.guests.maxOverNightGuestPax,
+    bookingFee: data?.bookingFee || 0,
   };
 
   const {
@@ -88,8 +58,7 @@ export default function BookingSetting({}: IBookingSettingProps) {
   const updateOrCreateSetting = (data: FormSchemaType) => {
     mutate(
       {
-        guests: data,
-        bookingFee: 0,
+        bookingFee: data.bookingFee,
       },
       {
         onSuccess() {
@@ -144,61 +113,11 @@ export default function BookingSetting({}: IBookingSettingProps) {
             <Stack spacing={5}>
               <Stack spacing={0}>
                 <Text>Minimum Non Overnight Guests:</Text>
-                <NumberFieldV2
-                  placeholder='Minimum Non Overnight Guests'
+                <NumberField
+                  placeholder='Booking Fee'
                   register={register}
-                  property='minNonOverNightGuestPax'
-                  errMsg={errors.minNonOverNightGuestPax?.message}
-                />
-              </Stack>
-
-              <Stack spacing={0}>
-                <Text>Maximum Non Overnight Guests:</Text>
-                <NumberFieldV2
-                  placeholder='Maximum Non Overnight Guests'
-                  register={register}
-                  property='maxNonOverNightGuestPax'
-                  errMsg={errors.maxNonOverNightGuestPax?.message}
-                />
-              </Stack>
-
-              <Stack spacing={0}>
-                <Text>Non Overnight Guest Fee:</Text>
-                <NumberFieldV2
-                  placeholder='Non Overnight Guest Fee'
-                  register={register}
-                  property='nonOverNightGuestFee'
-                  errMsg={errors.nonOverNightGuestFee?.message}
-                />
-              </Stack>
-
-              <Stack spacing={0}>
-                <Text>Minimum Overnight Guests:</Text>
-                <NumberFieldV2
-                  placeholder='Minimum Overnight Guests'
-                  register={register}
-                  property='minOverNightGuestPax'
-                  errMsg={errors.minOverNightGuestPax?.message}
-                />
-              </Stack>
-
-              <Stack spacing={0}>
-                <Text>Maximum Overnight Guests:</Text>
-                <NumberFieldV2
-                  placeholder='Maximum Overnight Guests'
-                  register={register}
-                  property='maxOverNightGuestPax'
-                  errMsg={errors.maxOverNightGuestPax?.message}
-                />
-              </Stack>
-
-              <Stack spacing={0}>
-                <Text>Overnight Guest Fee:</Text>
-                <NumberFieldV2
-                  placeholder='Overnight Guest Fee'
-                  register={register}
-                  property='overNightGuestFee'
-                  errMsg={errors.overNightGuestFee?.message}
+                  property='bookingFee'
+                  errMsg={errors.bookingFee?.message}
                 />
               </Stack>
             </Stack>
@@ -219,43 +138,8 @@ export default function BookingSetting({}: IBookingSettingProps) {
         <SlideFade in>
           <Stack spacing={2}>
             <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Minimum Non Overnight Guests:</Text>
-              <Text>{data?.guests.minNonOverNightGuestPax}</Text>
-            </Stack>
-
-            <Divider borderColor='gray.400' />
-
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Maximum Non Overnight Guests:</Text>
-              <Text>{data?.guests.maxNonOverNightGuestPax}</Text>
-            </Stack>
-
-            <Divider borderColor='gray.400' />
-
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Non Overnight Guest Fee:</Text>
-              <Text>{PHpeso.format(data?.guests.nonOverNightGuestFee)}</Text>
-            </Stack>
-
-            <Divider borderColor='gray.400' />
-
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Minimum Overnight Guests:</Text>
-              <Text>{data?.guests.minOverNightGuestPax}</Text>
-            </Stack>
-
-            <Divider borderColor='gray.400' />
-
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Maximum Overnight Guests:</Text>
-              <Text>{data?.guests.maxOverNightGuestPax}</Text>
-            </Stack>
-
-            <Divider borderColor='gray.400' />
-
-            <Stack spacing={0} direction='row' justifyContent='space-between'>
-              <Text>Overnight Guest Fee:</Text>
-              <Text>{PHpeso.format(data?.guests.overNightGuestFee)}</Text>
+              <Text>Booking Fee:</Text>
+              <Text>{PHpeso.format(data?.bookingFee)}</Text>
             </Stack>
 
             <Divider borderColor='gray.400' />

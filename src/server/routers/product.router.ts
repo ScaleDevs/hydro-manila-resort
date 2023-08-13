@@ -18,6 +18,15 @@ export const productRouter = router({
         scheduleEndNextDay: z.boolean(),
         includedRooms: z.array(z.string().min(1)),
         description: z.string().optional(),
+        guestSetting: z.object({
+          nonOverNightGuestFee: z.number(),
+          minNonOverNightGuestPax: z.number(),
+          maxNonOverNightGuestPax: z.number(),
+          overNightGuestFee: z.number(),
+          minOverNightGuestPax: z.number(),
+          maxOverNightGuestPax: z.number(),
+        }),
+        isAllRooms: z.boolean(),
       }),
     )
     .mutation(({ input }) => {

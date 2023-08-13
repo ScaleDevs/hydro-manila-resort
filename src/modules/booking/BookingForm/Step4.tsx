@@ -18,7 +18,7 @@ import { trpc } from '@/utils/trpc';
 import { tzSchedToDayJsInsance } from '@/utils/helper';
 import { useBookingStore } from '@/store/booking.store';
 import usePaymentStoreTrack from '@/store/payment.store';
-import CostView from '../CostView';
+import CostView from '../components/CostView';
 import { TermsAndConditionModal } from './T&CModal';
 
 const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: string }) => {
@@ -111,14 +111,18 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
                 Addons
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${data.guests.nonOverNightGuests}`} />
+                {!!data.guests.nonOverNightGuests && (
+                  <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${data.guests.nonOverNightGuests}`} />
+                )}
                 {!!data.guests.overNightGuests && (
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${data.guests.overNightGuests}`} />
                 )}
-                <FieldValueReport
-                  fieldName='Rooms'
-                  value={`${Array.from(selectedRooms, (entry) => entry[1].roomIdentityName).join(', ')}`}
-                />
+                {!selectedProduct.isAllRooms && (
+                  <FieldValueReport
+                    fieldName='Rooms'
+                    value={`${Array.from(selectedRooms, (entry) => entry[1].roomIdentityName).join(', ')}`}
+                  />
+                )}
               </Stack>
             </Box>
 

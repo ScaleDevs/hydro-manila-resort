@@ -3,15 +3,15 @@ import Head from 'next/head';
 import { Stack, Box, useSteps, chakra, Center, Heading, SlideFade } from '@chakra-ui/react';
 import { BsPatchCheckFill } from 'react-icons/bs';
 
+import { GetApp } from '@/appspecs/theme';
 import Layout from '@/layouts/index';
 import FormStepper from '@/components/FormStepper';
-import FindBookingInfoForm from '@/modules/booking/BookingUpdateRequestForm/FindBookingInfoForm';
-import UpdateBookingRequestForm from '@/modules/booking/BookingUpdateRequestForm/EditBookingDetails';
-import CustomerBankInput from '@/modules/booking/BookingUpdateRequestForm/CustomerBankInputs';
-import ReviewDetails from '@/modules/booking/BookingUpdateRequestForm/ReviewDetails';
-import useBookingUpdateRequestStoreTrack from '@/store/bookingupdaterequest.store';
+import FindBookingInfoForm from '@/modules/booking/BookingUpdateForm/FindBookingInfoForm';
+import CustomerBankInput from '@/modules/booking/BookingUpdateForm/CustomerBankInputs';
+import ReviewDetails from '@/modules/booking/BookingUpdateForm/ReviewDetails';
+import useUpdateBookingStoreTrack from '@/store/update_booking.store';
 import PaymentForm from '@/modules/payment/PaymentForm';
-import { GetApp } from '@/appspecs/theme';
+import UpdateBookingRequestForm from '@/modules/booking/BookingUpdateForm/EditBookingDetails';
 
 const CheckIcon = chakra(BsPatchCheckFill);
 
@@ -21,21 +21,21 @@ interface IActiveFormProps {
 }
 
 const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
-  const { bookingUpdateCase, resetStates, setStepDescription } = useBookingUpdateRequestStoreTrack();
+  const { bookingUpdateCase, resetStates, setStateField } = useUpdateBookingStoreTrack();
 
   const previousStep = (step: number, desc: string) => {
     setActiveStep(step);
-    setStepDescription(desc);
+    setStateField('stepDescription', desc);
   };
 
   if (activeStep === 1)
     return (
       <UpdateBookingRequestForm
-        nextStep={(desc: string) => {
+        onNext={() => {
           setActiveStep(2);
-          setStepDescription(desc);
+          setStateField('stepDescription', 'Addons');
         }}
-        previousStep={() => {
+        onPrev={() => {
           previousStep(0, 'Find Booking Record');
           resetStates();
         }}
@@ -46,7 +46,7 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
     return (
       <CustomerBankInput
         nextStep={() => {
-          setStepDescription('Review Details');
+          setStateField('stepDescription', 'Review Details');
           setActiveStep(3);
         }}
         previousStep={() => previousStep(1, 'Edit Booking Details')}
@@ -61,7 +61,7 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
       <ReviewDetails
         previousStep={() => previousStep(1, 'Edit Booking Details')}
         nextStep={(desc) => {
-          setStepDescription(desc);
+          setStateField('stepDescription', desc);
           setActiveStep(3);
         }}
       />
@@ -75,14 +75,14 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
     <FindBookingInfoForm
       nextStep={() => {
         setActiveStep(1);
-        setStepDescription('Edit Booking Details');
+        setStateField('stepDescription', 'Date & Time');
       }}
     />
   );
 };
 
 export default function UpdateBooking() {
-  const { resetStates, isRequestSuccess, stepsLength, stepDescription } = useBookingUpdateRequestStoreTrack();
+  const { resetStates, isRequestSuccess, stepsLength, stepDescription } = useUpdateBookingStoreTrack();
 
   const { activeStep, setActiveStep } = useSteps({
     index: 0,
@@ -111,18 +111,18 @@ export default function UpdateBooking() {
 
       <br />
 
-      <Box w={{ base: '90%', xl: '100%' }} mx='auto' borderRadius='sm'>
+      <Box w={{ base: '100%', sm: '90%', lg: '1000px' }} mx='auto'>
         {isRequestSuccess ? (
           <SlideFade in={true} offsetY='20px'>
             <Center p='100px' boxShadow='2xl' borderRadius='2xl' mt='50px'>
               <Stack direction='column' alignItems='center' spacing={50}>
-                <Heading>Your Request Has Been succesfully submitted</Heading>
+                <Heading fontSize='3xl'>Your Request Has Been succesfully submitted</Heading>
                 <CheckIcon h={200} w={200} color='green.500' />
               </Stack>
             </Center>
           </SlideFade>
         ) : (
-          <>
+          <Box w={{ base: '90%', md: '98%', lg: '95%' }} mx='auto'>
             <br />
             <br />
 
@@ -132,7 +132,7 @@ export default function UpdateBooking() {
             <br />
 
             <ActiveForm {...{ activeStep, setActiveStep }} />
-          </>
+          </Box>
         )}
       </Box>
     </Layout>
