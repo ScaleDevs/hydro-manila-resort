@@ -134,6 +134,7 @@ function CreateProduct() {
 
   const {
     register,
+    control,
     setValue,
     handleSubmit,
     formState: { errors },
@@ -161,8 +162,6 @@ function CreateProduct() {
       ...rest,
       includedRooms: Array.from(includedRooms, (entry) => entry[1]),
     };
-
-    console.log('result', payload);
 
     mutate(payload, {
       onSuccess() {
@@ -287,7 +286,7 @@ function CreateProduct() {
                 <Stack>
                   <Label>Does Schedule End Next Day?:</Label>
                   <RadioBooleanField
-                    setValue={setValue}
+                    control={control}
                     property='scheduleEndNextDay'
                     errMsg={errors.scheduleEndNextDay?.message}
                   />
@@ -348,7 +347,12 @@ function CreateProduct() {
 
                 <Stack>
                   <Label>Does Include All Rooms?:</Label>
-                  <RadioBooleanField setValue={setValue} property='isAllRooms' errMsg={errors.scheduleEndNextDay?.message} />
+                  <RadioBooleanField
+                    control={control}
+                    property='isAllRooms'
+                    onChange={() => setValue('includedRooms', new Map())}
+                    errMsg={errors.isAllRooms?.message}
+                  />
                 </Stack>
 
                 <Collapse in={watch('isAllRooms') === false} animateOpacity>

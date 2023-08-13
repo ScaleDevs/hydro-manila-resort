@@ -50,8 +50,8 @@ function Admin() {
 
   const {
     register,
+    control,
     handleSubmit,
-    setValue,
     formState: { errors },
     reset,
   } = useForm<FormSchemaType>({
@@ -145,17 +145,17 @@ function Admin() {
 
                 <Stack>
                   <Label>Does it have a bathroom:</Label>
-                  <RadioBooleanField setValue={setValue} property='withBathroom' errMsg={errors.withBathroom?.message} />
+                  <RadioBooleanField control={control} property='withBathroom' errMsg={errors.withBathroom?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Air Condition?:</Label>
-                  <RadioBooleanField setValue={setValue} property='withAircon' errMsg={errors.withAircon?.message} />
+                  <RadioBooleanField control={control} property='withAircon' errMsg={errors.withAircon?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Electric Fan?:</Label>
-                  <RadioBooleanField setValue={setValue} property='withFan' errMsg={errors.withFan?.message} />
+                  <RadioBooleanField control={control} property='withFan' errMsg={errors.withFan?.message} />
                 </Stack>
 
                 <Button type='submit' borderRadius='sm' isLoading={isLoading}>
