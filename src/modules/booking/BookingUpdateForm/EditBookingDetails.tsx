@@ -26,7 +26,7 @@ import useBookingUpdateRequestStoreTrack, {
 } from '@/store/update_booking.store';
 import { DateTimeField } from '@/components/DateTimeField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
-import ControlledChooseRooms from '@/components/ControlledChooseRooms';
+import ControlledChooseRooms from '../components/ControlledChooseRooms';
 import CostView from '../components/CostView';
 
 const schema = bookingRequestUpdatesSchema;

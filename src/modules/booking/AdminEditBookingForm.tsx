@@ -10,7 +10,7 @@ import { IProduct } from '@/utils/types';
 import { SelectField } from '@/components/SelectField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { DateTimeField } from '@/components/DateTimeField';
-import ControlledChooseRooms from '@/components/ControlledChooseRooms';
+import ControlledChooseRooms from './components/ControlledChooseRooms';
 
 const schema = z.object({
   guests: z.object({
