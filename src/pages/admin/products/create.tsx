@@ -172,7 +172,6 @@ function CreateProduct() {
           isClosable: true,
         });
         reset();
-        reset({ includedRooms: new Map() });
       },
     });
   };
@@ -298,21 +297,21 @@ function CreateProduct() {
                   <Stack direction={{ base: 'column', md: 'row' }}>
                     <NumberFieldV2
                       label='Minimum Pax'
-                      register={register}
+                      control={control}
                       property='guestSetting.minNonOverNightGuestPax'
                       errMsg={errors.guestSetting?.minNonOverNightGuestPax?.message}
                     />
 
                     <NumberFieldV2
                       label='Maximum Pax'
-                      register={register}
+                      control={control}
                       property='guestSetting.maxNonOverNightGuestPax'
                       errMsg={errors.guestSetting?.maxNonOverNightGuestPax?.message}
                     />
 
                     <NumberFieldV2
                       label='Per Head Fee'
-                      register={register}
+                      control={control}
                       property='guestSetting.nonOverNightGuestFee'
                       errMsg={errors.guestSetting?.nonOverNightGuestFee?.message}
                     />
@@ -324,21 +323,21 @@ function CreateProduct() {
                   <Stack direction={{ base: 'column', md: 'row' }}>
                     <NumberFieldV2
                       label='Minimum Pax'
-                      register={register}
+                      control={control}
                       property='guestSetting.minOverNightGuestPax'
                       errMsg={errors.guestSetting?.minOverNightGuestPax?.message}
                     />
 
                     <NumberFieldV2
                       label='Maximum Pax'
-                      register={register}
+                      control={control}
                       property='guestSetting.maxOverNightGuestPax'
                       errMsg={errors.guestSetting?.maxOverNightGuestPax?.message}
                     />
 
                     <NumberFieldV2
                       label='Per Head Fee'
-                      register={register}
+                      control={control}
                       property='guestSetting.overNightGuestFee'
                       errMsg={errors.guestSetting?.overNightGuestFee?.message}
                     />

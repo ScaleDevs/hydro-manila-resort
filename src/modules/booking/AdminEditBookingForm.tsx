@@ -149,8 +149,8 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
         <Box w={{ base: '95%', md: '90%' }} mx='auto'>
           <form onSubmit={handleSubmit(submitUpdate)}>
             <Stack spacing={5}>
-              <NumberFieldV2 register={register} property='guests.overNightGuests' label='Guests (Overnight)' />
-              <NumberFieldV2 register={register} property='guests.nonOverNightGuests' label='Guests (Non-Overnight)' />
+              <NumberFieldV2 control={control} property='guests.overNightGuests' label='Guests (Overnight)' />
+              <NumberFieldV2 control={control} property='guests.nonOverNightGuests' label='Guests (Non-Overnight)' />
 
               <DateTimeField
                 type='date'

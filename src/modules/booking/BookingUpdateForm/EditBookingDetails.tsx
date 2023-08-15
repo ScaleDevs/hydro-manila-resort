@@ -56,10 +56,10 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, dirtyFields },
     setValue,
-    control,
     watch,
   } = useForm<BookingRequestUpdates>({
     resolver: zodResolver(schema),
@@ -82,6 +82,11 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
             nonOverNightGuests:
               guests.nonOverNightGuests > freeGuests ? guests.nonOverNightGuests - freeGuests : guests.nonOverNightGuests,
           };
+
+        return {
+          overNightGuests: 0,
+          nonOverNightGuests: 0,
+        };
       })(),
       bookingDate:
         savedValues?.bookingDate || (bookingInfo && utcDateToTzDayInstance(bookingInfo.startSession).format('YYYY-MM-DD')),
@@ -160,6 +165,8 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
     }
 
     if (!!formError) setFormError(null);
+
+    setStateField('currentFreeGuests', freeGuests);
 
     const setStates = () => {
       setBookingUpdates(updates);
@@ -281,7 +288,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                 <VStack alignItems='left' spacing={2}>
                   <NumberFieldV2
                     label='Additional Pax (Overnight)'
-                    register={register}
+                    control={control}
                     property='guests.overNightGuests'
                     disabled={isAdditionalInputsDisabled()}
                   />
@@ -304,7 +311,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                 <VStack alignItems='left' spacing={2}>
                   <NumberFieldV2
                     label='Additional Pax (Non-Overnight)'
-                    register={register}
+                    control={control}
                     property='guests.nonOverNightGuests'
                     disabled={isAdditionalInputsDisabled()}
                   />
