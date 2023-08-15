@@ -83,7 +83,7 @@ export default function TableBookingRecords() {
 
       <ScaleFade initialScale={0.9} in>
         <TableContainer w='100%'>
-          <Table fontFamily='primary' color='primary.1'>
+          <Table fontFamily='primary' color='black'>
             <Thead>
               <Tr>
                 <Th fontSize='md' fontFamily='primary'>
