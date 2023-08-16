@@ -126,7 +126,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
                     </ListItem>
                     <ListItem listStyleType='none'>
                       <ListIcon as={AiOutlineCheck} color='green.800' />
-                      Check-in {transformSchedule(record.scheduleEnd)}
+                      Check-out {transformSchedule(record.scheduleEnd)}
                     </ListItem>
                     {!record.isAllRooms && (
                       <ListItem>

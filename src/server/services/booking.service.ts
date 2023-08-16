@@ -230,7 +230,7 @@ class Service {
         summary: updatedBooking.name,
         description: `${product.name} / ${updatedBooking.guests.nonOverNightGuests ?? 0} Non-Overnight PAX /  ${
           updatedBooking.guests.overNightGuests ?? 0
-        } Overnight PAX / ${product.isAllRooms ? 'All Rooms' : rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
+        } Overnight PAX / ${product.isAllRooms ? 'Whole Place' : rooms.length > 0 ? rooms.join(', ') : 'No Rooms'}`,
       };
 
       if (!!data.startSession && !!data.endSession) {
@@ -348,7 +348,7 @@ class Service {
       if (!!newRooms)
         modifications.push({
           name: 'Rooms',
-          value: newProduct?.isAllRooms ? 'All Rooms' : !!newRooms.length ? newRooms.join(', ') : 'None',
+          value: newProduct?.isAllRooms ? 'Whole Place' : !!newRooms.length ? newRooms.join(', ') : 'None',
         });
 
       if (!!newProduct || bookingRequestUpdate.bookingDate) {
@@ -384,7 +384,7 @@ class Service {
         reference_no: bookingRecord.ref_no,
         guests: createGuestsSummary(bookingRecord.guests),
         booking_type: oldProduct.name,
-        room: oldProduct.isAllRooms ? 'All Rooms' : !!oldRooms?.length ? oldRooms.join(', ') : 'None',
+        room: oldProduct.isAllRooms ? 'Whole Place' : !!oldRooms?.length ? oldRooms.join(', ') : 'None',
         check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         check_out_date: dayjs.utc(bookingRecord.endSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
         modification: modifications,

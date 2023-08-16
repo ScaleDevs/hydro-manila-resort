@@ -200,7 +200,7 @@ export const customerUpdateRequestHandler = async (input: {
       customer_name: bookingRecord.name,
       guests: createGuestsSummary(newGuests),
       booking_type: (newProduct || oldProduct).name,
-      rooms: (newProduct || oldProduct).isAllRooms ? 'All Rooms' : roomNames.length > 0 ? roomNames.join(', ') : 'No Rooms',
+      rooms: (newProduct || oldProduct).isAllRooms ? 'Whole Place' : roomNames.length > 0 ? roomNames.join(', ') : 'No Rooms',
       check_in_date: result.startSession.format('MMM DD, YYYY hh:mm A'),
       check_out_date: result.endSession.format('MMM DD, YYYY hh:mm A'),
     });

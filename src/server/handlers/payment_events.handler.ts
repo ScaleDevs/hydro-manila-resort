@@ -171,7 +171,9 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     summary: parsed.data.name,
     description: `${product?.name} / ${guests.nonOverNightGuests ?? 0} Non-Overnight Guests / ${
       guests.overNightGuests ?? 0
-    } Overnight Guests / ${product.isAllRooms ? 'All Rooms' : rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'}`,
+    } Overnight Guests / ${
+      product.isAllRooms ? 'Whole Place' : rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'
+    }`,
     start: {
       dateTime: bookedDate.format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
       timeZone: constants.general.timezone,

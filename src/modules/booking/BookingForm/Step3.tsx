@@ -9,7 +9,8 @@ import { TextField } from '@/components/TextField';
 import CostView from '../components/CostView';
 
 const schema = z.object({
-  name: z.string().min(1, 'Required'),
+  firstName: z.string().min(1, 'Required'),
+  lastName: z.string().min(1, 'Required'),
   phoneNumber: z.string().min(1, 'Required'),
   email: z.string().email(),
 });
@@ -31,7 +32,8 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: data.name,
+      firstName: data.firstName,
+      lastName: data.lastName,
       phoneNumber: data.phoneNumber,
       email: data.email,
     },
@@ -48,7 +50,20 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
     <form onSubmit={handleSubmit(proceed)}>
       <Stack spacing={5}>
         <Stack spacing='3' mt='20px'>
-          <TextField register={register} property='name' placeholder='*Name' label='Name:' errMsg={errors.name?.message} />
+          <TextField
+            register={register}
+            property='firstName'
+            placeholder='*First Name'
+            label='First Name:'
+            errMsg={errors.firstName?.message}
+          />
+          <TextField
+            register={register}
+            property='lastName'
+            placeholder='*Last name'
+            label='Last Name:'
+            errMsg={errors.lastName?.message}
+          />
           <TextField
             register={register}
             property='phoneNumber'
