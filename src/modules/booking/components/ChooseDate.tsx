@@ -15,7 +15,17 @@ export interface IChooseDateProps {
 }
 
 export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: IChooseDateProps) {
-  const [dayState, setDayState] = useState(dayjs());
+  const [dayState, setDayState] = useState(
+    (() => {
+      if (!!chosenDate) {
+        const currentPos = dayjs(chosenDate).diff(dayjs(), 'day') + 2;
+        console.log(Math.ceil(currentPos / 7) * 7 - 6);
+        return dayjs().add(Math.ceil(currentPos / 7) * 7 - 7, 'day');
+      }
+
+      return dayjs();
+    })(),
+  );
 
   const handleArrows = (arrow: 'NEXT' | 'PREV') => {
     if (arrow === 'NEXT') setDayState(dayState.add(7, 'day'));

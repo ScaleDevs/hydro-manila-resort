@@ -122,12 +122,18 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
                   <List spacing={3}>
                     <ListItem listStyleType='none'>
                       <ListIcon as={AiOutlineCheck} color='green.800' />
-                      {`${transformSchedule(record.scheduleStart)} - ${transformSchedule(record.scheduleEnd)}`}
+                      Check-in {transformSchedule(record.scheduleStart)}
                     </ListItem>
-                    <ListItem>
+                    <ListItem listStyleType='none'>
                       <ListIcon as={AiOutlineCheck} color='green.800' />
-                      {record.includedRooms.length > 0 ? 'Rooms' : 'No Rooms'}
+                      Check-in {transformSchedule(record.scheduleEnd)}
                     </ListItem>
+                    {!record.isAllRooms && (
+                      <ListItem>
+                        <ListIcon as={AiOutlineCheck} color='green.800' />
+                        {record.includedRooms.length > 0 ? 'Rooms' : 'No Rooms'}
+                      </ListItem>
+                    )}
                   </List>
                 </Stack>
               </GridItem>
@@ -136,7 +142,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
         )}
       </Grid>
 
-      <Collapse in={!!chosenSchedule && chosenSchedule.includedRooms.length > 0} animateOpacity>
+      <Collapse in={!!chosenSchedule && chosenSchedule.includedRooms.length > 0 && !chosenSchedule.isAllRooms} animateOpacity>
         <Stack p='10px'>
           <Alert status='info' fontFamily='primary'>
             <AlertIcon />

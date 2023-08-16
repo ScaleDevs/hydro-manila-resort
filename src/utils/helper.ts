@@ -67,10 +67,13 @@ export const getProductPrice = (bookingDate: string, product: IProduct) => {
   }
 
   if (process.env.GENERAL_APP_NAME === 'VillaLeonora' || process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
-    const bookedDay = dayjs(bookingDate).day();
+    const bookedDate = dayjs(bookingDate);
+    const bookedDay = bookedDate.day();
+    const isRegularRates = bookedDate.month() >= 10 && bookedDate.year() >= 2023;
+
     if (product.name.includes('OVERNIGHT')) {
-      if (bookedDay > 0 && bookedDay < 5) return 12000;
-      else return 15000;
+      if (bookedDay > 0 && bookedDay < 5) return isRegularRates ? 15000 : 12000;
+      else return isRegularRates ? 20000 : 15000;
     }
   }
 

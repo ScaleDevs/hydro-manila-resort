@@ -1,6 +1,6 @@
-import { GetApp } from '@/appspecs/theme';
 import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
+import { GetApp } from '@/appspecs/theme';
 
 export interface ITextFieldProps {
   register?: UseFormRegister<any>;

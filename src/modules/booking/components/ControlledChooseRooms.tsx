@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Guests } from '@prisma/client';
 import { Control, Controller } from 'react-hook-form';
 import { Grid, Skeleton, GridItem, Center, Stack, List, ListItem, ListIcon, Text } from '@chakra-ui/react';
 import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
@@ -9,15 +8,7 @@ import { PHpeso } from '@/utils/helper';
 import { IProduct, IRoom } from '@/utils/types';
 
 export interface IControlledChooseRoomsProps {
-  control: Control<
-    {
-      productId: string;
-      guests: Guests;
-      rooms: string[];
-      bookingDate: string;
-    },
-    any
-  >;
+  control: Control<any, any>;
   isLoading: boolean;
   records: IRoom[];
   selectedProduct: IProduct | undefined;
@@ -57,7 +48,7 @@ export default function ControlledChooseRooms({
               </>
             ) : (
               records.map((record, index) => {
-                const isActive = value.some((roomId) => roomId === record.roomId);
+                const isActive = value.some((roomId: string) => roomId === record.roomId);
                 const isIncludedInSched = selectedProduct?.includedRooms.some((roomId) => roomId === record.roomId);
 
                 return (

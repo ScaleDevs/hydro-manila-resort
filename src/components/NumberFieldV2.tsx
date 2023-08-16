@@ -8,12 +8,11 @@ import {
   NumberInputStepper,
   Text,
 } from '@chakra-ui/react';
-import { UseFormRegister } from 'react-hook-form';
-import { RegexValidations } from '@/modules/utils/helper';
+import { Control, Controller } from 'react-hook-form';
 import { GetApp } from '@/appspecs/theme';
 
 export interface INumberFieldV2Props {
-  register?: UseFormRegister<any>;
+  control?: Control<any, any>;
   property: string;
   value?: string | number;
   placeholder?: string;
@@ -22,27 +21,67 @@ export interface INumberFieldV2Props {
   errMsg?: string;
   onChange?: (value: any) => void;
   onBlur?: () => void;
+  maxValue?: number;
+  disabled?: boolean;
 }
 
 export function NumberFieldV2(props: INumberFieldV2Props) {
-  const { label, required, register, property, onBlur, onChange, value, errMsg } = props;
+  const { label, required, control, property, onBlur, onChange, value, errMsg, maxValue, disabled } = props;
 
-  const setFormValue = (v: string) => {
-    if (v === '') return 0;
-    if (v === '0') return parseFloat(v);
-    return !!RegexValidations.FloatOnly.exec(v) ? parseFloat(v) : v;
-  };
+  if (control)
+    return (
+      <Controller
+        control={control}
+        name={property}
+        render={({ field: { onChange: setValue, value } }) => {
+          return (
+            <Box w='100%'>
+              <Text fontSize='md'>
+                {label}
+                {required && (
+                  <Text as='span' color='red' pl='1'>
+                    *
+                  </Text>
+                )}
+              </Text>
+              <NumberInput
+                value={value}
+                onChange={(_v, n) => {
+                  const takeValue = Number.isNaN(n) ? 0 : n;
+                  setValue(takeValue);
+                  onChange && onChange(takeValue);
+                }}
+                max={maxValue}
+                min={0}
+              >
+                <NumberInputField
+                  onBlur={() => {
+                    !!onBlur && onBlur();
+                  }}
+                  disabled={!!disabled}
+                  borderRadius='sm'
+                  transition='outline 0.1s linear'
+                  borderColor='blackAlpha.500'
+                  outline='0.5px solid transparent'
+                  _hover={{ borderColor: GetApp.ActiveColor }}
+                  _focusVisible={{
+                    borderColor: GetApp.ActiveColor,
+                    outline: '1.5px solid',
+                    outlineColor: GetApp.ActiveColor,
+                  }}
+                />
+                <NumberInputStepper>
+                  <NumberIncrementStepper color='BlackAlpha.400' />
+                  <NumberDecrementStepper color='BlackAlpha.400' />
+                </NumberInputStepper>
+              </NumberInput>
 
-  const inputProps = register
-    ? {
-        ...register(property, {
-          setValueAs: setFormValue,
-          onBlur: () => {
-            onBlur && onBlur();
-          },
-        }),
-      }
-    : { onChange, value };
+              {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
+            </Box>
+          );
+        }}
+      />
+    );
 
   return (
     <Box w='100%'>
@@ -54,9 +93,20 @@ export function NumberFieldV2(props: INumberFieldV2Props) {
           </Text>
         )}
       </Text>
-      <NumberInput value={value} onChange={onChange}>
+      <NumberInput
+        value={value}
+        onChange={(_v, n) => {
+          const takeValue = Number.isNaN(n) ? 0 : n;
+          onChange && onChange(takeValue);
+        }}
+        max={maxValue}
+        min={0}
+      >
         <NumberInputField
-          {...inputProps}
+          onBlur={() => {
+            !!onBlur && onBlur();
+          }}
+          disabled={!!disabled}
           borderRadius='sm'
           transition='outline 0.1s linear'
           borderColor='blackAlpha.500'

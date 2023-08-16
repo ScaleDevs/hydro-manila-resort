@@ -78,7 +78,7 @@ export const initiatePaymentSessionForBooking = async (input: {
       bookedDate: startSessionDayInstance.format('MMM DD, YYYY hh:mm A'),
       checkOutDate: endSessionDayInstance.format('MMM DD, YYYY hh:mm A'),
       scheduleType: product.name,
-      roomName: rooms.map((v) => v.roomIdentityName).join(', '),
+      roomName: product.isAllRooms ? 'All Rooms' : rooms.map((v) => v.roomIdentityName).join(', '),
     } as BookingStatusDisplay;
 
     const isTaken = await BookingService.checkScheduleAvailability({
@@ -143,7 +143,7 @@ export const initiatePaymentSessionForUpdateBooking = async (
       bookedDate: '',
       checkOutDate: '',
       scheduleType: product.name,
-      roomName: rooms.map((info) => info.roomIdentityName).join(', '),
+      roomName: product.isAllRooms ? 'All Rooms' : rooms.map((info) => info.roomIdentityName).join(', '),
     } as BookingStatusDisplay;
 
     if (bookingUpdates.bookingDate || bookingUpdates.productId) {

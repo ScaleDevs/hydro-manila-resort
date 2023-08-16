@@ -1,33 +1,41 @@
 import { Box, Text, Radio, RadioGroup, Stack } from '@chakra-ui/react';
-import { UseFormSetValue } from 'react-hook-form';
+import { Control, Controller } from 'react-hook-form';
 
 export interface IRadioBooleanFieldProps {
+  control: Control<any, any>;
   property: string;
   errMsg?: string;
-  value?: boolean;
-  setValue: UseFormSetValue<any>;
+  onChange?: () => void;
 }
 
-export function RadioBooleanField({ value, setValue, property, errMsg }: IRadioBooleanFieldProps) {
-  const setFormValue = (value: boolean) => {
-    setValue(property, value, {
-      shouldValidate: true,
-    });
-  };
-
+export function RadioBooleanField({ control, onChange: onChangeInputValue, property, errMsg }: IRadioBooleanFieldProps) {
   return (
-    <Box w='100%'>
-      <RadioGroup value={value === undefined ? undefined : value === true ? '1' : '0'}>
-        <Stack direction='row'>
-          <Radio value='1' colorScheme='default' onClick={() => setFormValue(true)}>
-            Yes
-          </Radio>
-          <Radio value='0' colorScheme='default' onClick={() => setFormValue(false)}>
-            No
-          </Radio>
-        </Stack>
-      </RadioGroup>
-      {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
-    </Box>
+    <Controller
+      control={control}
+      name={property}
+      render={({ field: { onChange, value } }) => {
+        return (
+          <Box w='100%'>
+            <RadioGroup
+              value={value === undefined ? undefined : !!value ? '1' : '0'}
+              onClick={(v) => {
+                !!onChangeInputValue && onChangeInputValue();
+                onChange({ target: { value: (v.target as any).value === '1' } });
+              }}
+            >
+              <Stack direction='row'>
+                <Radio value='1' colorScheme='default'>
+                  Yes
+                </Radio>
+                <Radio value='0' colorScheme='default'>
+                  No
+                </Radio>
+              </Stack>
+            </RadioGroup>
+            {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
+          </Box>
+        );
+      }}
+    />
   );
 }

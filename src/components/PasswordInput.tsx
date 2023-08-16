@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Input, Box, chakra } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
 import { BsFillEyeSlashFill, BsFillEyeFill } from 'react-icons/bs';
+import { GetApp } from '@/appspecs/theme';
 
 const EyeCloseIcon = chakra(BsFillEyeSlashFill);
 const EyeOpenIcon = chakra(BsFillEyeFill);
@@ -32,12 +33,12 @@ export function PasswordInput({ onChange, formInput, placeholder }: IPasswordInp
         {...useFormRegisterField}
         placeholder={placeholder || 'PASSWORD'}
         type={showPassword ? 'text' : 'password'}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal.400',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
       />
       {showPassword ? (
         <EyeCloseIcon

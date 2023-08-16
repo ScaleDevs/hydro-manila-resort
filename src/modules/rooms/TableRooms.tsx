@@ -42,7 +42,7 @@ export default function TableRoom({}: ITableRoomProps) {
   return (
     <ScaleFade initialScale={0.9} in>
       <TableContainer>
-        <Table fontFamily='primary' color='primary.1'>
+        <Table fontFamily='primary' color='black'>
           <Thead>
             <Tr>
               <Th fontSize='md' fontFamily='primary'>

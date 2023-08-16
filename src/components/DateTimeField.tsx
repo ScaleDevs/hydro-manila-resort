@@ -1,5 +1,6 @@
 import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
+import { GetApp } from '@/appspecs/theme';
 
 export interface IDateTimeFieldProps {
   register: UseFormRegister<any>;
@@ -42,9 +43,9 @@ export function DateTimeField({
         borderColor='primary.1'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal.400',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
         defaultValue={defaultValue}
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}

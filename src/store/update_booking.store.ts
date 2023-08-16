@@ -2,16 +2,15 @@ import create, { StateCreator } from 'zustand';
 import { createTrackedSelector } from 'react-tracked';
 import { devtools } from 'zustand/middleware';
 import { z } from 'zod';
-import { IBookingPublicOnly, IProduct, IRoom } from '@/utils/types';
+import { IBookingPublicOnly, ProductV2, IRoom } from '@/utils/types';
 
 export const bookingRequestUpdatesSchema = z.object({
   guests: z.object({
-    overNightGuests: z.number(),
-    nonOverNightGuests: z.number(),
+    overNightGuests: z.preprocess((val) => Number(val), z.number()),
+    nonOverNightGuests: z.preprocess((val) => Number(val), z.number()),
   }),
-  productId: z.string().min(1, 'Required'),
-  rooms: z.array(z.string().min(1)),
-  bookingDate: z.string().min(1, 'Required'),
+  rooms: z.array(z.string()),
+  bookingDate: z.string(),
 });
 
 export const customerBankInfoSchema = z.object({
@@ -20,50 +19,57 @@ export const customerBankInfoSchema = z.object({
   accountName: z.string().min(1, 'Required'),
 });
 
-export type BookingRequestUpdates = z.infer<typeof bookingRequestUpdatesSchema>;
+export type BookingRequestUpdates = {
+  guests: {
+    overNightGuests: number;
+    nonOverNightGuests: number;
+  };
+  rooms: string[];
+  bookingDate: string;
+};
+
 export type CustomerBankInfo = z.infer<typeof customerBankInfoSchema>;
 export type BookingUpdateCase = 'PARTIAL REFUND' | 'ADDITIONAL PAYMENT' | 'NORMAL';
 
-export type BookingUpdateRequestStates = {
+export type UpdateBookingStoreStates = {
   bookingReferenceNo: string;
   bookingInfo?: IBookingPublicOnly;
   bookingUpdates?: Partial<BookingRequestUpdates>;
   customerBankInfo?: CustomerBankInfo;
   bookingUpdateCase: BookingUpdateCase;
-  newTotal: number;
+  currentFreeGuests: number;
+  selectedProduct?: ProductV2;
+  selectedRooms: Map<string, IRoom>;
   isRequestSuccess: boolean;
-  enteredProduct?: IProduct;
-  enteredRooms: IRoom[];
+  newTotal: number;
   stepDescription: string;
   stepsLength: number;
 };
 
-type BookingUpdateRequestActions = {
+type Actions = {
   setBookingReferenceNo: (refNo: string) => void;
   setBookingInfo: (data: IBookingPublicOnly) => void;
-  setBookingUpdates: (data: BookingRequestUpdates) => void;
+  setBookingUpdates: (data: Partial<BookingRequestUpdates>) => void;
   setCustomerBankInfo: (data: CustomerBankInfo) => void;
   setBookingUpdateCase: (data: BookingUpdateCase) => void;
-  setIsRequestSuccess: (data: boolean) => void;
-  setNewTotal: (amount: number) => void;
-  setStepDescription: (desc: string) => void;
-  setBookingUpdateStates: (data: Partial<BookingUpdateRequestStates>) => void;
-  setEnteredProduct: (product?: IProduct) => void;
-  setEnteredRooms: (rooms: IRoom[]) => void;
+  setStateField: (label: keyof UpdateBookingStoreStates, value: any) => void;
+  setStateObject: (data: Partial<UpdateBookingStoreStates>) => void;
   resetStates: () => void;
 };
 
-type StoreType = BookingUpdateRequestStates & BookingUpdateRequestActions;
+type StoreType = UpdateBookingStoreStates & Actions;
 
-const initState: BookingUpdateRequestStates = {
+const initState: UpdateBookingStoreStates = {
   bookingReferenceNo: '',
   bookingInfo: undefined,
   bookingUpdates: undefined,
   customerBankInfo: undefined,
   bookingUpdateCase: 'NORMAL',
+  currentFreeGuests: 0,
   newTotal: 0,
   isRequestSuccess: false,
-  enteredRooms: [],
+  selectedProduct: undefined,
+  selectedRooms: new Map(),
   stepDescription: 'Find Booking Record',
   stepsLength: 3,
 };
@@ -71,23 +77,13 @@ const initState: BookingUpdateRequestStates = {
 const stateStore = devtools((set) => ({
   ...initState,
 
-  setBookingUpdateStates: (data) => {
+  setStateField: (label, value) => set({ [`${label}`]: value }),
+
+  setStateObject: (data) => {
     set((states) => ({
       ...states,
       ...data,
     }));
-  },
-
-  setStepDescription: (desc) => {
-    set({ stepDescription: desc });
-  },
-
-  setNewTotal: (amount) => {
-    set({ newTotal: amount });
-  },
-
-  setIsRequestSuccess: (data) => {
-    set({ isRequestSuccess: data });
   },
 
   setBookingReferenceNo: (refNo) => {
@@ -99,7 +95,12 @@ const stateStore = devtools((set) => ({
   },
 
   setBookingUpdates: (data) => {
-    set({ bookingUpdates: { ...data } });
+    set((states) => ({
+      bookingUpdates: {
+        ...states.bookingUpdates,
+        ...data,
+      },
+    }));
   },
 
   setCustomerBankInfo: (data) => {
@@ -110,19 +111,11 @@ const stateStore = devtools((set) => ({
     set({ bookingUpdateCase: data });
   },
 
-  setEnteredProduct: (product) => {
-    set({ enteredProduct: product });
-  },
-
-  setEnteredRooms: (rooms) => {
-    set({ enteredRooms: rooms });
-  },
-
   resetStates: () => set({ ...initState }),
 })) as StateCreator<StoreType, [], [], StoreType>;
 
-export const useBookingUpdateRequestStore = create<StoreType>(stateStore);
+export const useUpdateBookingStore = create<StoreType>(stateStore);
 
-const useBookingUpdateRequestStoreTrack = createTrackedSelector(useBookingUpdateRequestStore);
+const useUpdateBookingStoreTrack = createTrackedSelector(useUpdateBookingStore);
 
-export default useBookingUpdateRequestStoreTrack;
+export default useUpdateBookingStoreTrack;

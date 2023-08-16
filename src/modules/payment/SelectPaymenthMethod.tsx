@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { Center, Stack, HStack, Text } from '@chakra-ui/react';
+import { GetApp } from '@/appspecs/theme';
 
 const PaymentMethodWrapper = ({
   children,
@@ -18,10 +19,10 @@ const PaymentMethodWrapper = ({
       h='130px'
       p='12px'
       border='2px solid'
-      borderColor={active === title ? 'teal.500' : 'gray.400'}
+      borderColor={active === title ? GetApp.ActiveColor : 'gray.400'}
       spacing='5'
       borderRadius='sm'
-      _hover={{ borderColor: 'teal.400', cursor: 'pointer', transition: 'border-color 0.5s ease;' }}
+      _hover={{ borderColor: GetApp.ActiveColor, cursor: 'pointer', transition: 'border-color 0.5s ease;' }}
       onClick={() => onClick(title)}
     >
       {children}

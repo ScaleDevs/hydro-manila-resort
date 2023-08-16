@@ -83,7 +83,7 @@ class Respository {
     }
   }
 
-  public async findBookingConflicts({ startDate, endDate }: DatesInput) {
+  public async findBookingConflicts({ startDate, endDate, bookingId }: DatesInput & { bookingId?: string }) {
     const whereFilter: Prisma.BookingWhereInput = {
       OR: [
         {
@@ -113,9 +113,11 @@ class Respository {
       ],
     };
 
-    const result = await prisma.booking.findMany({
+    let result = await prisma.booking.findMany({
       where: whereFilter,
     });
+
+    if (!!bookingId) result = result.filter((v) => v.id !== bookingId);
 
     if (result.length === 0) return false;
 

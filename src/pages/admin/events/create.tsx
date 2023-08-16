@@ -74,7 +74,7 @@ function CreateScheduledEvent() {
         )}
 
         {isSuccess ? (
-          <Alert status='success' borderRadius='sm' color='green.600'>
+          <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
             <AlertIcon />
             Scheduled Event Successfuly created!
           </Alert>

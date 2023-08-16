@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { TextField } from '@/components/TextField';
-import useBookingUpdateRequestStoreTrack, { customerBankInfoSchema, CustomerBankInfo } from '@/store/bookingupdaterequest.store';
+import useBookingUpdateRequestStoreTrack, { customerBankInfoSchema, CustomerBankInfo } from '@/store/update_booking.store';
 
 const schema = customerBankInfoSchema;
 

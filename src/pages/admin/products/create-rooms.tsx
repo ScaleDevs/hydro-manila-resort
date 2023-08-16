@@ -16,18 +16,14 @@ import { NumberFieldV2 } from '@/components/NumberFieldV2';
 const schema = z.object({
   roomIdentityName: z.string().min(1, 'Required'),
   description: z.string().optional(),
-  price: z
-    .number({
-      invalid_type_error: 'Must be a number',
-    })
-    .min(1),
+  guests: z.number().min(1, 'Must be greater than 0'),
+  price: z.number().min(1, 'Must be greater than 0'),
+  bedSingle: z.number(),
+  bedDouble: z.number(),
+  bedQueen: z.number(),
   withBathroom: z.boolean(),
   withAircon: z.boolean(),
   withFan: z.boolean(),
-  bedSingle: z.number().min(0),
-  bedDouble: z.number().min(0),
-  bedQueen: z.number().min(0),
-  guests: z.number().min(1),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -50,10 +46,9 @@ function Admin() {
 
   const {
     register,
+    control,
     handleSubmit,
-    setValue,
     formState: { errors },
-    watch,
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
@@ -80,9 +75,6 @@ function Admin() {
       },
     });
   };
-
-  console.log(errors);
-
   return (
     <Layout>
       <Head>
@@ -122,40 +114,25 @@ function Admin() {
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }}>
-                  <NumberFieldV2
-                    register={register}
-                    value={watch('guests')}
-                    property='guests'
-                    label='Number of guests'
-                    errMsg={errors.guests?.message}
-                  />
-                  <NumberFieldV2
-                    register={register}
-                    value={watch('price')}
-                    property='price'
-                    label='Room Price'
-                    errMsg={errors.price?.message}
-                  />
+                  <NumberFieldV2 control={control} property='guests' label='Number of guests' errMsg={errors.guests?.message} />
+                  <NumberFieldV2 control={control} property='price' label='Room Price' errMsg={errors.price?.message} />
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }} spacing={3}>
                   <NumberFieldV2
-                    register={register}
-                    value={watch('bedSingle')}
+                    control={control}
                     property='bedSingle'
                     label='How many Single Bed?'
                     errMsg={errors.bedSingle?.message}
                   />
                   <NumberFieldV2
-                    register={register}
-                    value={watch('bedDouble')}
+                    control={control}
                     property='bedDouble'
                     label='How many Double Bed?'
                     errMsg={errors.bedDouble?.message}
                   />
                   <NumberFieldV2
-                    register={register}
-                    value={watch('bedQueen')}
+                    control={control}
                     property='bedQueen'
                     label='How many Queen Bed?'
                     errMsg={errors.bedQueen?.message}
@@ -164,32 +141,17 @@ function Admin() {
 
                 <Stack>
                   <Label>Does it have a bathroom:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withBathroom')}
-                    property='withBathroom'
-                    errMsg={errors.withBathroom?.message}
-                  />
+                  <RadioBooleanField control={control} property='withBathroom' errMsg={errors.withBathroom?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Air Condition?:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withAircon')}
-                    property='withAircon'
-                    errMsg={errors.withAircon?.message}
-                  />
+                  <RadioBooleanField control={control} property='withAircon' errMsg={errors.withAircon?.message} />
                 </Stack>
 
                 <Stack>
                   <Label>Does it have a Electric Fan?:</Label>
-                  <RadioBooleanField
-                    setValue={setValue}
-                    value={watch('withFan')}
-                    property='withFan'
-                    errMsg={errors.withFan?.message}
-                  />
+                  <RadioBooleanField control={control} property='withFan' errMsg={errors.withFan?.message} />
                 </Stack>
 
                 <Button type='submit' borderRadius='sm' isLoading={isLoading}>

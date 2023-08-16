@@ -66,7 +66,7 @@ function BookingCancel() {
                   </Fade>
                 ) : (
                   <Fade in={isSuccess}>
-                    <Alert status='success' borderRadius='sm'>
+                    <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
                       <AlertIcon />
                       <Text>Cancellation Submitted! You will receive an email within 30mins regarding the next steps</Text>
                     </Alert>
