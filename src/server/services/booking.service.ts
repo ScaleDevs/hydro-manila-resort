@@ -164,6 +164,7 @@ class Service {
       const isBookingDateTaken = await BookingRepository.findBookingConflicts({
         startDate: startSessionISOString,
         endDate: endSessionISOString,
+        bookingId: bookingRecord.id,
       });
 
       const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
