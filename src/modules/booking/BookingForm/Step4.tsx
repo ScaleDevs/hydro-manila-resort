@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
-import { tzSchedToDayJsInsance } from '@/utils/helper';
+import { tzSchedToDayJsInsance, capsFirstLetter } from '@/utils/helper';
 import { useBookingStore } from '@/store/booking.store';
 import usePaymentStoreTrack from '@/store/payment.store';
 import CostView from '../components/CostView';
@@ -54,7 +54,14 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
   const proceedToPayment = () => {
     console.log('data', data);
 
-    mutate(data, {
+    const { firstName, lastName, ...rest } = data;
+
+    const payload = {
+      ...rest,
+      name: capsFirstLetter(firstName) + ' ' + capsFirstLetter(lastName),
+    };
+
+    mutate(payload, {
       onSuccess(data) {
         const paymentIntentResource = data.paymentIntentResource;
 
@@ -131,7 +138,10 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
                 Personal Details
               </Heading>
               <Stack spacing={-2}>
-                <FieldValueReport fieldName='Name' value={data.name} />
+                <FieldValueReport
+                  fieldName='Name'
+                  value={capsFirstLetter(data.firstName) + ' ' + capsFirstLetter(data.lastName)}
+                />
                 <FieldValueReport fieldName='Contact Number' value={data.phoneNumber} />
                 <FieldValueReport fieldName='Email' value={data.email} />
               </Stack>

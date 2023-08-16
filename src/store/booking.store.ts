@@ -12,7 +12,8 @@ export enum BookingSteps {
 }
 
 export type BookingPayload = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phoneNumber: string;
   bookingDate: string;
@@ -42,7 +43,8 @@ export type BookingActions = {
 
 const initState: BookingState = {
   data: {
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phoneNumber: '',
     bookingDate: '',
