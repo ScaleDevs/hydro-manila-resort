@@ -5,7 +5,7 @@ import { AppRouter } from '@/server/routers/_app';
 import { TRPCClientErrorLike } from '@trpc/react-query';
 import { SlideFade, Box, Heading, TableContainer, Table, Tbody, Td, Th, Thead, Tr, Spinner, Text } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
-import { utcDateToTzDayInstance } from '@/utils/helper';
+import { PHpeso, utcDateToTzDayInstance } from '@/utils/helper';
 
 export interface IUpdateLogProps {
   data: UseTRPCQueryResult<inferRouterOutputs<AppRouter>['booking']['getBookingByRefNo'], TRPCClientErrorLike<AppRouter>>['data'];
@@ -14,6 +14,7 @@ export interface IUpdateLogProps {
 
 export function Logs({ isIn, data }: IUpdateLogProps) {
   const updateLogs = data?.updateLogs || [];
+  const transactionLogs = data?.transactionLogs || [];
 
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
@@ -94,7 +95,7 @@ export function Logs({ isIn, data }: IUpdateLogProps) {
                     <Td>{v.updatedBy}</Td>
                     <Td>{getReadableFieldName(v.fieldUpdated)}</Td>
                     <Td>
-                      <Box  minW='200px' maxW='200px' whiteSpace='normal'>
+                      <Box minW='200px' maxW='200px' whiteSpace='normal'>
                         <Text sx={{ wordWrap: 'break-word', wordBreak: 'break-word' }}>
                           {transformValues(v.fieldUpdated, v.fromValue)}
                         </Text>
@@ -108,6 +109,48 @@ export function Logs({ isIn, data }: IUpdateLogProps) {
                       </Box>
                     </Td>
                     <Td>{utcDateToTzDayInstance(v.createdAt).format('MMM DD, YYYY hh:mm A')}</Td>
+                  </Tr>
+                ))
+              )}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </Box>
+
+      <br />
+
+      <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
+        <Heading textAlign='center'>TRANSACTION LOGS</Heading>
+
+        <br />
+        <TableContainer>
+          <Table fontFamily='primary' color='black' variant='striped'>
+            <Thead>
+              <Tr>
+                <Th fontSize='md' fontFamily='primary'>
+                  TYPE
+                </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  PAYMENT ID
+                </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  AMOUNT
+                </Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {updateLogs.length === 0 ? (
+                <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
+                  <Td colSpan={5} textAlign='center' fontSize='lg'>
+                    No Records Found
+                  </Td>
+                </Tr>
+              ) : (
+                transactionLogs.map((v, i) => (
+                  <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} fontSize={{ base: 'xs', xl: 'sm' }}>
+                    <Td>{v.type}</Td>
+                    <Td>{v.refNo}</Td>
+                    <Td>{PHpeso.format(v.amount / 100)}</Td>
                   </Tr>
                 ))
               )}
