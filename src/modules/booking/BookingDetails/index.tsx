@@ -110,7 +110,7 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
               <Stack spacing={0} direction='row' justifyContent='space-between'>
                 <Text>ROOM:</Text>
                 {!!data?.product.isAllRooms ? (
-                  <Text>All Rooms</Text>
+                  <Text>Whole Place</Text>
                 ) : (
                   <Text>
                     {data?.roomsObject && data?.roomsObject.length > 0

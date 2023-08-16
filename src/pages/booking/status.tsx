@@ -102,7 +102,7 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
                         <Td>{statusDisplay.guests.overNightGuests}</Td>
                       </Tr>
                     )}
-                    {statusDisplay?.roomName && (
+                    {statusDisplay && statusDisplay?.roomName !== 'Whole Place' && (
                       <Tr>
                         <Td fontWeight='semibold'>ROOM</Td>
                         <Td>{statusDisplay.roomName}</Td>
