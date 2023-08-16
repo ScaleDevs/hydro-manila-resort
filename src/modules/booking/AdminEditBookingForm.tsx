@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { UseTRPCQueryResult } from '@trpc/react-query/shared';
+import { inferRouterOutputs } from '@trpc/server';
+import { AppRouter } from '@/server/routers/_app';
+import { TRPCClientErrorLike } from '@trpc/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import dayjs from 'dayjs';
@@ -26,20 +30,28 @@ type FormSchemaType = z.infer<typeof schema>;
 
 export interface IRescheduleFormProps {
   bookingRefNo: string;
+  bookingInfo: UseTRPCQueryResult<
+    inferRouterOutputs<AppRouter>['booking']['getBookingByRefNo'],
+    TRPCClientErrorLike<AppRouter>
+  >['data'];
+  isIn?: boolean;
 }
 
-export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormProps) {
-  const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(undefined);
+export default function AdminEditBookingForm({ bookingRefNo, bookingInfo, isIn }: IRescheduleFormProps) {
+  const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(bookingInfo?.product);
   const [formError, setFormError] = useState<string | null>(null);
-  const { data: bookingInfo, isLoading: fetchingBookingInfo } = trpc.booking.getBookingByRefNo.useQuery(bookingRefNo);
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
     limit: 100,
   });
   const { data: roomsData, isLoading: fetchingRooms } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
-  const { mutate: updateBookingMutate, isLoading: isUpdating, isSuccess, error } = trpc.booking.updateBooking.useMutation();
-  const { mutate: checkAvailabilityMutate, isLoading: isCheckingScheduleLoading } =
-    trpc.booking.checkBookingAvailability.useMutation();
+  const {
+    mutate: updateBookingMutate,
+    isLoading: isUpdating,
+    isSuccess,
+    error,
+    reset: resetMutation,
+  } = trpc.booking.updateBooking.useMutation();
   const ctx = trpc.useContext();
 
   const {
@@ -47,17 +59,23 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     control,
     handleSubmit,
     formState: { errors, dirtyFields },
+    setValue,
     watch,
+    reset: resetFormFields,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
       guests: bookingInfo?.guests,
-      rooms: !!fetchingBookingInfo || !bookingInfo ? [] : bookingInfo.rooms,
+      rooms: bookingInfo?.rooms,
+      productId: bookingInfo?.productId,
     },
   });
 
   const handleSelectProduct = (value: any) => {
     if (productsData) setSelectedProduct(productsData.records.find((v) => v.productId === value));
+    setValue('rooms', [], {
+      shouldDirty: true,
+    });
   };
 
   const submitUpdate = async (data: FormSchemaType) => {
@@ -90,24 +108,6 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
       return;
     }
 
-    if (!!updates.bookingDate || !!updates.productId) {
-      const isSchedTaken = await new Promise((resolve) => {
-        checkAvailabilityMutate(
-          {
-            bookingDate: updates.bookingDate || data.bookingDate,
-            productId: updates.productId || data.productId,
-          },
-          {
-            onSuccess(isSchedTaken) {
-              resolve(isSchedTaken);
-            },
-          },
-        );
-      });
-
-      if (!!isSchedTaken) setFormError('Schedule is taken! Kindly choose another schedule');
-    }
-
     updateBookingMutate(
       {
         bookingId: bookingInfo.id,
@@ -118,12 +118,16 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
           ctx.booking.getBookingByRefNo.setData(bookingRefNo, (currentData) => {
             return { ...currentData, ...data };
           });
+          resetFormFields(updates);
+          setTimeout(() => {
+            resetMutation();
+          }, 5000);
         },
       },
     );
   };
 
-  if (fetchingBookingInfo || fetchingProducts || fetchingRooms)
+  if (fetchingProducts || fetchingRooms)
     return (
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         <Heading textAlign='center'>EDIT BOOKING</Heading>
@@ -140,12 +144,12 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
     );
 
   return (
-    <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
-      <Heading textAlign='center'>EDIT BOOKING</Heading>
+    <SlideFade in={isIn} offsetY='20px'>
+      <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
+        <Heading textAlign='center'>EDIT BOOKING</Heading>
 
-      <br />
+        <br />
 
-      <SlideFade in>
         <Box w={{ base: '95%', md: '90%' }} mx='auto'>
           <form onSubmit={handleSubmit(submitUpdate)}>
             <Stack spacing={5}>
@@ -174,12 +178,12 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
                     value: v.productId,
                   })) || []
                 }
-                value={watch('productId') || bookingInfo?.productId}
+                value={watch('productId')}
                 errMsg={!!errors.productId?.message ? 'Required!' : undefined}
                 required
               />
 
-              {roomsData?.records && (
+              {roomsData?.records && !selectedProduct?.isAllRooms && (
                 <ControlledChooseRooms
                   control={control}
                   isLoading={fetchingRooms}
@@ -193,8 +197,8 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
 
             {isSuccess && (
               <>
-                <Alert status='success' borderRadius='sm' color='green.600'>
-                  <AlertIcon />
+                <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
+                  <AlertIcon color='green.200' />
                   Booking Successfuly updated!
                 </Alert>
                 <br />
@@ -211,14 +215,14 @@ export default function AdminEditBookingForm({ bookingRefNo }: IRescheduleFormPr
               </>
             )}
 
-            <Button type='submit' isLoading={isUpdating || isCheckingScheduleLoading}>
+            <Button type='submit' isLoading={isUpdating}>
               UPDATE BOOKING
             </Button>
           </form>
         </Box>
-      </SlideFade>
 
-      <br />
-    </Box>
+        <br />
+      </Box>
+    </SlideFade>
   );
 }
