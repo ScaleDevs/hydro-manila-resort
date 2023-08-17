@@ -126,8 +126,7 @@ const Component = ({ payment_intent_id }: { payment_intent_id: string }) => {
               </Text>
               <Text mt='5px' textAlign='center'>
                 If you have not receive any email after waiting long then kindly contact our team at{' '}
-                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || ''}
-                to confirm your booking schedule.
+                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || ''} to confirm your booking schedule.
               </Text>
               <br /> <br />
             </Box>

@@ -196,7 +196,7 @@ const VLTC = () => {
         <ListItem fontFamily='primary'>Swimming Pool</ListItem>
         <ListItem fontFamily='primary'>Videoke Machine</ListItem>
         <ListItem fontFamily='primary'>Kitchen and Dining Facility</ListItem>
-        <ListItem fontFamily='primary'>Parking for 3 Cars</ListItem>
+        <ListItem fontFamily='primary'>Parking for 4 Cars</ListItem>
       </UnorderedList>
 
       <br />

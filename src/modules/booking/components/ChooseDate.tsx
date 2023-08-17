@@ -19,7 +19,6 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
     (() => {
       if (!!chosenDate) {
         const currentPos = dayjs(chosenDate).diff(dayjs(), 'day') + 2;
-        console.log(Math.ceil(currentPos / 7) * 7 - 6);
         return dayjs().add(Math.ceil(currentPos / 7) * 7 - 7, 'day');
       }
 
