@@ -32,9 +32,10 @@ export interface IChooseScheduleProps {
   chosenDate: string | undefined;
   chosenSchedule: ProductV2 | undefined;
   setChosenSchedule: Dispatch<SetStateAction<ProductV2 | undefined>>;
+  isGettingRooms: boolean;
 }
 
-export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }: IChooseScheduleProps) {
+export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule, isGettingRooms }: IChooseScheduleProps) {
   const { data: productsData, isLoading: isFetchingProducts } = trpc.product.getProducts.useQuery({
     page: 1,
     limit: 100,
@@ -54,7 +55,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule }
       </Text>
       <br />
       <Grid templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={4} p='10px'>
-        {isFetchingProducts || isFetchingBookedDates ? (
+        {isFetchingProducts || isFetchingBookedDates || isGettingRooms ? (
           <>
             <Skeleton height='40px' w='100%' />
             <Skeleton height='40px' w='100%' />

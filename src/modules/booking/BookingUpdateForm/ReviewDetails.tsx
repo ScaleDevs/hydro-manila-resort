@@ -133,7 +133,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 {!!bookingInfo.guests.overNightGuests && (
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingInfo.guests.overNightGuests}`} />
                 )}
-                <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingInfo.guests.nonOverNightGuests}`} />
+                <FieldValueReport
+                  fieldName={selectedProduct.isAllRooms ? 'Guests (Non-Overnight)' : 'Guests'}
+                  value={`${bookingInfo.guests.nonOverNightGuests}`}
+                />
                 <FieldValueReport
                   fieldName='Check-In Date'
                   value={utcDateToTzDayInstance(bookingInfo.startSession).format('MMM DD, YYYY hh:mm A')}
@@ -145,7 +148,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 <FieldValueReport fieldName='Schedule' value={selectedProduct.name || ''} />
                 {!selectedProduct?.isAllRooms && (
                   <FieldValueReport
-                    fieldName='Room'
+                    fieldName='Rooms'
                     value={bookingInfo.roomsObject.map((room) => room.roomIdentityName).join(', ') || 'N/A'}
                   />
                 )}
@@ -159,8 +162,11 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 {!!bookingUpdates?.guests?.overNightGuests && (
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
                 )}
-                {!!bookingUpdates?.guests?.overNightGuests && (
-                  <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${bookingUpdates.guests.nonOverNightGuests}`} />
+                {!!bookingUpdates?.guests?.nonOverNightGuests && (
+                  <FieldValueReport
+                    fieldName={selectedProduct.isAllRooms ? 'Guests (Non-Overnight)' : 'Guests'}
+                    value={`${bookingUpdates.guests.nonOverNightGuests}`}
+                  />
                 )}
                 {bookingUpdates.bookingDate && (
                   <>
@@ -182,7 +188,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                   </>
                 )}
                 {!selectedProduct.isAllRooms && bookingUpdates.rooms && (
-                  <FieldValueReport fieldName='Room' value={Array.from(selectedRooms, (v) => v[1].roomIdentityName).join(', ')} />
+                  <FieldValueReport
+                    fieldName='Rooms'
+                    value={selectedRooms.size === 0 ? 'None' : Array.from(selectedRooms, (v) => v[1].roomIdentityName).join(', ')}
+                  />
                 )}
               </Stack>
             </Box>

@@ -17,7 +17,10 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
     const { guestSetting } = product;
     let total = 0;
 
-    rooms.forEach((roomInfo) => (total += roomInfo.price));
+    rooms.forEach((roomInfo) => {
+      if (product.includedRooms.includes(roomInfo.roomId)) return;
+      total += roomInfo.price;
+    });
 
     if (product && bookedDate) total += getProductPrice(bookedDate, product);
     else if (product) total += product.price;
@@ -38,7 +41,7 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
 
   if (!product) return null;
 
-  const { guestSetting } = product;
+  const { guestSetting, includedRooms } = product;
 
   return (
     <>
@@ -53,12 +56,16 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
           ''
         )}
         {rooms.length > 0
-          ? rooms.map((roomInfo) => (
-              <HStack key={roomInfo.roomId} justifyContent='space-between'>
-                <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
-                <Text>{PHpeso.format(roomInfo.price)}</Text>
-              </HStack>
-            ))
+          ? rooms.map((roomInfo) => {
+              if (includedRooms.includes(roomInfo.roomId)) return null;
+
+              return (
+                <HStack key={roomInfo.roomId} justifyContent='space-between'>
+                  <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
+                  <Text>{PHpeso.format(roomInfo.price)}</Text>
+                </HStack>
+              );
+            })
           : ''}
         {guests && guests.overNightGuests > guestSetting.minOverNightGuestPax && (
           <HStack justifyContent='space-between'>
@@ -72,7 +79,10 @@ export default function CostView({ bookedDate, rooms = [], product, guests }: IC
         )}
         {guests && guests.nonOverNightGuests > guestSetting.minNonOverNightGuestPax && (
           <HStack justifyContent='space-between'>
-            <Text>ADDITIONAL NON-OVERNIGHT PAX ({guests.nonOverNightGuests - guestSetting.minNonOverNightGuestPax})</Text>
+            <Text>
+              ADDITIONAL {product.isAllRooms ? 'NON-OVERNIGHT' : ''} PAX (
+              {guests.nonOverNightGuests - guestSetting.minNonOverNightGuestPax})
+            </Text>
             <Text>
               {PHpeso.format(
                 getExtraHeadsTotal(

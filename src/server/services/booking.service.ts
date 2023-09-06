@@ -109,8 +109,8 @@ class Service {
             transactionRefNo: transactionRefNo ? transactionRefNo : null,
             updatedBy,
             fieldUpdated,
-            fromValue: createGuestsSummary(bookingRecord.guests),
-            toValue: createGuestsSummary(data.guests),
+            fromValue: createGuestsSummary({ guests: bookingRecord.guests }),
+            toValue: createGuestsSummary({ guests: data.guests }),
             createdAt: dayjs().toDate(),
           });
         else
@@ -342,7 +342,7 @@ class Service {
       if (!!bookingRequestUpdate.guests)
         modifications.push({
           name: 'No. of Guests',
-          value: createGuestsSummary(bookingRequestUpdate.guests),
+          value: createGuestsSummary({ guests: bookingRequestUpdate.guests }),
         });
 
       if (!!newRooms)
@@ -382,7 +382,7 @@ class Service {
       // send email to both support team & customer
       await updateBookingPartialRefundEmail(bookingRecord, PHpeso.format(bookingRecord.receipt.total - newTotal), {
         reference_no: bookingRecord.ref_no,
-        guests: createGuestsSummary(bookingRecord.guests),
+        guests: createGuestsSummary({ isAllRooms: (newProduct || oldProduct).isAllRooms, guests: bookingRecord.guests }),
         booking_type: oldProduct.name,
         room: oldProduct.isAllRooms ? 'Whole Place' : !!oldRooms?.length ? oldRooms.join(', ') : 'None',
         check_in_date: dayjs.utc(bookingRecord.startSession).tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),

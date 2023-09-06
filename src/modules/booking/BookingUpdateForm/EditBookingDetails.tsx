@@ -67,16 +67,16 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
       guests: (() => {
         if (!selectedProduct || !bookingInfo) return undefined;
 
-        const { scheduleEndNextDay, guestSetting } = selectedProduct;
+        const { scheduleEndNextDay, guestSetting, isAllRooms } = selectedProduct;
         const guests = savedValues?.guests || bookingInfo?.guests;
 
-        if (!!scheduleEndNextDay && freeGuests === guestSetting.minOverNightGuestPax)
+        if (!!scheduleEndNextDay && !!isAllRooms && freeGuests === guestSetting.minOverNightGuestPax)
           return {
             overNightGuests: guests.overNightGuests > freeGuests ? guests.overNightGuests - freeGuests : 0,
             nonOverNightGuests: guests.nonOverNightGuests,
           };
 
-        if (!scheduleEndNextDay && freeGuests === guestSetting.minNonOverNightGuestPax)
+        if (freeGuests === guestSetting.minNonOverNightGuestPax)
           return {
             overNightGuests: guests.overNightGuests,
             nonOverNightGuests:
@@ -123,7 +123,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
 
   const proceed = (data: BookingRequestUpdates) => {
     if (!dirtyFields || !bookingInfo || !selectedProduct) return;
-    const { guestSetting, scheduleEndNextDay } = selectedProduct;
+    const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
 
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
       setFormError('Date is not available! Kindly choose another date');
@@ -144,8 +144,10 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
     const compareData = {
       ...data,
       guests: {
-        overNightGuests: !!scheduleEndNextDay ? freeGuests + data.guests.overNightGuests : data.guests.overNightGuests,
-        nonOverNightGuests: !!scheduleEndNextDay ? data.guests.nonOverNightGuests : freeGuests + data.guests.nonOverNightGuests,
+        overNightGuests:
+          !!scheduleEndNextDay && !!isAllRooms ? freeGuests + data.guests.overNightGuests : data.guests.overNightGuests,
+        nonOverNightGuests:
+          !!scheduleEndNextDay && !!isAllRooms ? data.guests.nonOverNightGuests : freeGuests + data.guests.nonOverNightGuests,
       },
     };
     const updates = {} as any;
@@ -186,7 +188,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
         setStateField('stepsLength', 2);
       }
 
-      setStateField('selectedRooms', selectedRooms);
+      setStateField('selectedRooms', new Map(Array.from(selectedRooms, (v) => [v.roomId, v])));
       setStateField('selectedProduct', selectedProduct);
     };
 
@@ -216,11 +218,13 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
 
   if (!selectedProduct) return null;
 
-  const { guestSetting, scheduleEndNextDay } = selectedProduct;
+  const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
 
   const isAdditionalInputsDisabled = () =>
-    freeGuests < (!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
-  const getMainMin = () => (!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
+    freeGuests <
+    (!!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
+  const getMainMin = () =>
+    !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
   const extraHeadsTotalNonOvernight = guestSetting.maxNonOverNightGuestPax - guestSetting.minNonOverNightGuestPax;
   const extraHeadsTotalOvernight = guestSetting.maxOverNightGuestPax - guestSetting.minOverNightGuestPax;
 
@@ -264,7 +268,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                 <VStack alignItems='left' spacing={2}>
                   <NumberFieldV2
                     label='Guests'
-                    maxValue={!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax}
+                    maxValue={getMainMin()}
                     value={`${freeGuests}`}
                     property='freeGuests'
                     onChange={(v) => {
@@ -285,32 +289,34 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                   </Box>
                 </VStack>
 
-                <VStack alignItems='left' spacing={2}>
-                  <NumberFieldV2
-                    label='Additional Pax (Overnight)'
-                    control={control}
-                    property='guests.overNightGuests'
-                    disabled={isAdditionalInputsDisabled()}
-                  />
-                  <Box w='70%' fontSize='12px' lineHeight={1.5}>
-                    <Text color='gray.400'>
-                      MAX OF {extraHeadsTotalOvernight} PAX ₱{guestSetting.overNightGuestFee}
-                      /HEAD
-                    </Text>
-                    <Text color='gray.400'>CHILDREN 2 YEARS BELOW ARE FREE Do not add in # of pax</Text>
-                  </Box>
-                  <Stack w='100%'>
-                    <Text color='red.500' textAlign='left'>
-                      {watch('guests.overNightGuests') > extraHeadsTotalOvernight
-                        ? `Extra Heads Allowed are only ${extraHeadsTotalOvernight}!`
-                        : ''}
-                    </Text>
-                  </Stack>
-                </VStack>
+                {!!scheduleEndNextDay && !!isAllRooms && (
+                  <VStack alignItems='left' spacing={2}>
+                    <NumberFieldV2
+                      label='Additional Pax (Overnight)'
+                      control={control}
+                      property='guests.overNightGuests'
+                      disabled={isAdditionalInputsDisabled()}
+                    />
+                    <Box w='70%' fontSize='12px' lineHeight={1.5}>
+                      <Text color='gray.400'>
+                        MAX OF {extraHeadsTotalOvernight} PAX ₱{guestSetting.overNightGuestFee}
+                        /HEAD
+                      </Text>
+                      <Text color='gray.400'>CHILDREN 2 YEARS BELOW ARE FREE Do not add in # of pax</Text>
+                    </Box>
+                    <Stack w='100%'>
+                      <Text color='red.500' textAlign='left'>
+                        {watch('guests.overNightGuests') > extraHeadsTotalOvernight
+                          ? `Extra Heads Allowed are only ${extraHeadsTotalOvernight}!`
+                          : ''}
+                      </Text>
+                    </Stack>
+                  </VStack>
+                )}
 
                 <VStack alignItems='left' spacing={2}>
                   <NumberFieldV2
-                    label='Additional Pax (Non-Overnight)'
+                    label={!!isAllRooms ? 'Additional Pax (Non-Overnight)' : 'Additional Pax'}
                     control={control}
                     property='guests.nonOverNightGuests'
                     disabled={isAdditionalInputsDisabled()}
@@ -352,12 +358,14 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
               rooms={selectedRooms}
               product={selectedProduct}
               guests={{
-                nonOverNightGuests: !!scheduleEndNextDay
-                  ? watch('guests.nonOverNightGuests')
-                  : watch('guests.nonOverNightGuests') + freeGuests,
-                overNightGuests: !!scheduleEndNextDay
-                  ? watch('guests.overNightGuests') + freeGuests
-                  : watch('guests.overNightGuests'),
+                nonOverNightGuests:
+                  !!scheduleEndNextDay && !!isAllRooms
+                    ? watch('guests.nonOverNightGuests')
+                    : watch('guests.nonOverNightGuests') + freeGuests,
+                overNightGuests:
+                  !!scheduleEndNextDay && !!isAllRooms
+                    ? watch('guests.overNightGuests') + freeGuests
+                    : watch('guests.overNightGuests'),
               }}
               bookedDate={watch('bookingDate')}
             />
@@ -382,7 +390,9 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                 isLoading={isCheckingScheduleLoading}
                 isDisabled={
                   freeGuests >
-                    (!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax) ||
+                    (!!scheduleEndNextDay && !!isAllRooms
+                      ? guestSetting.minOverNightGuestPax
+                      : guestSetting.minNonOverNightGuestPax) ||
                   watch('guests.nonOverNightGuests') > extraHeadsTotalNonOvernight ||
                   watch('guests.overNightGuests') > extraHeadsTotalOvernight
                 }

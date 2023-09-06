@@ -119,7 +119,10 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
               </Heading>
               <Stack spacing={-2}>
                 {!!data.guests.nonOverNightGuests && (
-                  <FieldValueReport fieldName='Guests (Non-Overnight)' value={`${data.guests.nonOverNightGuests}`} />
+                  <FieldValueReport
+                    fieldName={`Guests ${selectedProduct.isAllRooms ? '(Non-Overnight)' : ''}`}
+                    value={`${data.guests.nonOverNightGuests}`}
+                  />
                 )}
                 {!!data.guests.overNightGuests && (
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${data.guests.overNightGuests}`} />
