@@ -14,20 +14,21 @@ export interface IStep2Props {
 export function Step2({ onPrev, onNext }: IStep2Props) {
   const { setBookingStateData, setBookingState, selectedRooms, selectedProduct, data, freeGuests } = useBookingStoreTrack();
   const [nonOverNightGuests, setNonOverNightGuests] = useState(
-    !!selectedProduct?.scheduleEndNextDay ? data.guests.nonOverNightGuests : data.guests.nonOverNightGuests - freeGuests,
+    !!selectedProduct?.scheduleEndNextDay && !!selectedProduct.isAllRooms
+      ? data.guests.nonOverNightGuests
+      : data.guests.nonOverNightGuests - freeGuests,
   );
   const [overNightGuests, setOverNightGuests] = useState(
-    !!selectedProduct?.scheduleEndNextDay ? data.guests.overNightGuests - freeGuests : 0,
+    !!selectedProduct?.scheduleEndNextDay && !!selectedProduct.isAllRooms ? data.guests.overNightGuests - freeGuests : 0,
   );
   const [guests, setGuests] = useState(freeGuests);
   const [chosenRoomsMap, setChosenRoomsMap] = useState<typeof selectedRooms>(selectedRooms);
 
   const isStepComplete = () => {
     if (!selectedProduct) return false;
-    const { guestSetting } = selectedProduct;
-    const freeGuestMax = !!selectedProduct?.scheduleEndNextDay
-      ? guestSetting.minOverNightGuestPax
-      : guestSetting.minNonOverNightGuestPax;
+    const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
+    const freeGuestMax =
+      !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
 
     return (
       guests > 0 &&
@@ -40,11 +41,13 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
   const proceed = () => {
     if (!guests || !selectedProduct) return;
 
+    const { scheduleEndNextDay, isAllRooms } = selectedProduct;
+
     setBookingStateData({
       roomIds: Array.from(chosenRoomsMap, (entry) => entry[1].roomId),
       guests: {
-        nonOverNightGuests: !!selectedProduct.scheduleEndNextDay ? nonOverNightGuests : nonOverNightGuests + guests,
-        overNightGuests: !!selectedProduct.scheduleEndNextDay ? overNightGuests + guests : 0,
+        nonOverNightGuests: !!scheduleEndNextDay && !!isAllRooms ? nonOverNightGuests : nonOverNightGuests + guests,
+        overNightGuests: !!scheduleEndNextDay && !!isAllRooms ? overNightGuests + guests : 0,
       },
     });
     setBookingState('freeGuests', guests);
@@ -53,10 +56,11 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
   };
 
   if (!selectedProduct) return null;
-  const { guestSetting, scheduleEndNextDay } = selectedProduct;
+  const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
   const isAdditionalInputsDisabled = () =>
-    guests < (!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
-  const getMainMin = () => (!!scheduleEndNextDay ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
+    guests < (!!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
+  const getMainMin = () =>
+    !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
   const extraHeadsTotalNonOvernight = guestSetting.maxNonOverNightGuestPax - guestSetting.minNonOverNightGuestPax;
   const extraHeadsTotalOvernight = guestSetting.maxOverNightGuestPax - guestSetting.minOverNightGuestPax;
 
@@ -93,7 +97,7 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
         </Box>
       </VStack>
 
-      {!!scheduleEndNextDay && (
+      {!!scheduleEndNextDay && !!isAllRooms && (
         <VStack alignItems='left' spacing={2}>
           <Text fontSize='lg' fontWeight='semibold'>
             Enter Additional Overnight guests:
@@ -127,7 +131,7 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
 
       <VStack alignItems='left' spacing={2}>
         <Text fontSize='lg' fontWeight='semibold'>
-          Enter Additional Non-Overnight guests:
+          {!!isAllRooms ? 'Enter Additional Non-Overnight guests:' : 'Enter Additional guests:'}
         </Text>
         <Box h='100%' w='30%'>
           <NumberFieldV2
@@ -163,8 +167,8 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
         <Box w='400px'>
           <CostView
             guests={{
-              nonOverNightGuests: !!scheduleEndNextDay ? nonOverNightGuests : nonOverNightGuests + guests,
-              overNightGuests: !!scheduleEndNextDay ? overNightGuests + guests : overNightGuests,
+              nonOverNightGuests: !!scheduleEndNextDay && !!isAllRooms ? nonOverNightGuests : nonOverNightGuests + guests,
+              overNightGuests: !!scheduleEndNextDay && !!isAllRooms ? overNightGuests + guests : overNightGuests,
             }}
             product={selectedProduct}
             rooms={Array.from(chosenRoomsMap, (entry) => entry[1])}

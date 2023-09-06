@@ -31,6 +31,8 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
   const searchBookingInfo = (payload: FormSchemaType) => {
     mutate(payload.refNo, {
       onSuccess(data) {
+        const { scheduleEndNextDay, isAllRooms, guestSetting } = data.product;
+
         setBookingReferenceNo(payload.refNo);
         setBookingInfo(data);
 
@@ -39,10 +41,9 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
         setStateField(
           'currentFreeGuests',
           (() => {
-            const guests = !!data.product.scheduleEndNextDay ? data.guests.overNightGuests : data.guests.nonOverNightGuests;
-            const minGuestsAllowed = !!data.product.scheduleEndNextDay
-              ? data.product.guestSetting.minOverNightGuestPax
-              : data.product.guestSetting.minNonOverNightGuestPax;
+            const guests = !!scheduleEndNextDay && !!isAllRooms ? data.guests.overNightGuests : data.guests.nonOverNightGuests;
+            const minGuestsAllowed =
+              !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
 
             return guests > minGuestsAllowed ? minGuestsAllowed : guests;
           })(),

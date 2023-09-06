@@ -121,9 +121,9 @@ export const createReferenceNumber = () => {
   return dayjsInstance.format('MMMDDYY').toUpperCase() + randomString(3) + `${dayjsInstance.unix()}`.slice(6) + randomString(2);
 };
 
-export const createGuestsSummary = (guests?: Guests) => {
+export const createGuestsSummary = ({ isAllRooms, guests }: { isAllRooms?: boolean; guests?: Guests }) => {
   if (!guests) return 'No Guests';
-  const nonOvernightString = `Non-Overnight Guests (${guests.nonOverNightGuests || 0})`;
+  const nonOvernightString = (isAllRooms ? 'Non-Overnight ' : '') + 'Guests' + ' ' + `(${guests.nonOverNightGuests || 0})`;
   if (guests.overNightGuests > 0) return nonOvernightString + ' ' + `Overnight Guests (${guests.overNightGuests})`;
   return nonOvernightString;
 };

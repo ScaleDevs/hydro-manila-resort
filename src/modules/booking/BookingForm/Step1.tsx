@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Stack, Button, Box, Collapse } from '@chakra-ui/react';
 
-import { ProductV2 } from '@/utils/types';
+import { trpc } from '@/utils/trpc';
+import { IRoom, ProductV2 } from '@/utils/types';
 import useBookingStoreTrack from '@/store/booking.store';
 import CostView from '../components/CostView';
 import { ChooseDate } from '../components/ChooseDate';
@@ -15,6 +16,7 @@ export function Step1({ onNext }: Step1Props) {
   const { setBookingStateData, setBookingState, data, selectedProduct, selectedRooms } = useBookingStoreTrack();
   const [chosenDate, setChosenDate] = useState<string | undefined>(data.bookingDate || undefined);
   const [chosenSchedule, setChosenSchedule] = useState<ProductV2 | undefined>(selectedProduct);
+  const { data: roomsData, isLoading } = trpc.room.getRooms.useQuery({ page: 1, limit: 100 });
 
   const isDisabled = () => !chosenDate || !chosenSchedule;
 
@@ -30,7 +32,17 @@ export function Step1({ onNext }: Step1Props) {
         roomIds: [],
       });
 
-      setBookingState('selectedRooms', new Map());
+      const rooms = roomsData?.records;
+      const roomsMapArray: [string, IRoom][] = [];
+
+      if (!!rooms)
+        chosenSchedule.includedRooms.forEach((p) => {
+          const id = p;
+          const value = rooms.find((r) => r.roomId === p);
+          if (!!value) roomsMapArray.push([id, value]);
+        });
+
+      setBookingState('selectedRooms', new Map(roomsMapArray));
       setBookingState('freeGuests', 0);
     }
 
@@ -49,7 +61,12 @@ export function Step1({ onNext }: Step1Props) {
       <ChooseDate chosenDate={chosenDate} setChosenDate={setChosenDate} setChosenSchedule={setChosenSchedule} />
       {chosenDate && (
         <Collapse in={!!chosenDate} animateOpacity>
-          <ChooseSchedule chosenDate={chosenDate} chosenSchedule={chosenSchedule} setChosenSchedule={setChosenSchedule} />
+          <ChooseSchedule
+            chosenDate={chosenDate}
+            chosenSchedule={chosenSchedule}
+            setChosenSchedule={setChosenSchedule}
+            isGettingRooms={isLoading}
+          />
         </Collapse>
       )}
       <Stack direction='row' justifyContent='flex-end'>
