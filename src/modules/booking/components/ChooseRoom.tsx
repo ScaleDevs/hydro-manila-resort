@@ -50,10 +50,10 @@ export function ChooseRoom({ chosenSchedule, chosenRoomsMap, setChosenRoomsMap }
               <GridItem
                 colSpan={1}
                 key={index}
-                borderRadius='md'
                 boxShadow='lg'
+                borderRadius='sm'
                 overflow='hidden'
-                transition='outline 0.1s linear'
+                transition='outline 0.03s linear'
                 cursor={isIncludedInSched ? 'not-allowed' : 'pointer'}
                 _hover={isActive || isIncludedInSched ? {} : { outline: 'solid 2px', outlineColor: 'primary.1' }}
                 outline={isActive || isIncludedInSched ? 'solid 4px' : '2px'}
