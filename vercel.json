@@ -1,4 +1,10 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "master": true,
+      "develop": false
+    }
+  },
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "crons": [
