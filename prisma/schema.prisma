@@ -162,3 +162,14 @@ model BookingAttempt {
   createdAt        DateTime @default(now())
   expireAt         DateTime
 }
+
+model Secrets {
+  secretId        String   @id @default(auto()) @map("_id") @db.ObjectId
+  secretsIdentity String
+  clientId        String
+  clientSecret    String
+  accessToken     String
+  expiresIn       Int
+  isActive        Boolean
+  createdAt       DateTime
+}

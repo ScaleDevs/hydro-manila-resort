@@ -20,4 +20,12 @@ export const GetVars = {
 
     return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
   })(),
+  hostAwayListingId: (() => {
+    const result = {
+      VillaLeonora: 95907,
+      HydroResortManila: 0,
+    };
+
+    return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
+  })(),
 };
