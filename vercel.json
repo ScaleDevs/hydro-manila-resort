@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/hostaway_update_token?secretId=6507d56943cf27b0e29390db",
-      "schedule": "35 18 * * *"
+      "schedule": "49 18 * * *"
     }
   ]
 }
