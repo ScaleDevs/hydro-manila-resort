@@ -1,0 +1,16 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "master": true,
+      "develop": false
+    }
+  },
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/hostaway_update_token?secretId=6507d56943cf27b0e29390db",
+      "schedule": "* * * * *"
+    }
+  ]
+}
