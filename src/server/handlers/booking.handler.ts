@@ -2,15 +2,17 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { Guests } from '@prisma/client';
 
-import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
+import { tzSchedToDayJsInsance, tzSchedToUnix, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
 import { bookingUpdateNoAdditionalPaymentConfirmation } from '@/repo/mailersend.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
+import { getReservations } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { createGuestsSummary } from '../util';
+import { constants } from '../constants';
 
 export * as BookingHandler from './booking.handler';
 
@@ -43,14 +45,35 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
       page: 1,
       limit: 1000,
     };
-
     const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
-
     const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
-
     const bookingAttemptRecords = await BookingAttemptRepository.findAllBookingAttemptsByDates(getRecordsParams);
-
     const bookedDates: IBookingDates = {};
+
+    if (constants.general.appName === 'VillaLeonora') {
+      const hostawayRecords = await getReservations({
+        arrivalStartDate: inputs.startDate.split('T')[0],
+        arrivalEndDate: inputs.endDate.split('T')[0],
+      });
+
+      if (hostawayRecords)
+        for (const record of hostawayRecords.result) {
+          if (['new', 'modified', 'ownerStay', 'awaitingPayment', 'awaitingGuestVerification'].includes(record.status)) {
+            const keyStart = record.arrivalDate;
+            const keyEnd = record.departureDate;
+            const value = {
+              start: tzSchedToUnix(record.arrivalDate, record.checkInTime),
+              end: tzSchedToUnix(record.departureDate, record.checkOutTime),
+            };
+
+            if (!bookedDates[keyStart]) bookedDates[keyStart] = [];
+            if (!bookedDates[keyEnd]) bookedDates[keyEnd] = [];
+
+            bookedDates[keyStart].push(value);
+            if (keyStart !== keyEnd) bookedDates[keyEnd].push(value);
+          }
+        }
+    }
 
     for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
       if ('id' in record) if (!!record.refundId) continue;

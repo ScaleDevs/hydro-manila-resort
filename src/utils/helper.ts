@@ -41,6 +41,10 @@ export const tzSchedToDayJsInsance = (bookingDate: string, schedule: string) => 
   );
 };
 
+export const tzSchedToUnix = (date: string, time: number) => {
+  return dayjs.tz(`${date}T${time}:00:00`, process.env.NEXT_PUBLIC_TIMEZONE).unix();
+};
+
 export const buildGoogleCalendarDateTime = (utcDateTime: string | Date) => {
   return dayjs.utc(utcDateTime).format('YYYY-MM-DDTHH:mm:00.000') + 'Z';
 };

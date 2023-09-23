@@ -11,6 +11,7 @@ type ReservationDetails = {
   checkOutTime: number;
   phone: string;
   totalPrice: number;
+  status: string;
 };
 
 type AccessTokenResponse = {
@@ -80,7 +81,7 @@ export const generateToken = async (secretId: string) => {
   }
 };
 
-export const createReservation = async (details: ReservationDetails) => {
+export const createReservation = async (details: Omit<ReservationDetails, 'status'>) => {
   console.log('EXECUTING :: createReservation');
 
   try {
@@ -142,7 +143,7 @@ export const getReservations = async ({
     const res = (await result.json()) as any;
 
     console.log('SUCCESS EXECUTION :: getReservations');
-    return res;
+    return res as { status: string; result: ReservationDetails[] };
   } catch (err) {
     console.log(err);
     return false;
