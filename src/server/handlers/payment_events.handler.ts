@@ -16,6 +16,7 @@ import {
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
+import { createReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
@@ -167,6 +168,43 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   });
   emailAddonsTable.push({ name: '', price: '', qty: 'Total Extra', summary: PHpeso.format(addonsTotal) });
 
+  let hostawayId: null | number = null;
+
+  if (constants.general.appName === 'VillaLeonora') {
+    const arrivalDateInstance = dayjs(parsed.data.startSession);
+    const departureDateInstance = dayjs(parsed.data.endSession);
+
+    const reservationResult = await createReservation({
+      guestName: parsed.data.name,
+      numberOfGuests: parsed.data.guests.nonOverNightGuests + parsed.data.guests.overNightGuests,
+      arrivalDate: arrivalDateInstance.format('YYYY-MM-DD'),
+      departureDate: departureDateInstance.format('YYYY-MM-DD'),
+      checkInTime: arrivalDateInstance.hour(),
+      checkOutTime: departureDateInstance.hour(),
+      phone: parsed.data.phoneNumber,
+      totalPrice: parsed.data.receipt.total,
+    });
+
+    if ('conflict' in reservationResult && reservationResult.message === 'Requested date is not available') {
+      await sendRefundEmailConflictBooking({
+        recipientEmail: parsed.data.email,
+        customer_name: parsed.data.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+        isHostawayConflict: true,
+      });
+
+      return;
+    } else if ('conflict' in reservationResult) {
+      await sendRefundEmailConflictBooking({
+        recipientEmail: parsed.data.email,
+        customer_name: parsed.data.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+      });
+
+      return;
+    } else if ('guestName' in reservationResult) hostawayId = reservationResult.id;
+  }
+
   const calendarEventId = await GoogleCalendarRepository.createEvent({
     summary: parsed.data.name,
     description: `${product?.name} / ${guests.nonOverNightGuests ?? 0} Non-Overnight Guests / ${
@@ -194,6 +232,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     refundId: null,
     updateLogs: [],
     transactionLogs: [],
+    hostawayId: hostawayId,
   });
 
   if (!bookingRecord) {

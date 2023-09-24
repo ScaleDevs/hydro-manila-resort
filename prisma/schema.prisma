@@ -126,7 +126,10 @@ model Booking {
   paymentId       String
   refundId        String?
   calendarEventId String?
+  hostawayId      Int?
   createdAt       DateTime           @default(now())
+
+  @@index([startSession, endSession])
 }
 
 model BookingSetting {

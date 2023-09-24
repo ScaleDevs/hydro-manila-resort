@@ -148,12 +148,14 @@ type SendRefundEmailConflictBookingInput = {
   recipientEmail: string;
   customer_name: string;
   payment_id: string;
+  isHostawayConflict?: boolean;
 };
 
 export const sendRefundEmailConflictBooking = async ({
   recipientEmail,
   customer_name,
   payment_id,
+  isHostawayConflict,
 }: SendRefundEmailConflictBookingInput) => {
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
@@ -161,7 +163,9 @@ export const sendRefundEmailConflictBooking = async ({
     variables: {
       title_of_message: 'Booking Failed due to conflict of schedules (Kindly Review)',
       greetings: 'Hi Support Team,',
-      message_body: `The booking for customer ${customer_name} has failed due to booking schedule already being filled. Kindly process his/her refund or help resched booking by contacting the customer.`,
+      message_body: `The booking for customer ${customer_name} has failed due to booking schedule already being filled${
+        isHostawayConflict ? ' on the hostaway calendar' : ''
+      }. Kindly process his/her refund or help resched booking by contacting the customer.`,
     },
     subject: constants.general.companyName + ' ' + 'Customer Booking Failed',
   });

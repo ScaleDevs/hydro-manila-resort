@@ -3,6 +3,7 @@ import prisma from './prisma.client';
 import { GetVars } from '@/appspecs/vars';
 
 type ReservationDetails = {
+  id: number;
   guestName: string;
   numberOfGuests: number;
   arrivalDate: string;
@@ -81,12 +82,16 @@ export const generateToken = async (secretId: string) => {
   }
 };
 
-export const createReservation = async (details: Omit<ReservationDetails, 'status'>) => {
+export const createReservation = async (details: Omit<ReservationDetails, 'id' | 'status'>) => {
   console.log('EXECUTING :: createReservation');
 
   try {
     const secrets = await prisma.secrets.findFirst();
-    if (!secrets) return false;
+    if (!secrets)
+      return {
+        conflict: true,
+        message: 'No token was found to be used to access the api',
+      };
 
     const result = await fetch('https://api.hostaway.com/v1/reservations', {
       method: 'post',
@@ -105,12 +110,28 @@ export const createReservation = async (details: Omit<ReservationDetails, 'statu
 
     const res = (await result.json()) as any;
 
+    if (result.status === 403 && !!res.message.includes('Requested dates are not available for listing')) {
+      return {
+        conflict: true,
+        message: 'Requested date is not available',
+      };
+    }
+
+    if (res.status === 'fail')
+      return {
+        conflict: true,
+        message: 'Something went wrong',
+      };
+
     console.log('SUCCESS EXECUTION :: createReservation');
 
-    return res;
+    return res.result as ReservationDetails;
   } catch (err) {
     console.log(err);
-    return false;
+    return {
+      conflict: true,
+      message: 'Something went wrong',
+    };
   }
 };
 
