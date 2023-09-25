@@ -56,6 +56,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
     mutate: sendUpdateRequest,
     isLoading: isSendingUpdateRequest,
     isError,
+    error,
   } = trpc.booking.customerUpdateRequest.useMutation();
   const { mutate: inititatePaymentSession, isLoading: isInitiationPaymentSession } =
     trpc.payment.initiatePaymentSessionForUpdateBooking.useMutation();
@@ -116,7 +117,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
         <>
           <Alert status='error' borderRadius='sm' color='red.600'>
             <AlertIcon />
-            Something Went Wrong! Kindly Try Again
+            {error.message || 'Something Went Wrong! Kindly Try Again'}
           </Alert>
           <br />
         </>

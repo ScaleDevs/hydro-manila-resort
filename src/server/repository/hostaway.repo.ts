@@ -164,6 +164,7 @@ export const updateReservation = async (
     const res = (await result.json()) as any;
 
     if (result.status === 403 && !!res.message.includes('Requested dates are not available for listing')) {
+      console.error(res);
       return {
         conflict: true,
         message: 'Requested date is not available',
@@ -174,7 +175,7 @@ export const updateReservation = async (
       console.error(res);
       return {
         conflict: true,
-        message: 'Something went wrong',
+        message: 'Something went wrong! Kindly Try Again!',
       };
     }
 
@@ -185,7 +186,7 @@ export const updateReservation = async (
     console.log(err);
     return {
       conflict: true,
-      message: 'Something went wrong',
+      message: 'Something went wrong! Kindly Try Again!',
     };
   }
 };

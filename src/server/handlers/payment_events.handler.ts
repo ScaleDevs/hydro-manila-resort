@@ -7,6 +7,7 @@ import { BookingRepository } from '@/repo/booking.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import {
+  notificationUpdateFailed,
   notifyAdminDbInsertionError,
   sendBookingSuccessEmail,
   sendRefundEmailConflictBooking,
@@ -16,7 +17,7 @@ import {
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
-import { createReservation } from '@/repo/hostaway.repo';
+import { createReservation, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
@@ -420,6 +421,35 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
       room: statusDisplay.roomName || 'N/A',
       total_payment: PHpeso.format(paymentIntentRecord.attributes.amount / 100),
     });
+  }
+
+  if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+    const { overNightGuests, nonOverNightGuests } = data.guests || bookingRecord.guests;
+    const updateResult = await updateReservation(bookingRecord.hostawayId.toString(), {
+      numberOfGuests: overNightGuests + nonOverNightGuests,
+      arrivalDate: result.startSession.format('YYYY-MM-DD'),
+      departureDate: result.endSession.format('YYYY-MM-DD'),
+    });
+
+    if ('conflict' in updateResult && updateResult.message === 'Requested date is not available') {
+      await sendRefundEmailConflictBooking({
+        recipientEmail: bookingRecord.email,
+        customer_name: bookingRecord.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+        isHostawayConflict: true,
+      });
+
+      return;
+    } else if ('conflict' in updateResult) {
+      await notificationUpdateFailed({
+        customer_email: bookingRecord.email,
+        customer_name: bookingRecord.name,
+        payment_id: paymentIntentRecord.attributes.payments[0].id,
+        ref_no: bookingRecord.ref_no,
+      });
+
+      return;
+    }
   }
 
   await BookingService.updateBooking({

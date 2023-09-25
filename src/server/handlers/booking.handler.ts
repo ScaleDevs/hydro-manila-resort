@@ -158,8 +158,7 @@ export const updateBookingHandler = async (
     },
   });
 
-  if (!newBookingData)
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Error :: Handler ==> updateBookingHandler()' });
+  if (!newBookingData) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong! Kindly Try Again!' });
 
   return BookingService.extendedBookingInstance(newBookingData);
 };
@@ -221,6 +220,23 @@ export const customerUpdateRequestHandler = async (input: {
       product: oldProduct,
     });
 
+    if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+      const { overNightGuests, nonOverNightGuests } = updateData.guests || bookingRecord.guests;
+      const updateResult = await updateReservation(bookingRecord.hostawayId.toString(), {
+        numberOfGuests: overNightGuests + nonOverNightGuests,
+        arrivalDate: result.startSession.format('YYYY-MM-DD'),
+        departureDate: result.endSession.format('YYYY-MM-DD'),
+      });
+
+      if ('conflict' in updateResult && updateResult.message === 'Requested date is not available')
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Requested dates are blocked from hostaway calendar' });
+      else if ('conflict' in updateResult)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `${updateResult.message}`,
+        });
+    }
+
     await BookingService.updateBooking({
       bookingId: bookingRecord.id,
       product: newProduct || oldProduct,
@@ -257,11 +273,33 @@ export const checkBookingAvailability = async (input: { productId: string; booki
     .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
     .format('YYYY-MM-DD');
 
-  const startSession = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart).toISOString();
-  const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd).toISOString();
+  const startSession = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
+  const endSession = tzSchedToDayJsInsance(endDate, product.scheduleEnd);
+
+  if (constants.general.appName === 'VillaLeonora') {
+    const hostawayRecords = await getReservations({
+      arrivalStartDate: input.bookingDate,
+      arrivalEndDate: endDate,
+    });
+
+    if (hostawayRecords) {
+      const reqStart = startSession.unix();
+      const reqEnd = endSession.unix();
+      for (const record of hostawayRecords.result)
+        if (['new', 'modified', 'ownerStay', 'awaitingPayment', 'awaitingGuestVerification'].includes(record.status)) {
+          const checkStart = tzSchedToUnix(record.arrivalDate, record.checkInTime);
+          const checkEnd = tzSchedToUnix(record.departureDate, record.checkOutTime);
+
+          if (reqStart <= checkStart && checkStart <= reqEnd) return true;
+          if (reqStart <= checkEnd && checkEnd <= reqEnd) return true;
+          if (checkStart <= reqStart && reqStart <= checkEnd) return true;
+          if (checkStart <= reqEnd && reqEnd <= checkEnd) return true;
+        }
+    }
+  }
 
   return BookingService.checkScheduleAvailability({
-    startDate: startSession,
-    endDate: endSession,
+    startDate: startSession.toISOString(),
+    endDate: endSession.toISOString(),
   });
 };
