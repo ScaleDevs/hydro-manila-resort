@@ -171,8 +171,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   let hostawayId: null | number = null;
 
   if (constants.general.appName === 'VillaLeonora') {
-    const arrivalDateInstance = dayjs(parsed.data.startSession);
-    const departureDateInstance = dayjs(parsed.data.endSession);
+    const arrivalDateInstance = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
+    const departureDateInstance = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
 
     const reservationResult = await createReservation({
       guestName: parsed.data.name,
@@ -181,7 +181,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
       departureDate: departureDateInstance.format('YYYY-MM-DD'),
       checkInTime: arrivalDateInstance.hour(),
       checkOutTime: departureDateInstance.hour(),
-      phone: parsed.data.phoneNumber,
+      phone: '+63' + parsed.data.phoneNumber,
       totalPrice: parsed.data.receipt.total,
     });
 

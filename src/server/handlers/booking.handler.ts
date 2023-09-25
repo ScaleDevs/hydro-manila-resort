@@ -9,7 +9,7 @@ import { RoomRepository } from '@/repo/room.repo';
 import { bookingUpdateNoAdditionalPaymentConfirmation } from '@/repo/mailersend.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
-import { getReservations } from '@/repo/hostaway.repo';
+import { getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { createGuestsSummary } from '../util';
 import { constants } from '../constants';
@@ -126,6 +126,23 @@ export const updateBookingHandler = async (
     rooms,
     guests: data.guests || bookingRecord.guests,
   });
+
+  if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+    const { overNightGuests, nonOverNightGuests } = updateData.guests || bookingRecord.guests;
+    const updateResult = await updateReservation(bookingRecord.hostawayId.toString(), {
+      numberOfGuests: overNightGuests + nonOverNightGuests,
+      arrivalDate: result.startSession.format('YYYY-MM-DD'),
+      departureDate: result.endSession.format('YYYY-MM-DD'),
+    });
+
+    if ('conflict' in updateResult && updateResult.message === 'Requested date is not available')
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Requested dates are blocked from hostaway calendar' });
+    else if ('conflict' in updateResult)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `${updateResult.message}`,
+      });
+  }
 
   const newBookingData = await BookingService.updateBooking({
     bookingId: bookingRecord.id,

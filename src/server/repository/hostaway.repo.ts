@@ -135,6 +135,61 @@ export const createReservation = async (details: Omit<ReservationDetails, 'id' |
   }
 };
 
+export const updateReservation = async (
+  reservationId: string,
+  details: { numberOfGuests?: number; arrivalDate?: string; departureDate?: string },
+) => {
+  console.log('EXECUTING :: updateReservation');
+
+  try {
+    const secrets = await prisma.secrets.findFirst();
+    if (!secrets)
+      return {
+        conflict: true,
+        message: 'No token was found to be used to access the api',
+      };
+
+    const result = await fetch('https://api.hostaway.com/v1/reservations' + '/' + reservationId, {
+      method: 'put',
+      body: JSON.stringify({
+        ...details,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-control': 'no-cache',
+        Authorization: 'Bearer ' + secrets.accessToken,
+      },
+    });
+
+    const res = (await result.json()) as any;
+
+    if (result.status === 403 && !!res.message.includes('Requested dates are not available for listing')) {
+      return {
+        conflict: true,
+        message: 'Requested date is not available',
+      };
+    }
+
+    if (res.status === 'fail') {
+      console.error(res);
+      return {
+        conflict: true,
+        message: 'Something went wrong',
+      };
+    }
+
+    console.log('SUCCESS EXECUTION :: updateReservation');
+
+    return res.result as ReservationDetails;
+  } catch (err) {
+    console.log(err);
+    return {
+      conflict: true,
+      message: 'Something went wrong',
+    };
+  }
+};
+
 export const getReservations = async ({
   arrivalStartDate,
   arrivalEndDate,
