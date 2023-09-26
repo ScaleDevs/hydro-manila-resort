@@ -113,6 +113,7 @@ type SendRefundEmailProcessingInput = {
   customer_name: string;
   ref_no: string;
   amount: number;
+  isParameterAboveMaximum?: boolean;
 };
 
 export const sendRefundEmailProcessing = async ({
@@ -120,6 +121,7 @@ export const sendRefundEmailProcessing = async ({
   customer_name,
   ref_no,
   amount,
+  isParameterAboveMaximum,
 }: SendRefundEmailProcessingInput) => {
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
@@ -132,13 +134,20 @@ export const sendRefundEmailProcessing = async ({
     subject: constants.general.companyName + ' ' + 'Customer Refund Request',
   });
 
+  const messageForParameterAboveMaximum =
+    'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually.';
+  const messageForInsufficientBalance =
+    'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.';
+
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
     recipientEmail: constants.mailerSend.supportEmail,
     variables: {
       title_of_message: 'Booking Refund Request (Requires Manual Processing)',
       greetings: 'Hi Support Team,',
-      message_body: `A customer named ${customer_name} has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.`,
+      message_body: `A customer named ${customer_name} has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} ${
+        isParameterAboveMaximum ? messageForParameterAboveMaximum : messageForInsufficientBalance
+      }`,
     },
     subject: constants.general.companyName + ' ' + 'Customer Refund Request',
   });

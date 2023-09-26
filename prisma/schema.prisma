@@ -142,7 +142,9 @@ model BookingSetting {
 model BookingRefund {
   bookingRefundId  String              @id @default(auto()) @map("_id") @db.ObjectId
   paymongoRefundId String?
+  referenceNo      String?
   reason           String
+  amount           Int?
   status           BookingRefundStatus
   type             BookingRefundType
   createdAt        DateTime            @default(now())

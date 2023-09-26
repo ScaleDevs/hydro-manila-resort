@@ -294,6 +294,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
           customer_name: bookingRecord.name,
           ref_no: bookingRecord.ref_no,
           amount: bookingRecord.receipt.total,
+          isParameterAboveMaximum: result.error === 'parameter_above_maximum',
         });
 
         if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
