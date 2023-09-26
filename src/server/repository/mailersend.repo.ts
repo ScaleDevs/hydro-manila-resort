@@ -334,3 +334,16 @@ export const updateBookingConfirmation = async (
     subject: constants.general.companyName + ' ' + 'Customer Booking Update Confirmation',
   });
 };
+
+export const notifyFailedHostawayDeletion = async ({ ref_no, hostaway_id }: { ref_no: string; hostaway_id: string }) => {
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.reuseableId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Deletion of customer booking at hostaway calendar failed!',
+      greetings: 'Hi Support Team,',
+      message_body: `Customer with booking reference ${ref_no} has refunded his/her booking but the system has failed to delete his/her reservation on hostaway calender with the reservationId of ${hostaway_id}. Please handle manually by deleting it directly on the hostaway calendar. Thank you.`,
+    },
+    subject: constants.general.companyName + ' ' + 'Deletion of Reservation Failed',
+  });
+};

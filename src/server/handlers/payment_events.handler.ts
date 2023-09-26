@@ -9,6 +9,7 @@ import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import {
   notificationUpdateFailed,
   notifyAdminDbInsertionError,
+  notifyFailedHostawayDeletion,
   sendBookingSuccessEmail,
   sendRefundEmailConflictBooking,
   sendRefundEmailSuccess,
@@ -17,7 +18,7 @@ import {
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
-import { createReservation, updateReservation } from '@/repo/hostaway.repo';
+import { createReservation, deleteReservation, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
@@ -321,12 +322,23 @@ export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId
 
     const refundRecord = await BookingRefundRepository.createBookingRefund({
       paymongoRefundId: refundId,
+      referenceNo: null,
       type: 'AUTOMATIC',
       reason: refundResource.attributes.metadata.reason || '',
       status: 'SUCCESS',
+      amount: bookingRecord.receipt.total,
     });
 
     await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
+
+    if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+      const result = await deleteReservation(bookingRecord.hostawayId.toString());
+      if ('conflict' in result)
+        await notifyFailedHostawayDeletion({
+          ref_no: bookingRecord.ref_no,
+          hostaway_id: bookingRecord.hostawayId.toString(),
+        });
+    }
 
     await sendRefundEmailSuccess({
       recipientEmail: bookingRecord.email,

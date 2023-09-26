@@ -15,7 +15,8 @@ import { BookingRepository } from '@/repo/booking.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
-import { sendRefundEmailProcessing } from '@/repo/mailersend.repo';
+import { deleteReservation } from '@/repo/hostaway.repo';
+import { notifyFailedHostawayDeletion, sendRefundEmailProcessing } from '@/repo/mailersend.repo';
 import { BookingService } from '@/svc/booking.service';
 import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
@@ -275,12 +276,14 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
     });
 
     if ('error' in result) {
-      if (result.error === 'available_balance_insufficient') {
+      if (!!['available_balance_insufficient', 'parameter_above_maximum'].includes(result.error)) {
         const refundRecord = await BookingRefundRepository.createBookingRefund({
           paymongoRefundId: null,
+          referenceNo: null,
           type: 'MANUAL',
           reason: reason,
           status: 'PROCESSING',
+          amount: bookingRecord.receipt.total,
         });
 
         await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
@@ -294,6 +297,15 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
         });
 
         if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
+
+        if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+          const result = await deleteReservation(bookingRecord.hostawayId.toString());
+          if ('conflict' in result)
+            await notifyFailedHostawayDeletion({
+              ref_no: bookingRecord.ref_no,
+              hostaway_id: bookingRecord.hostawayId.toString(),
+            });
+        }
 
         return {
           status: 'MANUAL_PROCESSING',

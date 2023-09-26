@@ -232,7 +232,11 @@ export const deleteReservation = async (reservationId: string) => {
 
   try {
     const secrets = await prisma.secrets.findFirst();
-    if (!secrets) return false;
+    if (!secrets)
+      return {
+        conflict: true,
+        message: 'Something went wrong! Kindly Try Again!',
+      };
 
     const result = await fetch('https://api.hostaway.com/v1/reservations' + '/' + reservationId, {
       method: 'delete',
@@ -245,10 +249,21 @@ export const deleteReservation = async (reservationId: string) => {
 
     const res = (await result.json()) as any;
 
+    if (res.status === 'fail') {
+      console.error(res);
+      return {
+        conflict: true,
+        message: 'Something went wrong! Kindly Try Again!',
+      };
+    }
+
     console.log('SUCCESS EXECUTION :: deleteReservation');
-    return res;
+    return res as { status: string };
   } catch (err) {
     console.log(err);
-    return false;
+    return {
+      conflict: true,
+      message: 'Something went wrong! Kindly Try Again!',
+    };
   }
 };

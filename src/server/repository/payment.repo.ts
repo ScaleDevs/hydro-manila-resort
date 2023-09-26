@@ -123,7 +123,7 @@ export const createRefund = async (data: CreateRefundInput) => {
     };
   } else if (!!result.errors) {
     return {
-      error: 'something_went_wrong',
+      error: result.errors[0].code,
     };
   }
 
