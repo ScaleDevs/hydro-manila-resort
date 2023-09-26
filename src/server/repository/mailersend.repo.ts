@@ -135,7 +135,7 @@ export const sendRefundEmailProcessing = async ({
   });
 
   const messageForParameterAboveMaximum =
-    'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually.';
+    'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.';
   const messageForInsufficientBalance =
     'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.';
 
