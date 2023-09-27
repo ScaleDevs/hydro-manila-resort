@@ -47,11 +47,20 @@ enum TransactionType {
   PAYMENT
 }
 
+enum ProcessType {
+  BANK
+  PAYMONGO
+  CASH
+}
+
 type TransactionLog {
-  refNo           String
+  refNo           String?
   paymentIntentId String?
+  process         ProcessType     @default(PAYMONGO)
   type            TransactionType
   amount          Int
+  addedBy         String?         @default("SYSTEM")
+  createdAt       DateTime?
 }
 
 type Guests {
