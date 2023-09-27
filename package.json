@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run prisma-generate && next build",
+    "update:db": "npx prisma db push && node ./migration/create_ttl_index.js", 
     "start": "next start",
     "prisma-generate": "npx prisma generate",
     "lint": "next lint",
@@ -68,6 +69,7 @@
     "postcss": "8.4.17",
     "prettier": "2.7.1",
     "prisma": "4.4.0",
-    "typescript": "4.8.4"
+    "typescript": "4.8.4",
+    "mongoose": "^7.5.3"
   }
 }
