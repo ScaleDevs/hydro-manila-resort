@@ -125,8 +125,6 @@ export default function CardInputsForm({ setIsTaken }: ICardInputsFormProps) {
           },
         );
     } catch (err) {
-      console.log('ERROR HERE');
-      console.log(err);
       toast({
         description: 'Kindly Try Again',
         status: 'error',
