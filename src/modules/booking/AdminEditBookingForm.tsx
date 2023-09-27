@@ -7,10 +7,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import dayjs from 'dayjs';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Box, SlideFade, Heading, Skeleton, Stack, Button, Alert, AlertIcon } from '@chakra-ui/react';
+import { Box, SlideFade, Heading, Skeleton, Stack, Button, Alert, AlertIcon, useToast } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
 import { IProduct } from '@/utils/types';
+import useAuthStoreTrack from '@/store/auth.store';
 import { SelectField } from '@/components/SelectField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { DateTimeField } from '@/components/DateTimeField';
@@ -38,6 +39,8 @@ export interface IRescheduleFormProps {
 }
 
 export default function AdminEditBookingForm({ bookingRefNo, bookingInfo, isIn }: IRescheduleFormProps) {
+  const { username } = useAuthStoreTrack();
+  const toast = useToast();
   const [selectedProduct, setSelectedProduct] = useState<IProduct | undefined>(bookingInfo?.product);
   const [formError, setFormError] = useState<string | null>(null);
   const { data: productsData, isLoading: fetchingProducts } = trpc.product.getProducts.useQuery({
@@ -81,6 +84,18 @@ export default function AdminEditBookingForm({ bookingRefNo, bookingInfo, isIn }
   const submitUpdate = async (data: FormSchemaType) => {
     if (!bookingInfo) return;
 
+    if (!username) {
+      toast({
+        title: 'Invalid Admin User!',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+        status: 'error',
+      });
+
+      return;
+    }
+
     const { guestSetting } = selectedProduct || bookingInfo.product;
 
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
@@ -111,6 +126,7 @@ export default function AdminEditBookingForm({ bookingRefNo, bookingInfo, isIn }
     updateBookingMutate(
       {
         bookingId: bookingInfo.id,
+        username,
         data: updates,
       },
       {

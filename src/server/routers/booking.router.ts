@@ -34,6 +34,7 @@ export const bookingRouter = router({
     .input(
       z.object({
         bookingId: z.string(),
+        username: z.string().min(1),
         data: z.object({
           bookingDate: z.string().optional(),
           guests: z
@@ -48,7 +49,7 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      return BookingHandler.updateBookingHandler(input.bookingId, input.data);
+      return BookingHandler.updateBookingHandler(input.bookingId, input.username, input.data);
     }),
   customerUpdateRequest: procedure
     .input(

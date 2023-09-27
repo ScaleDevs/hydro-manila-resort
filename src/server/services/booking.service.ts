@@ -94,7 +94,7 @@ class Service {
       rooms?: string[];
       productId?: string;
     },
-    updatedBy: 'ADMIN' | 'CUSTOMER',
+    updatedBy: string,
     transactionRefNo?: string,
   ) {
     try {
@@ -141,7 +141,7 @@ class Service {
     bookingRecord: IBooking;
     updatedBookedDate?: string;
     updatedProductId?: string;
-    updatedBy: 'ADMIN' | 'CUSTOMER';
+    updatedBy: string;
     paymentId?: string;
     product: IProduct;
   }) {

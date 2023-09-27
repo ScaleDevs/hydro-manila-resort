@@ -99,6 +99,7 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
 
 export const updateBookingHandler = async (
   bookingId: string,
+  username: string,
   data: {
     bookingDate?: string | undefined;
     guests?: Guests | undefined;
@@ -112,12 +113,12 @@ export const updateBookingHandler = async (
   const product = await ProductRepository.findProductById(data.productId || bookingRecord.productId);
   const rooms = await RoomRepository.findRoomsByIds(roomIds);
 
-  const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, updateData, 'ADMIN');
+  const updateLogs = await BookingService.buildBookingDetailsUpdateLog(bookingRecord, updateData, username);
   const result = await BookingService.buildScheduleAndUpdateLog({
     bookingRecord,
     updatedBookedDate: bookingDate,
     updatedProductId: data.productId,
-    updatedBy: 'ADMIN',
+    updatedBy: username,
     product,
   });
   const receipt = await BookingService.getBookingDetailsTotal({
