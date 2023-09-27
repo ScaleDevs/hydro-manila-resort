@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { Guests } from '@prisma/client';
+import { Guests, ProcessType, TransactionType } from '@prisma/client';
 
 import { tzSchedToDayJsInsance, tzSchedToUnix, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
@@ -302,4 +302,21 @@ export const checkBookingAvailability = async (input: { productId: string; booki
     startDate: startSession.toISOString(),
     endDate: endSession.toISOString(),
   });
+};
+
+export const addTransactionLog = async (
+  bookingId: string,
+  data: {
+    refNo: string;
+    process: ProcessType;
+    type: TransactionType;
+    amount: number;
+  },
+) => {
+  const updatedBooking = await BookingRepository.addTransactionLog(bookingId, {
+    ...data,
+    paymentIntentId: null,
+    createdAt: dayjs().toDate(),
+  });
+  return updatedBooking;
 };

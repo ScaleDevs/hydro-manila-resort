@@ -1,5 +1,5 @@
 import prisma from './prisma.client';
-import { Prisma } from '@prisma/client';
+import { Prisma, TransactionLog } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 
@@ -149,6 +149,17 @@ class Respository {
     return prisma.booking.update({
       where: { id },
       data: partialData,
+    });
+  }
+
+  public async addTransactionLog(id: string, transactionLog: TransactionLog) {
+    return prisma.booking.update({
+      where: { id },
+      data: {
+        transactionLogs: {
+          push: transactionLog,
+        },
+      },
     });
   }
 

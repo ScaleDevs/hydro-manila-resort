@@ -23,7 +23,7 @@ import { BookingService } from '@/svc/booking.service';
 import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
 import { BookingStatusDisplay } from '@/utils/types';
-import { TransactionLog } from '@prisma/client';
+import { ProcessType, TransactionLog } from '@prisma/client';
 import { createGuestsSummary } from '../util';
 
 export * as PaymentEventsHandler from './payment_events.handler';
@@ -416,6 +416,9 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
       paymentIntentId: paymentIntentId,
       type: 'PAYMENT',
       amount: amountPaid,
+      process: ProcessType.PAYMONGO,
+      addedBy: 'SYSTEM',
+      createdAt: dayjs().toDate(),
     },
   ];
 

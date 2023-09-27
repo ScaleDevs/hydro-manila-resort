@@ -5,7 +5,8 @@ import { AppRouter } from '@/server/routers/_app';
 import { TRPCClientErrorLike } from '@trpc/react-query';
 import { SlideFade, Box, Heading, TableContainer, Table, Tbody, Td, Th, Thead, Tr, Spinner, Text } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
-import { PHpeso, utcDateToTzDayInstance } from '@/utils/helper';
+import { utcDateToTzDayInstance } from '@/utils/helper';
+import TransactionLogs from './TransactionLogs';
 
 export interface IUpdateLogProps {
   data: UseTRPCQueryResult<inferRouterOutputs<AppRouter>['booking']['getBookingByRefNo'], TRPCClientErrorLike<AppRouter>>['data'];
@@ -58,7 +59,7 @@ export function Logs({ isIn, data }: IUpdateLogProps) {
   return (
     <SlideFade in={isIn} offsetY='20px'>
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
-        <Heading textAlign='center'>UPDATE LOGS</Heading>
+        <Heading size='lg'>UPDATE LOGS</Heading>
 
         <br />
         <TableContainer>
@@ -119,45 +120,7 @@ export function Logs({ isIn, data }: IUpdateLogProps) {
 
       <br />
 
-      <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
-        <Heading textAlign='center'>TRANSACTION LOGS</Heading>
-
-        <br />
-        <TableContainer>
-          <Table fontFamily='primary' color='black' variant='striped'>
-            <Thead>
-              <Tr>
-                <Th fontSize='md' fontFamily='primary'>
-                  TYPE
-                </Th>
-                <Th fontSize='md' fontFamily='primary'>
-                  PAYMENT ID
-                </Th>
-                <Th fontSize='md' fontFamily='primary'>
-                  AMOUNT
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {updateLogs.length === 0 ? (
-                <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td colSpan={5} textAlign='center' fontSize='lg'>
-                    No Records Found
-                  </Td>
-                </Tr>
-              ) : (
-                transactionLogs.map((v, i) => (
-                  <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} fontSize={{ base: 'xs', xl: 'sm' }}>
-                    <Td>{v.type}</Td>
-                    <Td>{v.refNo}</Td>
-                    <Td>{PHpeso.format(v.amount / 100)}</Td>
-                  </Tr>
-                ))
-              )}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </Box>
+      <TransactionLogs bookingId={data?.id} logs={transactionLogs} />
     </SlideFade>
   );
 }

@@ -100,4 +100,19 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.checkBookingAvailability(input);
     }),
+  addTransactionLog: procedure
+    .input(
+      z.object({
+        bookingId: z.string().min(1),
+        data: z.object({
+          refNo: z.string(),
+          process: z.enum(['BANK', 'CASH']),
+          type: z.enum(['REFUND', 'PAYMENT']),
+          amount: z.number().min(1, 'Required'),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return BookingHandler.addTransactionLog(input.bookingId, input.data);
+    }),
 });
