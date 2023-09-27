@@ -306,6 +306,7 @@ export const checkBookingAvailability = async (input: { productId: string; booki
 
 export const addTransactionLog = async (
   bookingId: string,
+  username: string,
   data: {
     refNo: string;
     process: ProcessType;
@@ -316,7 +317,9 @@ export const addTransactionLog = async (
   const updatedBooking = await BookingRepository.addTransactionLog(bookingId, {
     ...data,
     paymentIntentId: null,
+    addedBy: username,
     createdAt: dayjs().toDate(),
   });
+
   return updatedBooking;
 };

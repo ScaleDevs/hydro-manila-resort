@@ -104,6 +104,7 @@ export const bookingRouter = router({
     .input(
       z.object({
         bookingId: z.string().min(1),
+        username: z.string().min(1),
         data: z.object({
           refNo: z.string(),
           process: z.enum(['BANK', 'CASH']),
@@ -113,6 +114,6 @@ export const bookingRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
-      return BookingHandler.addTransactionLog(input.bookingId, input.data);
+      return BookingHandler.addTransactionLog(input.bookingId, input.username, input.data);
     }),
 });

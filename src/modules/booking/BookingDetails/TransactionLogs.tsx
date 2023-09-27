@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { ProcessType, TransactionType } from '@prisma/client';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,10 +34,10 @@ import { BsPlusLg } from 'react-icons/bs';
 
 import { PHpeso } from '@/utils/helper';
 import { trpc } from '@/utils/trpc';
+import useAuthStoreTrack from '@/store/auth.store';
 import { TextField } from '@/components/TextField';
 import { SelectField } from '@/components/SelectField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
-import dayjs from 'dayjs';
 
 const schema = z.object({
   refNo: z.string(),
@@ -79,6 +80,7 @@ interface ICreateTransactionLogProps {
 
 const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransactionLogProps) => {
   const router = useRouter();
+  const { username } = useAuthStoreTrack();
   const ctx = trpc.useContext();
   const initialRef = useRef(null);
   const toast = useToast();
@@ -94,6 +96,10 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      refNo: '',
+      amount: 0,
+    },
   });
 
   const onExit = () => {
@@ -105,13 +111,36 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
     trigger();
 
     if (!!Object.keys(errors).length) return;
-    if (!bookingId) return;
+    if (!bookingId) {
+      toast({
+        title: 'Invalid Booking Record!',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+        status: 'error',
+      });
+
+      return;
+    }
+
+    if (!username) {
+      toast({
+        title: 'Invalid Admin User!',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+        status: 'error',
+      });
+
+      return;
+    }
 
     const data = getValues();
 
     mutate(
       {
         bookingId,
+        username,
         data,
       },
       {
@@ -196,6 +225,8 @@ interface ITransactionLogsProps {
     type: TransactionType;
     amount: number;
     createdAt: string | null;
+    paymentIntentId: string | null;
+    addedBy: string | null;
   }[];
 }
 
@@ -223,10 +254,13 @@ export default function TransactionLogs({ bookingId, logs }: ITransactionLogsPro
                 PROCESS
               </Th>
               <Th fontSize='md' fontFamily='primary'>
-                PAYMENT ID
+                REFERENCE
               </Th>
               <Th fontSize='md' fontFamily='primary'>
                 AMOUNT
+              </Th>
+              <Th fontSize='md' fontFamily='primary'>
+                ADDED BY
               </Th>
               <Th fontSize='md' fontFamily='primary'>
                 CREATED AT
@@ -236,7 +270,7 @@ export default function TransactionLogs({ bookingId, logs }: ITransactionLogsPro
           <Tbody>
             {logs.length === 0 ? (
               <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                <Td colSpan={5} textAlign='center' fontSize='lg'>
+                <Td colSpan={6} textAlign='center' fontSize='lg'>
                   No Records Found
                 </Td>
               </Tr>
@@ -244,10 +278,11 @@ export default function TransactionLogs({ bookingId, logs }: ITransactionLogsPro
               logs.map((v, i) => (
                 <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} fontSize={{ base: 'xs', xl: 'sm' }}>
                   <Td>{v.type}</Td>
-                  <Td>{v.process}</Td>
-                  <Td>{v.refNo}</Td>
-                  <Td>{PHpeso.format(v.process === 'PAYMONGO' ? v.amount / 100 : v.amount)}</Td>
-                  <Td>{dayjs(v.createdAt).format('MMM DD, YYYY hh:mm A')}</Td>
+                  <Td>{v.process ?? 'N/A'}</Td>
+                  <Td>{v.refNo ?? 'N/A'}</Td>
+                  <Td>{PHpeso.format(v.process && v.process === 'PAYMONGO' ? v.amount / 100 : v.amount)}</Td>
+                  <Td>{v.createdAt ? dayjs(v.createdAt).format('MMM DD, YYYY hh:mm A') : 'N/A'}</Td>
+                  <Td>{v.addedBy ?? 'N/A'}</Td>
                 </Tr>
               ))
             )}
