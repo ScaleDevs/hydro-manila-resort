@@ -3,6 +3,7 @@ import {
   CognitoIdentityProviderClient,
   AdminCreateUserCommand,
   InitiateAuthCommand,
+  GetUserCommand,
   RespondToAuthChallengeCommand,
   AuthFlowType,
   ChallengeNameType,
@@ -159,6 +160,18 @@ export const refreshTokens = async (username: string, refreshToken: string) => {
     });
 
     return await client.send(command);
+  } catch (err: any) {
+    trpcErrorHandling(err);
+  }
+};
+
+export const getUser = async (accessToken: string) => {
+  try {
+    const usercommand = new GetUserCommand({
+      AccessToken: accessToken,
+    });
+
+    return await client.send(usercommand);
   } catch (err: any) {
     trpcErrorHandling(err);
   }

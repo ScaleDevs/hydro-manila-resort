@@ -30,7 +30,7 @@ export default function useRefreshToken() {
     },
   });
 
-  const updateAuthStates = (data: InitiateAuthCommandOutput & { expiresAt: number }) => {
+  const updateAuthStates = (data: InitiateAuthCommandOutput & { expiresAt: number; email: string }) => {
     if (!data.AuthenticationResult?.AccessToken) return;
     setToken(data.AuthenticationResult.AccessToken);
     setAuthState('accessToken', data?.AuthenticationResult?.AccessToken);
@@ -38,6 +38,7 @@ export default function useRefreshToken() {
     setAuthState('expiresIn', data?.AuthenticationResult?.ExpiresIn);
     setAuthState('expiresAt', data.expiresAt);
     setAuthState('authLoader', false);
+    setAuthState('username', data.email);
     if (!publicRoutes[router.pathname as keyof typeof publicRoutes]) return;
     else router.push(publicRoutes['/admin/login']);
   };

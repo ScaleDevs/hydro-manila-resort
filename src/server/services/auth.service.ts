@@ -1,5 +1,6 @@
 import {
   adminVerifyEmail,
+  getUser,
   initiateAuth,
   refreshTokens,
   respondToNewPasswordAuthChallenge,
@@ -37,6 +38,7 @@ class Service {
 
   public async signIn(ctx: any, username: string, password: string) {
     const result = await initiateAuth(username, password);
+
     if (!result) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
 
     if (result.authResult.ChallengeName === ChallengeNameType.NEW_PASSWORD_REQUIRED)
@@ -87,10 +89,16 @@ class Service {
 
     const result = await refreshTokens(username, refreshToken);
 
-    if (!!result?.AuthenticationResult) {
-      const user = await decodeToken(result.AuthenticationResult.AccessToken as string);
+    if (!!result?.AuthenticationResult && result.AuthenticationResult.AccessToken) {
+      const user = await decodeToken(result.AuthenticationResult.AccessToken);
+      const userDetails = await getUser(result.AuthenticationResult.AccessToken);
+      const userEmail = userDetails?.UserAttributes?.find((v) => v.Name === 'email');
+
+      if (!userEmail || !userEmail.Value) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid User' });
+
       return {
         ...result,
+        email: userEmail.Value,
         expiresAt: user.exp,
       };
     }

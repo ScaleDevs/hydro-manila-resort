@@ -48,13 +48,15 @@ export default function useLogin() {
           setAuthState('forceChangePassword', true);
           setAuthState('username', formData.username);
           authResult.Session && setAuthState('session', authResult.Session);
-        } else if (authResult.AuthenticationResult && typeof expiresAt === 'number')
+        } else if (authResult.AuthenticationResult && typeof expiresAt === 'number') {
+          setAuthState('username', formData.username);
           updateAuthStates({
             AccessToken: authResult.AuthenticationResult.AccessToken,
             IdToken: authResult.AuthenticationResult.IdToken,
             ExpiresIn: authResult.AuthenticationResult.ExpiresIn,
             expiresAt,
           });
+        }
       },
       onError(error) {
         setErrMessage(error.message);
