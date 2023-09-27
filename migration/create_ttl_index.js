@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const bookingAttempt = new Schema(
   {
-    expiresAt: { type: Date, expires: 600 },
+    expireAt: { type: Date, expires: 600 },
   },
   { strict: false, collection: 'BookingAttempt' },
 );
