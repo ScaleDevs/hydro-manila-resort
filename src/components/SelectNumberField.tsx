@@ -1,6 +1,7 @@
 import { Select, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
 import { RegexValidations } from '@/modules/utils/helper';
+import { GetApp } from '@/appspecs/theme';
 
 export interface ISelectNumberFieldProps {
   register: UseFormRegister<any>;
@@ -33,18 +34,18 @@ export function SelectNumberField({
 
   return (
     <Box w='100%'>
-      <Text fontSize='lg'>{label}</Text>
+      <Text fontSize='md'>{label}</Text>
       <Select
         {...register(property, {
           setValueAs: setFormValue,
           value: value === undefined ? '' : value,
         })}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
         className='scrollbar'
       >
         <option value='' disabled selected>

@@ -40,7 +40,7 @@ export function DateTimeField({
           },
         })}
         type={type}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
           borderColor: GetApp.ActiveColor,

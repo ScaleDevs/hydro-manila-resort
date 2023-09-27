@@ -74,6 +74,7 @@ export default function TableScheduledEvent() {
             status: 'error',
             duration: 9000,
             isClosable: true,
+            position: 'top-right',
           });
         },
       },

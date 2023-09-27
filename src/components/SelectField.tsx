@@ -1,5 +1,6 @@
 import { Select, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
+import { GetApp } from '@/appspecs/theme';
 
 export interface ISelectFieldProps {
   register: UseFormRegister<any>;
@@ -45,12 +46,12 @@ export function SelectField({
       <Select
         {...register(property, { value: value === undefined ? '' : value, onChange })}
         disabled={disabled}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
         className='scrollbar'
       >
         <option value='' disabled selected>
