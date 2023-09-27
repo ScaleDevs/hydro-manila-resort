@@ -1,50 +1,92 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { Box, Button, Stack, Heading, Alert, AlertIcon, SlideFade } from '@chakra-ui/react';
+import { Box, Button, Stack, Heading, Alert, AlertIcon, SlideFade, useToast } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { GetApp } from '@/appspecs/theme';
+import { GetVars } from '@/appspecs/vars';
+import { trpc } from '@/utils/trpc';
+import useAuthStoreTrack from '@/store/auth.store';
 import Layout from '@/layouts/admin';
 import { TextField } from '@/components/TextField';
-import { trpc } from '@/utils/trpc';
 import { DateTimeField } from '@/components/DateTimeField';
-import { GetApp } from '@/appspecs/theme';
+import { NumberFieldV2 } from '@/components/NumberFieldV2';
+import { SelectNumberField } from '@/components/SelectNumberField';
 
 const schema = z.object({
+  guestName: z.string().min(1),
+  guests: z.number(),
   description: z.string().min(1, 'Required'),
   startSession: z.string().min(1, 'Required'),
   endSession: z.string().min(1, 'Required'),
+  checkInTime: z.number(),
+  checkOutTime: z.number(),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
 
 function CreateScheduledEvent() {
-  const { mutate, isLoading, error, isSuccess } = trpc.scheduledevent.createScheduledEvent.useMutation();
+  const { username } = useAuthStoreTrack();
+  const toast = useToast();
+  const { mutate, isLoading, error, isSuccess, reset: resetMutation } = trpc.scheduledevent.createScheduledEvent.useMutation();
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      guestName: '',
+      guests: 0,
+      description: '',
+      checkInTime: GetVars.appName === 'VillaLeonora' ? undefined : 1,
+      checkOutTime: GetVars.appName === 'VillaLeonora' ? undefined : 1,
+    },
   });
 
   const addScheduledEvent = (data: FormSchemaType) => {
-    mutate(
-      {
-        ...data,
-        startSession: data.startSession,
-        endSession: data.endSession,
+    if (!username) {
+      toast({
+        title: 'Invalid Admin User!',
+        position: 'top-right',
+        duration: 5000,
+        isClosable: true,
+        status: 'error',
+      });
+
+      return;
+    }
+
+    const payload = {
+      guestName: data.guestName,
+      guests: data.guests,
+      description: data.description,
+      startSession: data.startSession,
+      endSession: data.endSession,
+      createdBy: username,
+    };
+
+    if (GetVars.appName === 'VillaLeonora') {
+      payload['startSession'] = `${data.startSession}T${data.checkInTime}:00`;
+      payload['endSession'] = `${data.endSession}T${data.checkOutTime}:00`;
+    }
+
+    mutate(payload, {
+      onSuccess() {
+        reset();
       },
-      {
-        onSuccess() {
-          reset();
-        },
+      onSettled() {
+        setTimeout(() => {
+          resetMutation();
+        }, 5000);
       },
-    );
+    });
   };
 
   return (
@@ -87,7 +129,18 @@ function CreateScheduledEvent() {
               <Stack spacing={6}>
                 <TextField
                   required
-                  label='DESCRIPTION:'
+                  label='Guest Name:'
+                  register={register}
+                  property='guestName'
+                  placeholder='Enter guest name'
+                  errMsg={errors.description?.message}
+                />
+
+                <NumberFieldV2 control={control} property='guests' label='Guests' required />
+
+                <TextField
+                  required
+                  label='Description:'
                   register={register}
                   property='description'
                   placeholder='Schedule Event Description'
@@ -97,19 +150,43 @@ function CreateScheduledEvent() {
                 <Stack direction={{ base: 'column', md: 'row' }}>
                   <DateTimeField
                     required
-                    label='START:'
+                    label='Start:'
                     register={register}
                     property='startSession'
                     errMsg={errors.startSession?.message}
+                    type={GetVars.appName === 'VillaLeonora' ? 'date' : 'datetime-local'}
                   />
                   <DateTimeField
                     required
-                    label='END:'
+                    label='End:'
                     register={register}
                     property='endSession'
                     errMsg={errors.endSession?.message}
+                    type={GetVars.appName === 'VillaLeonora' ? 'date' : 'datetime-local'}
                   />
                 </Stack>
+
+                {GetVars.appName === 'VillaLeonora' && (
+                  <Stack direction={{ base: 'column', md: 'row' }}>
+                    <SelectNumberField
+                      label='Check In Time'
+                      placeholder='Hour'
+                      maxOpt={23}
+                      register={register}
+                      property='checkInTime'
+                      errMsg={errors.checkInTime?.message}
+                    />
+
+                    <SelectNumberField
+                      label='Check Out Time'
+                      placeholder='Hour'
+                      maxOpt={23}
+                      register={register}
+                      property='checkOutTime'
+                      errMsg={errors.checkOutTime?.message}
+                    />
+                  </Stack>
+                )}
 
                 <Button type='submit' borderRadius='sm' w='200px' isLoading={isLoading}>
                   Add Schedule Event

@@ -5,35 +5,64 @@ import { ScheduledEventRepository } from '@/server/repository/scheduledevent.rep
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
+import { createReservation, deleteReservation } from '@/server/repository/hostaway.repo';
 import { constants } from '../constants';
-import { dateToIsoString } from '@/utils/helper';
 
 class Service {
-  public async createScheduledEvent(data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId'>) {
+  public async createScheduledEvent(
+    data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId' | 'hostawayId'>,
+  ) {
     try {
-      const startSession = dateToIsoString(data.startSession);
-      const endSession = dateToIsoString(data.endSession);
+      const startSession = dayjs.tz(data.startSession, constants.general.timezone);
+      const endSession = dayjs.tz(data.endSession, constants.general.timezone);
+      const startISOString = startSession.toISOString();
+      const endISOString = endSession.toISOString();
 
       const isBookingDateTaken = await BookingRepository.findBookingConflicts({
-        startDate: startSession,
-        endDate: endSession,
+        startDate: startISOString,
+        endDate: endISOString,
       });
 
       const isSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
-        startDate: startSession,
-        endDate: endSession,
+        startDate: startISOString,
+        endDate: endISOString,
       });
 
       const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
-        startDate: startSession,
-        endDate: endSession,
+        startDate: startISOString,
+        endDate: endISOString,
       });
 
       if (isBookingDateTaken || isSchedTaken || isBookingAttemptTaken)
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Record already exist :: Conflict Schedule',
+          message: 'Schedule_not_available',
         });
+
+      let hostawayId: null | number = null;
+
+      // add reservation to hostaway
+      if (constants.general.appName === 'VillaLeonora') {
+        const reservationResult = await createReservation({
+          guestName: data.guestName,
+          numberOfGuests: data.guests,
+          arrivalDate: startSession.format('YYYY-MM-DD'),
+          departureDate: endSession.format('YYYY-MM-DD'),
+          checkInTime: startSession.hour(),
+          checkOutTime: endSession.hour(),
+          phone: '+63' + '000000000',
+          totalPrice: 0,
+        });
+
+        if ('conflict' in reservationResult && reservationResult.message === 'Requested date is not available')
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Schedule_not_available',
+          });
+        else if ('conflict' in reservationResult)
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+        else if ('guestName' in reservationResult) hostawayId = reservationResult.id;
+      }
 
       const calendarEventId = await GoogleCalendarRepository.createEvent({
         summary: data.description,
@@ -50,13 +79,14 @@ class Service {
 
       return ScheduledEventRepository.createScheduledEvent({
         ...data,
-        startSession,
-        endSession,
+        startSession: startISOString,
+        endSession: endISOString,
+        hostawayId,
         calendarEventId,
       });
     } catch (err: any) {
       console.log(err);
-      if (err.message === 'Record already exist :: Conflict Schedule')
+      if (err.message === 'Schedule_not_available')
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Schedule Already Filled',
@@ -67,11 +97,22 @@ class Service {
 
   public async deleteScheduledEvent(scheduledEventId: string, calendarEventId: string | null) {
     try {
-      const result = await ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
+      const scheduleEventDeleted = await ScheduledEventRepository.deleteScheduledEvent(scheduledEventId);
+
       if (calendarEventId) await GoogleCalendarRepository.deleteEvent(calendarEventId);
-      return result;
-    } catch (err) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+      if (constants.general.appName === 'VillaLeonora' && !!scheduleEventDeleted.hostawayId) {
+        const result = await deleteReservation(scheduleEventDeleted.hostawayId.toString());
+        if ('conflict' in result)
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'System unable to delete the hostaway record for this event. Please delete it directly on your hostaway dashboard',
+          });
+      }
+
+      return scheduleEventDeleted;
+    } catch (err: any) {
+      throw new TRPCError({ code: err.code || 'INTERNAL_SERVER_ERROR', message: err.message || 'Something went wrong' });
     }
   }
 }

@@ -28,4 +28,12 @@ export const GetVars = {
 
     return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
   })(),
+  appName: (() => {
+    const result = {
+      VillaLeonora: 'VillaLeonora',
+      HydroResortManila: 'HydroResortManila',
+    };
+
+    return result[process.env.NEXT_PUBLIC_APP as GetAppKeys];
+  })(),
 };

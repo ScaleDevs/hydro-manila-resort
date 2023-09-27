@@ -161,13 +161,15 @@ model BookingRefund {
 
 model ScheduledEvent {
   scheduledEventId String   @id @default(auto()) @map("_id") @db.ObjectId
-  guestName        String?
-  guests           Int?
+  guestName        String
+  guests           Int
   startSession     DateTime
   endSession       DateTime
   description      String
   calendarEventId  String?
   createdAt        DateTime @default(now())
+  hostawayId       Int?
+  createdBy        String?
 }
 
 model BookingAttempt {

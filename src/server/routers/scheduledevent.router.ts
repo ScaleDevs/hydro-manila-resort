@@ -7,9 +7,12 @@ export const scheduledEventRouter = router({
   createScheduledEvent: protectedProcedure
     .input(
       z.object({
-        startSession: z.string(),
-        endSession: z.string(),
+        guestName: z.string().min(1),
+        guests: z.number(),
         description: z.string(),
+        startSession: z.string().min(1),
+        endSession: z.string().min(1),
+        createdBy: z.string(),
       }),
     )
     .mutation(async ({ input }) => {
