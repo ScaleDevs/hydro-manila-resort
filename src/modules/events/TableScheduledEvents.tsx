@@ -122,17 +122,23 @@ export default function TableScheduledEvent() {
 
       <ScaleFade initialScale={0.9} in>
         <TableContainer w='100%'>
-          <Table fontFamily='primary' color='primary.1'>
+          <Table fontFamily='primary' color='black'>
             <Thead>
               <Tr>
                 <Th fontSize='md' fontFamily='primary'>
-                  START
+                  SCHEDULE
                 </Th>
                 <Th fontSize='md' fontFamily='primary'>
-                  END
+                  NAME
+                </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  GUESTS
                 </Th>
                 <Th fontSize='md' fontFamily='primary'>
                   DESCRIPTION
+                </Th>
+                <Th fontSize='md' fontFamily='primary'>
+                  CREATED BY
                 </Th>
               </Tr>
             </Thead>
@@ -154,22 +160,36 @@ export default function TableScheduledEvent() {
                       <Td>
                         <Skeleton height='20px' />
                       </Td>
+                      <Td>
+                        <Skeleton height='20px' />
+                      </Td>
                     </Tr>
                   ))
               ) : data?.records.length === 0 ? (
                 <Tr _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                  <Td colSpan={4} textAlign='center' fontSize='lg'>
+                  <Td colSpan={5} textAlign='center' fontSize='lg'>
                     No Records Found
                   </Td>
                 </Tr>
               ) : (
                 data?.records.map((v, i) => (
                   <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
-                    <Td>{tableFormatTimeDisplay(v.startSession)}</Td>
-                    <Td>{tableFormatTimeDisplay(v.endSession)}</Td>
-                    <Td>{v.description}</Td>
                     <Td>
-                      <Button borderRadius='sm' onClick={() => deleteScheduledEvent(v.scheduledEventId, v.calendarEventId)}>
+                      {tableFormatTimeDisplay(v.startSession)} - {tableFormatTimeDisplay(v.endSession)}
+                    </Td>
+                    <Td>{v.guestName}</Td>
+                    <Td>{v.guests}</Td>
+                    <Td>{v.description}</Td>
+                    <Td>{v.createdBy}</Td>
+                    <Td>
+                      <Button
+                        borderRadius='sm'
+                        onClick={() => deleteScheduledEvent(v.scheduledEventId, v.calendarEventId)}
+                        bg='red.300'
+                        _hover={{
+                          bg: 'red.400',
+                        }}
+                      >
                         <BsFillTrashFill />
                       </Button>
                     </Td>
