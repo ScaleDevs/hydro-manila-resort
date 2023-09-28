@@ -243,7 +243,7 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         startSession: session.startSession,
         endSession: session.endSession,
         ref_no: session.ref_no,
-        expireAt: dayjs().add(25, 'm').toDate(),
+        expireAt: dayjs().toDate(),
       });
     }
 
@@ -284,6 +284,8 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
           reason: reason,
           status: 'PROCESSING',
           amount: bookingRecord.receipt.total,
+          process: null,
+          updatedBy: null,
         });
 
         await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
