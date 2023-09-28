@@ -113,9 +113,9 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
           reset();
           onClose();
         },
-        onError() {
+        onError(data) {
           toast({
-            title: 'Something Went Wrong. Try Again',
+            title: data.message || 'Something Went Wrong. Try Again',
             position: 'top-right',
             duration: 5000,
             isClosable: true,

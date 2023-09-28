@@ -13,6 +13,7 @@ import { getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { PHpeso, createGuestsSummary } from '../util';
 import { constants } from '../constants';
+import { BookingRefundRepository } from '../repository/bookingrefund.repo';
 
 export * as BookingHandler from './booking.handler';
 
@@ -393,5 +394,36 @@ export const resetBookingEmailConfirmation = async (bookingId: string) => {
     return true;
   } catch (err) {
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+  }
+};
+
+export const updateRefundInfo = async ({
+  bookingRefundId,
+  data,
+}: {
+  data: {
+    refNo?: string | undefined;
+    amount?: number | undefined;
+    updatedBy: string;
+    process: 'BANK' | 'CASH';
+  };
+  bookingRefundId: string;
+}) => {
+  try {
+    const refund = await BookingRefundRepository.findBookingRefundById(bookingRefundId);
+
+    if (!refund) throw new TRPCError({ code: 'NOT_FOUND', message: 'Refund not found' });
+
+    if (refund.status === 'SUCCESS') throw new TRPCError({ code: 'FORBIDDEN', message: 'This booking is already refunded!' });
+
+    return BookingRefundRepository.updateBookinRefund(bookingRefundId, {
+      referenceNo: data.refNo,
+      process: data.process,
+      updatedBy: data.updatedBy,
+      amount: data.amount,
+      status: 'SUCCESS',
+    });
+  } catch (err: any) {
+    throw new TRPCError({ code: err.code || 'INTERNAL_SERVER_ERROR', message: err.message || 'Something went wrong. Try Again' });
   }
 };
