@@ -33,13 +33,13 @@ const BadgeColor = {
   SUCCESS: 'red',
 };
 
-const InfoField = ({ label, value = 'N/A', children }: { label: string; value?: string | number; children?: ReactNode }) => {
+const InfoField = ({ label, value, children }: { label: string; value?: string | number | null; children?: ReactNode }) => {
   return (
     <VStack spacing={0} align='flex-start' wordBreak='break-word'>
       <Text color='gray.500' fontSize='sm'>
         {label}:
       </Text>
-      {value ? <Text>{value}</Text> : children}
+      {value || value === null ? <Text>{value ?? 'N/A'}</Text> : children}
     </VStack>
   );
 };
@@ -199,6 +199,49 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
           </>
         )}
       </Box>
+
+      {data?.refund && data.refundId && (
+        <>
+          <br />
+          <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
+            {isLoading || !data ? (
+              <Center minH='210px'>
+                <VStack gap='3'>
+                  <Spinner size='lg' />
+                  <Text>Fetching Details ...</Text>
+                </VStack>
+              </Center>
+            ) : (
+              <SlideFade in>
+                <Heading size='lg' fontFamily='primary'>
+                  REFUND
+                </Heading>
+                <br />
+                <Stack spacing={{ md: 20 }} direction={{ base: 'column', md: 'row' }}>
+                  <VStack align='flex-start'>
+                    <InfoField label='Type' value={data.refund.type} />
+                    <InfoField label='Process' value={data.refund.process} />
+                    <InfoField label='Status' value={data.refund.status} />
+                  </VStack>
+                  <VStack align='flex-start'>
+                    <InfoField label='Reference No' value={data.refund.referenceNo} />
+                    <InfoField label='Paymongo Refund Id' value={data.refund.paymongoRefundId} />
+                    <InfoField label='Amount' value={PHpeso.format(data.refund.amount ?? 0)} />
+                  </VStack>
+                  <VStack align='flex-start'>
+                    <InfoField label='Reason' value={data.refund.reason} />
+                    <InfoField label='Updated By' value={data.refund.updatedBy} />
+                    <InfoField
+                      label='Created At'
+                      value={!!data.refund.createdAt ? tableFormatTimeDisplay(data.refund.createdAt) : 'N/A'}
+                    />
+                  </VStack>
+                </Stack>
+              </SlideFade>
+            )}
+          </Box>
+        </>
+      )}
 
       <br />
 
