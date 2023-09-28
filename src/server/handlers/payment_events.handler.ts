@@ -327,6 +327,8 @@ export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId
       reason: refundResource.attributes.metadata.reason || '',
       status: 'SUCCESS',
       amount: bookingRecord.receipt.total,
+      process: 'PAYMONGO',
+      updatedBy: 'SYSTEM',
     });
 
     await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });

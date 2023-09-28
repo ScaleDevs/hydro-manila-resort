@@ -19,11 +19,19 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { MdEmail } from 'react-icons/md';
+import { RiRefund2Fill } from 'react-icons/ri';
 
 import { tableFormatTimeDisplay } from '@/modules/utils/helper';
 import { PHpeso } from '@/utils/helper';
-import ConfirmModal from '@/components/ConfirmModal';
+import Modal from '@/components/Modal';
 import { trpc } from '@/utils/trpc';
+import UpdateRefund from './UpdateRefund';
+
+const BadgeColor = {
+  FAILED: 'gray',
+  PROCESSING: 'gray',
+  SUCCESS: 'red',
+};
 
 const InfoField = ({ label, value = 'N/A', children }: { label: string; value?: string | number; children?: ReactNode }) => {
   return (
@@ -45,6 +53,7 @@ export interface IDetailsProps {
 export function Details({ isLoading, isIn, data }: IDetailsProps) {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenRefundModal, onOpen: onOpenRefundModal, onClose: closeRefundModal } = useDisclosure();
   const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
 
   const getConvenienceFee = () => {
@@ -84,11 +93,17 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
     });
   };
 
+  const openRefundModal = () => {
+    if (!data?.refundId) return;
+    onOpenRefundModal();
+  };
+
   return (
     <SlideFade in={isIn} offsetY='20px'>
-      <ConfirmModal title='Resend Email' {...{ isOpen, onClose, isLoading: isResendingEmail, onConfirm }}>
+      <Modal title='Resend Email' {...{ isOpen, onClose, isLoading: isResendingEmail, onConfirm }}>
         <Text>Are you sure you want to resend booking confirmation email to customer?</Text>
-      </ConfirmModal>
+      </Modal>
+      <UpdateRefund isOpen={isOpenRefundModal} onClose={closeRefundModal} bookingRefundId={data?.refundId} />
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         {isLoading ? (
           <Center minH='210px'>
@@ -101,7 +116,13 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
           <>
             <Stack direction={{ base: 'column', md: 'row' }} justify='space-between'>
               <Stack direction='row' align='end'>
-                <Badge py={3} px={5} variant='subtle' colorScheme='green' fontFamily='primary'>
+                <Badge
+                  py={3}
+                  px={5}
+                  variant='subtle'
+                  colorScheme={!!data?.refund ? BadgeColor[data.refund.status] : 'green'}
+                  fontFamily='primary'
+                >
                   {getStatus()}
                 </Badge>
                 <Stack spacing={0} justifyContent='space-between'>
@@ -112,7 +133,17 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
                 </Stack>
               </Stack>
 
-              <IconButton variant='outline' colorScheme='teal' aria-label='Send email' icon={<MdEmail />} onClick={onOpen} />
+              <Stack direction='row'>
+                <IconButton variant='outline' colorScheme='teal' aria-label='Send email' icon={<MdEmail />} onClick={onOpen} />
+                <IconButton
+                  variant='outline'
+                  colorScheme='red'
+                  aria-label='Update Refund'
+                  icon={<RiRefund2Fill />}
+                  onClick={openRefundModal}
+                  isDisabled={!data?.refundId || data.refund?.status === 'SUCCESS'}
+                />
+              </Stack>
             </Stack>
 
             <br />

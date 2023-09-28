@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
-import { BookingUpdateLog, Guests } from '@prisma/client';
+import { BookingRefund, BookingUpdateLog, Guests } from '@prisma/client';
 import { calendar_v3 } from 'googleapis';
 
 import {
@@ -25,6 +25,7 @@ import {
 } from '@/server/repository/mailersend.repo';
 import { constants } from '../constants';
 import { createGuestsSummary } from '../util';
+import { BookingRefundRepository } from '../repository/bookingrefund.repo';
 
 class Service {
   public async checkScheduleAvailability({ startDate, endDate }: { startDate: string | Date; endDate: string | Date }) {
@@ -59,6 +60,7 @@ class Service {
 
   public async extendedBookingInstance(booking: IBooking) {
     try {
+      let refund: BookingRefund | null = null;
       const product = await ProductRepository.findProductById(booking.productId);
       const bookingResult: typeof booking & { product: IProduct & { includedRoomsName: string[] } } & { roomsObject: IRoom[] } = {
         ...booking,
@@ -78,7 +80,14 @@ class Service {
         };
       }
 
-      return bookingResult;
+      if (!!booking.refundId) {
+        refund = await BookingRefundRepository.findBookingRefundById(booking.refundId);
+      }
+
+      return {
+        ...bookingResult,
+        refund,
+      };
     } catch (err: any) {
       const code = err.code || 'INTERNAL_SERVER_ERROR';
       const message = err.message || 'Something went wrong';

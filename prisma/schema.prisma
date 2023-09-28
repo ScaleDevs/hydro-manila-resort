@@ -154,8 +154,10 @@ model BookingRefund {
   referenceNo      String?
   reason           String
   amount           Int?
+  process          ProcessType?
   status           BookingRefundStatus
   type             BookingRefundType
+  updatedBy        String?
   createdAt        DateTime            @default(now())
 }
 

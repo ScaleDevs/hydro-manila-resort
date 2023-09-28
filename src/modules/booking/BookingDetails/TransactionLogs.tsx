@@ -55,7 +55,7 @@ const schema = z.object({
     .number({
       required_error: 'Enter Amount!',
     })
-    .min(1, 'Must be greater than0!'),
+    .min(1, 'Must be greater than 0!'),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -106,10 +106,10 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
     onClose();
   };
 
-  const save = () => {
-    trigger();
+  const save = async () => {
+    const isValid = await trigger();
 
-    if (!!Object.keys(errors).length) return;
+    if (!isValid) return;
     if (!bookingId) {
       toast({
         title: 'Invalid Booking Record!',

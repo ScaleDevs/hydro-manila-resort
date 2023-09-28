@@ -123,8 +123,9 @@ export const bookingRouter = router({
       z.object({
         bookingRefundId: z.string().min(1),
         data: z.object({
-          refNo: z.string(),
+          refNo: z.string().optional(),
           process: z.enum(['BANK', 'CASH']),
+          amount: z.number().optional(),
           updatedBy: z.string(),
         }),
       }),
@@ -134,6 +135,8 @@ export const bookingRouter = router({
         referenceNo: input.data.refNo,
         process: input.data.process,
         updatedBy: input.data.updatedBy,
+        amount: input.data.amount,
+        status: 'SUCCESS',
       });
     }),
   resendBookingInfo: procedure.input(z.string().min(1)).mutation(async ({ input }) => {
