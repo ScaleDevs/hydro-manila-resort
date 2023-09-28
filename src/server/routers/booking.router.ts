@@ -51,6 +51,40 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.updateBookingHandler(input.bookingId, input.username, input.data);
     }),
+  addTransactionLog: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.string().min(1),
+        username: z.string().min(1),
+        data: z.object({
+          refNo: z.string(),
+          process: z.enum(['BANK', 'CASH']),
+          type: z.enum(['REFUND', 'PAYMENT']),
+          amount: z.number().min(1, 'Required'),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return BookingHandler.addTransactionLog(input.bookingId, input.username, input.data);
+    }),
+  updateRefundInfo: protectedProcedure
+    .input(
+      z.object({
+        bookingRefundId: z.string().min(1),
+        data: z.object({
+          refNo: z.string().optional(),
+          process: z.enum(['BANK', 'CASH']),
+          amount: z.number().optional(),
+          updatedBy: z.string(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return BookingHandler.updateRefundInfo(input);
+    }),
+  resendBookingInfo: protectedProcedure.input(z.string().min(1)).mutation(async ({ input }) => {
+    return BookingHandler.resetBookingEmailConfirmation(input);
+  }),
   customerUpdateRequest: procedure
     .input(
       z.object({
@@ -101,38 +135,4 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.checkBookingAvailability(input);
     }),
-  addTransactionLog: procedure
-    .input(
-      z.object({
-        bookingId: z.string().min(1),
-        username: z.string().min(1),
-        data: z.object({
-          refNo: z.string(),
-          process: z.enum(['BANK', 'CASH']),
-          type: z.enum(['REFUND', 'PAYMENT']),
-          amount: z.number().min(1, 'Required'),
-        }),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      return BookingHandler.addTransactionLog(input.bookingId, input.username, input.data);
-    }),
-  updateRefundInfo: procedure
-    .input(
-      z.object({
-        bookingRefundId: z.string().min(1),
-        data: z.object({
-          refNo: z.string().optional(),
-          process: z.enum(['BANK', 'CASH']),
-          amount: z.number().optional(),
-          updatedBy: z.string(),
-        }),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      return BookingHandler.updateRefundInfo(input);
-    }),
-  resendBookingInfo: procedure.input(z.string().min(1)).mutation(async ({ input }) => {
-    return BookingHandler.resetBookingEmailConfirmation(input);
-  }),
 });
