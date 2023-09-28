@@ -155,7 +155,7 @@ model BookingRefund {
   status           BookingRefundStatus
   referenceNo      String?
   paymongoRefundId String?
-  amount           Int?
+  amount           Float?
   reason           String
   updatedBy        String?
   createdAt        DateTime            @default(now())

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
-import { VStack, useToast } from '@chakra-ui/react';
+import { Button, VStack, useToast } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -24,7 +24,7 @@ const schema = z.object({
       }
     },
   }),
-  amount: z.number().optional(),
+  amount: z.preprocess((v) => Number(parseFloat(v as string)), z.number()).optional(),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -55,21 +55,16 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
   const { mutate, isLoading } = trpc.booking.updateRefundInfo.useMutation();
 
   const {
+    handleSubmit,
     register,
     control,
     formState: { errors },
-    trigger,
-    getValues,
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
   });
 
-  const onConfirm = async () => {
-    const isValid = await trigger();
-
-    if (!isValid) return;
-
+  const onConfirm = async (data: FormSchemaType) => {
     if (!bookingRefundId) {
       toast({
         title: 'Invalid Refund Record!',
@@ -94,8 +89,6 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
       return;
     }
 
-    const data = getValues();
-
     mutate(
       {
         bookingRefundId,
@@ -105,10 +98,10 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
         },
       },
       {
-        onSuccess() {
+        onSuccess(data) {
           if (router.query.id && typeof router.query.id === 'string')
             ctx.booking.getBookingByRefNo.setData(router.query.id, (currentData: any) => {
-              return { ...currentData, refund: { ...currentData.refund, status: 'SUCCESS' } };
+              return { ...currentData, refund: data };
             });
           toast({
             title: 'Refund Info Saved',
@@ -135,28 +128,34 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
   };
 
   return (
-    <Modal title='Provide Refund Details' {...{ isOpen, onClose, isLoading, onConfirm }}>
-      <VStack gap={2}>
-        <SelectField
-          register={register}
-          property='process'
-          placeholder='Choose Process'
-          label='Process:'
-          options={processTypes}
-          errMsg={errors.process?.message}
-          required
-        />
+    <Modal title='Provide Refund Details' {...{ isOpen, onClose, isLoading }}>
+      <form onSubmit={handleSubmit(onConfirm)}>
+        <VStack gap={2}>
+          <SelectField
+            register={register}
+            property='process'
+            placeholder='Choose Process'
+            label='Process:'
+            options={processTypes}
+            errMsg={errors.process?.message}
+            required
+          />
 
-        <TextField
-          register={register}
-          property='refNo'
-          placeholder='Reference No'
-          label='Reference No:'
-          errMsg={errors.refNo?.message}
-        />
+          <TextField
+            register={register}
+            property='refNo'
+            placeholder='Reference No'
+            label='Reference No:'
+            errMsg={errors.refNo?.message}
+          />
 
-        <NumberFieldV2 required control={control} property='amount' label='Amount:' errMsg={errors.amount?.message} />
-      </VStack>
+          <NumberFieldV2 required control={control} property='amount' label='Amount:' errMsg={errors.amount?.message} />
+
+          <Button type='submit' isLoading={isLoading} w='100%'>
+            Confirm
+          </Button>
+        </VStack>
+      </form>
     </Modal>
   );
 }

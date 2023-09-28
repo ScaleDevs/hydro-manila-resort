@@ -46,11 +46,11 @@ export function NumberFieldV2(props: INumberFieldV2Props) {
               </Text>
               <NumberInput
                 value={value}
-                onChange={(_v, n) => {
-                  const takeValue = Number.isNaN(n) ? 0 : n;
-                  setValue(takeValue);
-                  onChange && onChange(takeValue);
+                onChange={(value) => {
+                  setValue(value);
+                  onChange && onChange(value);
                 }}
+                precision={2}
                 max={maxValue}
                 min={0}
               >

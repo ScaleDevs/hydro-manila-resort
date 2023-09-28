@@ -16,7 +16,7 @@ export interface IModalProps {
   isLoading?: boolean;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   confirmText?: string;
 }
 
@@ -31,11 +31,19 @@ export default function Modal({ title, confirmText = 'Confirm', children, isOpen
         <ModalCloseButton />
         <ModalBody pb={6}>{children}</ModalBody>
 
-        <ModalFooter>
-          <Button type='submit' onClick={onConfirm} isLoading={isLoading}>
-            {confirmText}
-          </Button>
-        </ModalFooter>
+        {onConfirm && (
+          <ModalFooter>
+            <Button
+              type='submit'
+              onClick={() => {
+                !!onConfirm && onConfirm();
+              }}
+              isLoading={isLoading}
+            >
+              {confirmText}
+            </Button>
+          </ModalFooter>
+        )}
       </ModalContent>
     </ChakraModal>
   );
