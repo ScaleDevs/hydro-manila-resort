@@ -262,7 +262,10 @@ interface CreateRefundHandler {
 export const createRefundHandler: CreateRefundHandler = async (ref_no: string, reason: string) => {
   try {
     const bookingRecord = await BookingService.findBookingByReferenceNo(ref_no);
+
     if (!bookingRecord) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Booking record does not exist' });
+
+    if (!!bookingRecord.refundId) throw new TRPCError({ code: 'FORBIDDEN', message: 'You have already requested for a refund!' });
 
     const { total } = bookingRecord.receipt;
 
@@ -315,10 +318,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
         };
       }
 
-      if (result.error === 'something_went_wrong')
-        return {
-          status: 'FAILED',
-        };
+      if (result.error === 'something_went_wrong') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Something went wrong!' });
     }
 
     if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
@@ -327,7 +327,6 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
       status: 'AUTOMATIC_PROCESSING',
     };
   } catch (err) {
-    console.log(err);
     const error = err as any;
     throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
