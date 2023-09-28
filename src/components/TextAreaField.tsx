@@ -1,5 +1,6 @@
 import { Textarea, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
+import { GetApp } from '@/appspecs/theme';
 
 export interface ITextAreaFieldProps {
   register: UseFormRegister<any>;
@@ -29,12 +30,12 @@ export function TextAreaField({ register, property, placeholder, errMsg, onBlur,
           },
         })}
         placeholder={placeholder || ''}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal.400',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>
