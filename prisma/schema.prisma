@@ -150,13 +150,13 @@ model BookingSetting {
 
 model BookingRefund {
   bookingRefundId  String              @id @default(auto()) @map("_id") @db.ObjectId
-  paymongoRefundId String?
-  referenceNo      String?
-  reason           String
-  amount           Int?
+  type             BookingRefundType
   process          ProcessType?
   status           BookingRefundStatus
-  type             BookingRefundType
+  referenceNo      String?
+  paymongoRefundId String?
+  amount           Int?
+  reason           String
   updatedBy        String?
   createdAt        DateTime            @default(now())
 }
