@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import * as React from 'react';
 import Head from 'next/head';
-import { Alert, AlertIcon, Button, Fade, Heading, SlideFade, Stack, Text } from '@chakra-ui/react';
+import { Alert, AlertIcon, Button, Collapse, Heading, SlideFade, Stack, Text } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,8 +19,7 @@ const schema = z.object({
 type FormSchemaType = z.infer<typeof schema>;
 
 function BookingCancel() {
-  const { mutate, isLoading, isSuccess } = trpc.payment.createRefund.useMutation();
-  const [refundType, setRefundType] = useState<'MANUAL_PROCESSING' | 'AUTOMATIC_PROCESSING' | 'FAILED' | null>(null);
+  const { mutate, isLoading, isSuccess, error, reset: resetMutation } = trpc.payment.createRefund.useMutation();
 
   const {
     register,
@@ -33,9 +32,13 @@ function BookingCancel() {
 
   const onCancellation = (data: FormSchemaType) => {
     mutate(data, {
-      onSuccess(data) {
-        setRefundType(data.status);
+      onSuccess() {
         reset();
+      },
+      onSettled() {
+        setTimeout(() => {
+          resetMutation();
+        }, 5000);
       },
     });
   };
@@ -56,30 +59,38 @@ function BookingCancel() {
             <Stack w='100%' spacing={5}>
               <Heading>Cancellation Form</Heading>
 
-              {isSuccess ? (
-                refundType === 'FAILED' ? (
-                  <Fade in={isSuccess}>
-                    <Alert status='error' borderRadius='sm'>
-                      <AlertIcon />
-                      <Text>Something went wrong! Kindly Try again or contact customer support through test@gmail.com</Text>
-                    </Alert>
-                  </Fade>
-                ) : (
-                  <Fade in={isSuccess}>
-                    <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
-                      <AlertIcon />
-                      <Text>Cancellation Submitted! You will receive an email within 30mins regarding the next steps</Text>
-                    </Alert>
-                  </Fade>
-                )
-              ) : (
-                <Fade in={!isSuccess}>
-                  <Alert status='info' borderRadius='sm'>
-                    <AlertIcon />
-                    <Text>Cancellation 3 days before your booking date will not be allowed!</Text>
-                  </Alert>
-                </Fade>
-              )}
+              <Collapse in={true}>
+                <Alert status='info' borderRadius='sm'>
+                  <AlertIcon />
+                  <Text>Cancellation 3 days before your booking date will not be allowed!</Text>
+                </Alert>
+              </Collapse>
+
+              <Collapse in={isSuccess}>
+                <Alert status='success' borderRadius='xl' color='white'>
+                  <AlertIcon />
+                  <Text color='green.700'>
+                    Cancellation Submitted! You will receive an email within 30mins regarding the next steps
+                  </Text>
+                </Alert>
+              </Collapse>
+
+              <Collapse in={error?.data?.code === 'BAD_REQUEST' || error?.data?.code === 'INTERNAL_SERVER_ERROR'}>
+                <Alert status='error' borderRadius='xl'>
+                  <AlertIcon />
+                  <Text color='red.700'>
+                    Something went wrong! Kindly Try again or contact customer support through{' '}
+                    {process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? ''}
+                  </Text>
+                </Alert>
+              </Collapse>
+
+              <Collapse in={error?.data?.code === 'FORBIDDEN'}>
+                <Alert status='error' borderRadius='xl'>
+                  <AlertIcon />
+                  <Text color='red.700'>{error?.message}</Text>
+                </Alert>
+              </Collapse>
 
               <TextField
                 label='Booking Reference No:'
