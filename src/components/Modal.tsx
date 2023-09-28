@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
 import {
-  Modal,
+  Modal as ChakraModal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
@@ -10,18 +10,21 @@ import {
   Button,
 } from '@chakra-ui/react';
 
-export interface IConfirmModalProps {
+export interface IModalProps {
   title: string;
   children: ReactNode;
   isLoading?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  confirmText?: string;
 }
 
-export default function ConfirmModal({ title, children, isOpen, isLoading, onConfirm, onClose }: IConfirmModalProps) {
+export default function Modal({ title, confirmText = 'Confirm', children, isOpen, isLoading, onConfirm, onClose }: IModalProps) {
+  const initialRef = useRef(null);
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <ChakraModal initialFocusRef={initialRef} isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader fontFamily='primary'>{title}</ModalHeader>
@@ -30,10 +33,10 @@ export default function ConfirmModal({ title, children, isOpen, isLoading, onCon
 
         <ModalFooter>
           <Button type='submit' onClick={onConfirm} isLoading={isLoading}>
-            Confirm
+            {confirmText}
           </Button>
         </ModalFooter>
       </ModalContent>
-    </Modal>
+    </ChakraModal>
   );
 }
