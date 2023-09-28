@@ -39,7 +39,7 @@ const InfoField = ({ label, value, children }: { label: string; value?: string |
       <Text color='gray.500' fontSize='sm'>
         {label}:
       </Text>
-      {value || value === null ? <Text>{value ?? 'N/A'}</Text> : children}
+      {value || value === null || value === '' ? <Text>{value ? value : 'N/A'}</Text> : children}
     </VStack>
   );
 };
