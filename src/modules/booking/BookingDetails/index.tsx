@@ -135,8 +135,13 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
                     <InfoField label='Check Out' value={tableFormatTimeDisplay(data?.endSession as string)} />
                   </VStack>
                   <VStack align='flex-start'>
-                    <InfoField label='Guests (Overnight)' value={data?.guests.overNightGuests || 0} />
-                    <InfoField label='Guests (Non-Overnight)' value={data?.guests.nonOverNightGuests || 0} />
+                    {process.env.NEXT_PUBLIC_APP === 'VillaLeonora' && (
+                      <InfoField label='Guests (Overnight)' value={data?.guests.overNightGuests || 0} />
+                    )}
+                    <InfoField
+                      label={process.env.NEXT_PUBLIC_APP === 'VillaLeonora' ? 'Guests (Non-Overnight)' : 'Guests'}
+                      value={data?.guests.nonOverNightGuests || 0}
+                    />
                     <InfoField label='ROOM'>
                       {!!data?.product.isAllRooms ? (
                         <Text>Whole Place</Text>
