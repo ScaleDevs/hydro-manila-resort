@@ -58,7 +58,7 @@ type TransactionLog {
   paymentIntentId String?
   process         ProcessType     @default(PAYMONGO)
   type            TransactionType
-  amount          Int
+  amount          Float
   addedBy         String?         @default("SYSTEM")
   createdAt       DateTime?
 }

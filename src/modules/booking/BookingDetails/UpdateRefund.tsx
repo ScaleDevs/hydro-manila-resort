@@ -55,9 +55,9 @@ export default function UpdateRefund({ bookingRefundId, isOpen, onClose }: IUpda
   const { mutate, isLoading } = trpc.booking.updateRefundInfo.useMutation();
 
   const {
-    handleSubmit,
     register,
     control,
+    handleSubmit,
     formState: { errors },
     reset,
   } = useForm<FormSchemaType>({

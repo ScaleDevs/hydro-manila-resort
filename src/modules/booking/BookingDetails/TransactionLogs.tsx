@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import * as React from 'react';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { ProcessType, TransactionType } from '@prisma/client';
@@ -6,13 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
   Button,
   HStack,
   Heading,
@@ -26,14 +19,15 @@ import {
   Tr,
   useDisclosure,
   Box,
-  VStack,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
 import { BsPlusLg } from 'react-icons/bs';
 
 import { PHpeso } from '@/utils/helper';
 import { trpc } from '@/utils/trpc';
 import useAuthStoreTrack from '@/store/auth.store';
+import Modal from '@/components/Modal';
 import { TextField } from '@/components/TextField';
 import { SelectField } from '@/components/SelectField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
@@ -51,11 +45,7 @@ const schema = z.object({
     },
   }),
   type: z.enum(['REFUND', 'PAYMENT']),
-  amount: z
-    .number({
-      required_error: 'Enter Amount!',
-    })
-    .min(1, 'Must be greater than 0!'),
+  amount: z.preprocess((v) => Number(parseFloat(v as string)), z.number().min(1, 'Must be greater than 0!')),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -81,7 +71,6 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
   const router = useRouter();
   const { username } = useAuthStoreTrack();
   const ctx = trpc.useContext();
-  const initialRef = useRef(null);
   const toast = useToast();
 
   const { mutate, isLoading } = trpc.booking.addTransactionLog.useMutation();
@@ -89,9 +78,8 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
   const {
     register,
     control,
+    handleSubmit,
     formState: { errors },
-    trigger,
-    getValues,
     reset,
   } = useForm<FormSchemaType>({
     resolver: zodResolver(schema),
@@ -106,10 +94,7 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
     onClose();
   };
 
-  const save = async () => {
-    const isValid = await trigger();
-
-    if (!isValid) return;
+  const save = async (data: FormSchemaType) => {
     if (!bookingId) {
       toast({
         title: 'Invalid Booking Record!',
@@ -133,8 +118,6 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
 
       return;
     }
-
-    const data = getValues();
 
     mutate(
       {
@@ -164,54 +147,47 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
   };
 
   return (
-    <Modal initialFocusRef={initialRef} isOpen={isOpen} onClose={onExit} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader fontFamily='primary'>Create New Transaction Log</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
-          <VStack spacing={5}>
-            <SelectField
-              register={register}
-              property='type'
-              placeholder='Choose Type'
-              label='Type:'
-              options={Object.values(TransactionType).map((v) => ({
-                label: v,
-                value: v,
-              }))}
-              errMsg={errors.process?.message}
-              required
-            />
+    <Modal title='Create New Transaction Log' {...{ isOpen, onClose: onExit, isLoading }}>
+      <form onSubmit={handleSubmit(save)}>
+        <VStack gap={3}>
+          <SelectField
+            register={register}
+            property='type'
+            placeholder='Choose Type'
+            label='Type:'
+            options={Object.values(TransactionType).map((v) => ({
+              label: v,
+              value: v,
+            }))}
+            errMsg={errors.process?.message}
+            required
+          />
 
-            <SelectField
-              register={register}
-              property='process'
-              placeholder='Choose Process'
-              label='Process:'
-              options={processTypes}
-              errMsg={errors.process?.message}
-              required
-            />
+          <SelectField
+            register={register}
+            property='process'
+            placeholder='Choose Process'
+            label='Process:'
+            options={processTypes}
+            errMsg={errors.process?.message}
+            required
+          />
 
-            <TextField
-              register={register}
-              property='refNo'
-              placeholder='Reference No'
-              label='Reference No:'
-              errMsg={errors.refNo?.message}
-            />
+          <TextField
+            register={register}
+            property='refNo'
+            placeholder='Reference No'
+            label='Reference No:'
+            errMsg={errors.refNo?.message}
+          />
 
-            <NumberFieldV2 required control={control} property='amount' label='Amount:' errMsg={errors.amount?.message} />
-          </VStack>
-        </ModalBody>
+          <NumberFieldV2 required control={control} property='amount' label='Amount:' errMsg={errors.amount?.message} />
 
-        <ModalFooter>
-          <Button type='submit' onClick={save} isLoading={isLoading}>
+          <Button type='submit' isLoading={isLoading} w='100%'>
             Save
           </Button>
-        </ModalFooter>
-      </ModalContent>
+        </VStack>
+      </form>
     </Modal>
   );
 };
