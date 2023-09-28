@@ -1,12 +1,23 @@
-import * as React from 'react';
+import { ReactNode } from 'react';
 import { UseTRPCQueryResult } from '@trpc/react-query/shared';
 import { inferRouterOutputs } from '@trpc/server';
 import { AppRouter } from '@/server/routers/_app';
 import { TRPCClientErrorLike } from '@trpc/react-query';
-import { Box, Spinner, SlideFade, Heading, Stack, Divider, Text } from '@chakra-ui/react';
+import { Box, Spinner, SlideFade, Heading, Stack, Divider, Text, Badge, VStack } from '@chakra-ui/react';
 
 import { tableFormatTimeDisplay } from '@/modules/utils/helper';
 import { PHpeso } from '@/utils/helper';
+
+const InfoField = ({ label, value = 'N/A', children }: { label: string; value?: string | number; children?: ReactNode }) => {
+  return (
+    <VStack spacing={0} align='flex-start' wordBreak='break-word'>
+      <Text color='gray.500' fontSize='sm'>
+        {label}:
+      </Text>
+      {value ? <Text>{value}</Text> : children}
+    </VStack>
+  );
+};
 
 export interface IDetailsProps {
   isIn?: boolean;
@@ -34,105 +45,62 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
           <Spinner size='lg' />
         ) : (
           <>
-            <Heading textAlign='center'>BASIC DETAILS</Heading>
+            <Stack direction='row' align='end'>
+              <Badge py={3} px={5} variant='subtle' colorScheme='green' fontFamily='primary'>
+                BOOKED
+              </Badge>
+              <Stack spacing={0} justifyContent='space-between'>
+                <Text color='gray.400' fontSize='sm'>
+                  Reference No:
+                </Text>
+                <Text fontSize={{ base: 'sm', md: 'md' }}>{data?.ref_no}</Text>
+              </Stack>
+            </Stack>
+
             <br />
-            <Stack spacing={2}>
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Reference No:</Text>
-                <Text>{data?.ref_no}</Text>
+            <Stack direction={{ base: 'column', lg: 'row' }} justify='space-around' minH='210px'>
+              <VStack align='flex-start'>
+                <Heading size='md'>Personal Details</Heading>
+                <InfoField label='Name' value={data?.name} />
+                <InfoField label='Email' value={data?.email} />
+                <InfoField label='Phone' value={data?.phoneNumber} />
+              </VStack>
+
+              <Box bg='gray.400' w='0.5px' />
+
+              <Stack>
+                <Heading size='md'>Booking Details</Heading>
+                <Stack direction='row' align='flex-start' spacing={10}>
+                  <VStack align='flex-start'>
+                    <InfoField label='Type' value={data?.product.name} />
+                    <InfoField label='Check In' value={tableFormatTimeDisplay(data?.startSession as string)} />
+                    <InfoField label='Check Out' value={tableFormatTimeDisplay(data?.endSession as string)} />
+                  </VStack>
+                  <VStack align='flex-start'>
+                    <InfoField label='Guests (Overnight)' value={data?.guests.overNightGuests || 0} />
+                    <InfoField label='Guests (Non-Overnight)' value={data?.guests.nonOverNightGuests || 0} />
+                    <InfoField label='ROOM'>
+                      {!!data?.product.isAllRooms ? (
+                        <Text>Whole Place</Text>
+                      ) : (
+                        <Text>
+                          {data?.roomsObject && data?.roomsObject.length > 0
+                            ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
+                            : 'N/A'}
+                        </Text>
+                      )}
+                    </InfoField>
+                  </VStack>
+                </Stack>
               </Stack>
 
-              <Divider borderColor='gray.400' />
+              <Box bg='gray.400' w='0.5px' />
 
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Status:</Text>
-                <Text>{data?.refundId ? 'REFUNDED' : 'BOOKED'}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Name:</Text>
-                <Text>{data?.name}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Email:</Text>
-                <Text>{data?.email}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Contact Number:</Text>
-                <Text>{data?.phoneNumber}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Schedule Type:</Text>
-                <Text>{data?.product.name}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Start Schedule:</Text>
-                <Text>{tableFormatTimeDisplay(data?.startSession as string)}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>End Schedule:</Text>
-                <Text>{tableFormatTimeDisplay(data?.endSession as string)}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Guests (Overnight):</Text>
-                <Text>{data?.guests.overNightGuests || 0}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Guests (Non-Overnight):</Text>
-                <Text>{data?.guests.nonOverNightGuests || 0}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>ROOM:</Text>
-                {!!data?.product.isAllRooms ? (
-                  <Text>Whole Place</Text>
-                ) : (
-                  <Text>
-                    {data?.roomsObject && data?.roomsObject.length > 0
-                      ? data.roomsObject.map((info) => info.roomIdentityName).join(', ')
-                      : 'N/A'}
-                  </Text>
-                )}
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>PAYMENT ID:</Text>
-                <Text>{data?.paymentId}</Text>
-              </Stack>
-
-              <Divider borderColor='gray.400' />
-
-              <Stack spacing={0} direction='row' justifyContent='space-between'>
-                <Text>Created At:</Text>
-                <Text>{tableFormatTimeDisplay(data?.createdAt || '')}</Text>
-              </Stack>
+              <VStack align='flex-start'>
+                <Heading size='md'>Extra Details</Heading>
+                <InfoField label='Payment ID' value={data?.paymentId} />
+                <InfoField label='Created At' value={data?.createdAt} />
+              </VStack>
             </Stack>
           </>
         )}
@@ -145,7 +113,9 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
           <Spinner size='lg' />
         ) : (
           <SlideFade in>
-            <Heading textAlign='center'>RECEIPT DETAILS</Heading>
+            <Heading size='lg' fontFamily='primary'>
+              RECEIPT
+            </Heading>
             <br />
             <Stack spacing={2}>
               <Stack spacing={0} direction='row' justifyContent='space-between'>
