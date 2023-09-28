@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { BookingHandler } from '@/server/handlers/booking.handler';
 import { BookingRepository } from '@/repo/booking.repo';
+import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 
 export const bookingRouter = router({
   getManyBooking: protectedProcedure
@@ -117,4 +118,25 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.addTransactionLog(input.bookingId, input.username, input.data);
     }),
+  updateRefundInfo: procedure
+    .input(
+      z.object({
+        bookingRefundId: z.string().min(1),
+        data: z.object({
+          refNo: z.string(),
+          process: z.enum(['BANK', 'CASH']),
+          updatedBy: z.string(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      return BookingRefundRepository.updateBookinRefund(input.bookingRefundId, {
+        referenceNo: input.data.refNo,
+        process: input.data.process,
+        updatedBy: input.data.updatedBy,
+      });
+    }),
+  resendBookingInfo: procedure.input(z.string().min(1)).mutation(async ({ input }) => {
+    return BookingHandler.resetBookingEmailConfirmation(input);
+  }),
 });

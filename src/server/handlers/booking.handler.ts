@@ -2,16 +2,16 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { Guests, ProcessType, TransactionType } from '@prisma/client';
 
-import { tzSchedToDayJsInsance, tzSchedToUnix, utcDateToTzDayInstance } from '@/utils/helper';
+import { getExtraHeads, getExtraHeadsTotal, tzSchedToDayJsInsance, tzSchedToUnix, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
-import { bookingUpdateNoAdditionalPaymentConfirmation } from '@/repo/mailersend.repo';
+import { bookingUpdateNoAdditionalPaymentConfirmation, sendBookingSuccessEmail } from '@/repo/mailersend.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
-import { createGuestsSummary } from '../util';
+import { PHpeso, createGuestsSummary } from '../util';
 import { constants } from '../constants';
 
 export * as BookingHandler from './booking.handler';
@@ -323,4 +323,75 @@ export const addTransactionLog = async (
   });
 
   return updatedBooking;
+};
+
+export const resetBookingEmailConfirmation = async (bookingId: string) => {
+  try {
+    const booking = await BookingRepository.findBookingById(bookingId);
+    const product = await ProductRepository.findProductById(booking.productId);
+    const rooms = await RoomRepository.findRoomsByIds(booking.rooms);
+    const bookedDate = dayjs.utc(booking.startSession);
+    const checkOutDate = dayjs.utc(booking.endSession);
+    const { guestSetting } = product;
+    const { guests } = booking;
+    const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [];
+
+    const extraOverNightGuestsTotal = getExtraHeadsTotal(
+      guests.overNightGuests,
+      guestSetting.minOverNightGuestPax,
+      guestSetting.overNightGuestFee,
+    );
+    const extraNonOverNightGuestsTotal = getExtraHeadsTotal(
+      guests.nonOverNightGuests,
+      guestSetting.minNonOverNightGuestPax,
+      guestSetting.nonOverNightGuestFee,
+    );
+    let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
+
+    if (extraOverNightGuestsTotal > 0)
+      emailAddonsTable.push({
+        name: 'Additional Overnight Guests',
+        price: PHpeso.format(guestSetting.overNightGuestFee),
+        qty: `${getExtraHeads(guests.overNightGuests, guestSetting.minOverNightGuestPax)}`,
+        summary: PHpeso.format(extraOverNightGuestsTotal),
+      });
+
+    if (extraNonOverNightGuestsTotal > 0)
+      emailAddonsTable.push({
+        name: product.isAllRooms ? 'Additional Non-Overnight Guests' : 'Additional Guests',
+        price: PHpeso.format(guestSetting.nonOverNightGuestFee),
+        qty: `${getExtraHeads(guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax)}`,
+        summary: PHpeso.format(extraNonOverNightGuestsTotal),
+      });
+
+    rooms.forEach((info) => {
+      const isNotAddOn = product.includedRooms.some((val) => val === info.roomId);
+      addonsTotal += isNotAddOn ? 0 : info.price;
+      emailAddonsTable.push({
+        name: info.roomIdentityName,
+        price: PHpeso.format(info.price),
+        qty: '1',
+        summary: PHpeso.format(isNotAddOn ? 0 : info.price),
+      });
+    });
+    emailAddonsTable.push({ name: '', price: '', qty: 'Total Extra', summary: PHpeso.format(addonsTotal) });
+
+    await sendBookingSuccessEmail({
+      recipientEmail: [booking.email, constants.mailerSend.supportEmail],
+      reference_number: booking.ref_no,
+      guest_name: booking.name,
+      num_pax: guests.overNightGuests + guests.nonOverNightGuests,
+      checkin: bookedDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+      checkout: checkOutDate.tz(constants.general.timezone).format('MMM DD, YYYY / hh:mm A'),
+      booking_type: product.name,
+      booking_rate: 'BEST AVAILABLE RATE',
+      product_price: PHpeso.format(booking.receipt.productPrice),
+      elements: emailAddonsTable,
+      total_payment: PHpeso.format(booking.receipt.total),
+    });
+
+    return true;
+  } catch (err) {
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+  }
 };

@@ -3,10 +3,27 @@ import { UseTRPCQueryResult } from '@trpc/react-query/shared';
 import { inferRouterOutputs } from '@trpc/server';
 import { AppRouter } from '@/server/routers/_app';
 import { TRPCClientErrorLike } from '@trpc/react-query';
-import { Box, Spinner, SlideFade, Heading, Stack, Divider, Text, Badge, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Spinner,
+  SlideFade,
+  Heading,
+  Stack,
+  Divider,
+  Text,
+  Badge,
+  VStack,
+  Center,
+  IconButton,
+  useDisclosure,
+  useToast,
+} from '@chakra-ui/react';
+import { MdEmail } from 'react-icons/md';
 
 import { tableFormatTimeDisplay } from '@/modules/utils/helper';
 import { PHpeso } from '@/utils/helper';
+import ConfirmModal from '@/components/ConfirmModal';
+import { trpc } from '@/utils/trpc';
 
 const InfoField = ({ label, value = 'N/A', children }: { label: string; value?: string | number; children?: ReactNode }) => {
   return (
@@ -26,6 +43,10 @@ export interface IDetailsProps {
 }
 
 export function Details({ isLoading, isIn, data }: IDetailsProps) {
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
+
   const getConvenienceFee = () => {
     if (!data?.receipt) return 0;
 
@@ -38,23 +59,60 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
     return (data.receipt.bookingFee / 100) * total;
   };
 
+  const getStatus = () => {
+    if (!data?.refund) return 'BOOKED';
+    else if (data.refund.status === 'PROCESSING') return 'REFUND IN PROGRESS';
+    else if (data.refund.status === 'SUCCESS') return 'REFUNDED';
+    else return 'BOOKED';
+  };
+
+  const onConfirm = () => {
+    if (!data?.id) return;
+    mutate(data.id, {
+      onSuccess(data) {
+        if (!!data)
+          toast({
+            title: 'Booking Confirmation Resent',
+            position: 'top-right',
+            duration: 5000,
+            isClosable: true,
+            status: 'success',
+          });
+
+        onClose();
+      },
+    });
+  };
+
   return (
     <SlideFade in={isIn} offsetY='20px'>
+      <ConfirmModal title='Resend Email' {...{ isOpen, onClose, isLoading: isResendingEmail, onConfirm }}>
+        <Text>Are you sure you want to resend booking confirmation email to customer?</Text>
+      </ConfirmModal>
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         {isLoading ? (
-          <Spinner size='lg' />
+          <Center minH='210px'>
+            <VStack gap='3'>
+              <Spinner size='lg' />
+              <Text>Fetching Details ...</Text>
+            </VStack>
+          </Center>
         ) : (
           <>
-            <Stack direction='row' align='end'>
-              <Badge py={3} px={5} variant='subtle' colorScheme='green' fontFamily='primary'>
-                BOOKED
-              </Badge>
-              <Stack spacing={0} justifyContent='space-between'>
-                <Text color='gray.400' fontSize='sm'>
-                  Reference No:
-                </Text>
-                <Text fontSize={{ base: 'sm', md: 'md' }}>{data?.ref_no}</Text>
+            <Stack direction={{ base: 'column', md: 'row' }} justify='space-between'>
+              <Stack direction='row' align='end'>
+                <Badge py={3} px={5} variant='subtle' colorScheme='green' fontFamily='primary'>
+                  {getStatus()}
+                </Badge>
+                <Stack spacing={0} justifyContent='space-between'>
+                  <Text color='gray.400' fontSize='sm'>
+                    Reference No:
+                  </Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}>{data?.ref_no}</Text>
+                </Stack>
               </Stack>
+
+              <IconButton variant='outline' colorScheme='teal' aria-label='Send email' icon={<MdEmail />} onClick={onOpen} />
             </Stack>
 
             <br />
@@ -110,7 +168,12 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
 
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
         {isLoading || !data ? (
-          <Spinner size='lg' />
+          <Center minH='210px'>
+            <VStack gap='3'>
+              <Spinner size='lg' />
+              <Text>Fetching Details ...</Text>
+            </VStack>
+          </Center>
         ) : (
           <SlideFade in>
             <Heading size='lg' fontFamily='primary'>
