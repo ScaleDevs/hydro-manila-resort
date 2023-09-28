@@ -1,6 +1,7 @@
 import { Input, Box, Text } from '@chakra-ui/react';
 import { UseFormRegister } from 'react-hook-form';
 import { RegexValidations } from '@/modules/utils/helper';
+import { GetApp } from '@/appspecs/theme';
 
 export interface INumberFieldProps {
   register?: UseFormRegister<any>;
@@ -55,12 +56,12 @@ export function NumberField({
         {...inputProps}
         defaultValue={defaultvalue}
         placeholder={placeholder}
-        borderColor='primary.1'
+        borderColor='blackAlpha.500'
         borderRadius='sm'
         _hover={{
-          borderColor: 'teal',
+          borderColor: GetApp.ActiveColor,
         }}
-        focusBorderColor='teal.400'
+        focusBorderColor={GetApp.ActiveColor}
       />
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
     </Box>

@@ -19,8 +19,8 @@ import ControlledChooseRooms from './components/ControlledChooseRooms';
 
 const schema = z.object({
   guests: z.object({
-    overNightGuests: z.number(),
-    nonOverNightGuests: z.number(),
+    overNightGuests: z.preprocess((v) => Number(parseInt(v as string, 10)), z.number()),
+    nonOverNightGuests: z.preprocess((v) => Number(parseInt(v as string, 10)), z.number()),
   }),
   productId: z.string().min(1, 'Required'),
   rooms: z.array(z.string().min(1)),
@@ -169,8 +169,18 @@ export default function AdminEditBookingForm({ bookingRefNo, bookingInfo, isIn }
         <Box w={{ base: '95%', md: '90%' }} mx='auto'>
           <form onSubmit={handleSubmit(submitUpdate)}>
             <Stack spacing={5}>
-              <NumberFieldV2 control={control} property='guests.overNightGuests' label='Guests (Overnight)' />
-              <NumberFieldV2 control={control} property='guests.nonOverNightGuests' label='Guests (Non-Overnight)' />
+              <NumberFieldV2
+                control={control}
+                property='guests.overNightGuests'
+                label='Guests (Overnight)'
+                errMsg={errors.guests?.overNightGuests?.message}
+              />
+              <NumberFieldV2
+                control={control}
+                property='guests.nonOverNightGuests'
+                label='Guests (Non-Overnight)'
+                errMsg={errors.guests?.nonOverNightGuests?.message}
+              />
 
               <DateTimeField
                 type='date'

@@ -23,10 +23,11 @@ export interface INumberFieldV2Props {
   onBlur?: () => void;
   maxValue?: number;
   disabled?: boolean;
+  precion?: number;
 }
 
 export function NumberFieldV2(props: INumberFieldV2Props) {
-  const { label, required, control, property, onBlur, onChange, value, errMsg, maxValue, disabled } = props;
+  const { label, required, control, property, onBlur, onChange, value, errMsg, maxValue, disabled, precion = 0 } = props;
 
   if (control)
     return (
@@ -50,7 +51,7 @@ export function NumberFieldV2(props: INumberFieldV2Props) {
                   setValue(value);
                   onChange && onChange(value);
                 }}
-                precision={2}
+                precision={precion}
                 max={maxValue}
                 min={0}
               >

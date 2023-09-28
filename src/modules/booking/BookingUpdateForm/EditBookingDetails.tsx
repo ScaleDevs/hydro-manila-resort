@@ -123,6 +123,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
 
   const proceed = (data: BookingRequestUpdates) => {
     if (!dirtyFields || !bookingInfo || !selectedProduct) return;
+
     const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
 
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {

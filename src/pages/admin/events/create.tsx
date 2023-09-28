@@ -18,7 +18,7 @@ import { SelectNumberField } from '@/components/SelectNumberField';
 
 const schema = z.object({
   guestName: z.string().min(1),
-  guests: z.number(),
+  guests: z.preprocess((v) => Number(v), z.number()),
   description: z.string().min(1, 'Required'),
   startSession: z.string().min(1, 'Required'),
   endSession: z.string().min(1, 'Required'),
@@ -136,7 +136,7 @@ function CreateScheduledEvent() {
                   errMsg={errors.description?.message}
                 />
 
-                <NumberFieldV2 control={control} property='guests' label='Guests' required />
+                <NumberFieldV2 control={control} property='guests' label='Guests' required errMsg={errors.guests?.message} />
 
                 <TextField
                   required

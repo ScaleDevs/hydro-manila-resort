@@ -69,10 +69,10 @@ type Guests {
 }
 
 type GuestSettings {
-  overNightGuestFee       Int
+  overNightGuestFee       Float
   minNonOverNightGuestPax Int
   maxNonOverNightGuestPax Int
-  nonOverNightGuestFee    Int
+  nonOverNightGuestFee    Float
   minOverNightGuestPax    Int
   maxOverNightGuestPax    Int
 }

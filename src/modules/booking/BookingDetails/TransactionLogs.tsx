@@ -181,7 +181,14 @@ const CreateTransactionLog = ({ bookingId, isOpen, onClose }: ICreateTransaction
             errMsg={errors.refNo?.message}
           />
 
-          <NumberFieldV2 required control={control} property='amount' label='Amount:' errMsg={errors.amount?.message} />
+          <NumberFieldV2
+            required
+            control={control}
+            property='amount'
+            label='Amount:'
+            errMsg={errors.amount?.message}
+            precion={2}
+          />
 
           <Button type='submit' isLoading={isLoading} w='100%'>
             Save

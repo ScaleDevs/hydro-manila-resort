@@ -16,11 +16,11 @@ import { NumberFieldV2 } from '@/components/NumberFieldV2';
 const schema = z.object({
   roomIdentityName: z.string().min(1, 'Required'),
   description: z.string().optional(),
-  guests: z.number().min(1, 'Must be greater than 0'),
-  price: z.number().min(1, 'Must be greater than 0'),
-  bedSingle: z.number(),
-  bedDouble: z.number(),
-  bedQueen: z.number(),
+  guests: z.preprocess((v) => Number(v), z.number().min(1, 'Must be greater than 0')),
+  price: z.preprocess((v) => Number(v), z.number().min(1, 'Must be greater than 0')),
+  bedSingle: z.preprocess((v) => Number(v), z.number()),
+  bedDouble: z.preprocess((v) => Number(v), z.number()),
+  bedQueen: z.preprocess((v) => Number(v), z.number()),
   withBathroom: z.boolean(),
   withAircon: z.boolean(),
   withFan: z.boolean(),
@@ -115,7 +115,13 @@ function Admin() {
 
                 <Stack direction={{ base: 'column', md: 'row' }}>
                   <NumberFieldV2 control={control} property='guests' label='Number of guests' errMsg={errors.guests?.message} />
-                  <NumberFieldV2 control={control} property='price' label='Room Price' errMsg={errors.price?.message} />
+                  <NumberFieldV2
+                    control={control}
+                    property='price'
+                    label='Room Price'
+                    errMsg={errors.price?.message}
+                    precion={2}
+                  />
                 </Stack>
 
                 <Stack direction={{ base: 'column', md: 'row' }} spacing={3}>

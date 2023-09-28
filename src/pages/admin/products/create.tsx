@@ -29,12 +29,12 @@ const schema = z
     scheduleEndPost: z.enum(['AM', 'PM']),
     scheduleEndNextDay: z.boolean(),
     guestSetting: z.object({
-      nonOverNightGuestFee: z.number(),
-      minNonOverNightGuestPax: z.number(),
-      maxNonOverNightGuestPax: z.number(),
-      overNightGuestFee: z.number(),
-      minOverNightGuestPax: z.number(),
-      maxOverNightGuestPax: z.number(),
+      nonOverNightGuestFee: z.preprocess((v) => Number(v), z.number()),
+      minNonOverNightGuestPax: z.preprocess((v) => Number(v), z.number()),
+      maxNonOverNightGuestPax: z.preprocess((v) => Number(v), z.number()),
+      overNightGuestFee: z.preprocess((v) => Number(v), z.number()),
+      minOverNightGuestPax: z.preprocess((v) => Number(v), z.number()),
+      maxOverNightGuestPax: z.preprocess((v) => Number(v), z.number()),
     }),
     isAllRooms: z.boolean(),
     includedRooms: z.map(z.string().min(1), z.string().min(1)),
@@ -310,6 +310,7 @@ function CreateProduct() {
                     />
 
                     <NumberFieldV2
+                      precion={2}
                       label='Per Head Fee'
                       control={control}
                       property='guestSetting.nonOverNightGuestFee'
@@ -336,6 +337,7 @@ function CreateProduct() {
                     />
 
                     <NumberFieldV2
+                      precion={2}
                       label='Per Head Fee'
                       control={control}
                       property='guestSetting.overNightGuestFee'
