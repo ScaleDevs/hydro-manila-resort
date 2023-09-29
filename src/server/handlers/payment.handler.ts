@@ -266,6 +266,11 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
     if (!bookingRecord) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Booking record does not exist' });
 
     if (!!bookingRecord.refundId) throw new TRPCError({ code: 'FORBIDDEN', message: 'You have already requested for a refund!' });
+    if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'This booking is not valid for a refund since its booked date has already passed!',
+      });
 
     const { total } = bookingRecord.receipt;
 
