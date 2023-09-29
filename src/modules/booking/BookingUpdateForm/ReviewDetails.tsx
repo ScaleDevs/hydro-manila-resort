@@ -13,6 +13,7 @@ import {
   Center,
   Alert,
   AlertIcon,
+  Collapse,
 } from '@chakra-ui/react';
 import { trpc } from '@/utils/trpc';
 import { PHpeso, tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
@@ -113,15 +114,14 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
 
   return (
     <SlideFade in>
-      {isError && (
-        <>
-          <Alert status='error' borderRadius='sm' color='red.600'>
-            <AlertIcon />
-            {error.message || 'Something Went Wrong! Kindly Try Again'}
-          </Alert>
-          <br />
-        </>
-      )}
+      <Collapse in={isError}>
+        <Alert status='error' borderRadius='sm' color='red.600'>
+          <AlertIcon />
+          {error?.message || 'Something Went Wrong! Kindly Try Again'}
+        </Alert>
+        <br />
+      </Collapse>
+
       <Card>
         <CardBody>
           <Stack divider={<StackDivider />} spacing='4'>

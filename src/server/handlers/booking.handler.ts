@@ -11,7 +11,7 @@ import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
-import { PHpeso, createGuestsSummary } from '../util';
+import { PHpeso, createGuestsSummary, isIt3DaysBeforeBookingDate } from '../util';
 import { constants } from '../constants';
 import { BookingRefundRepository } from '../repository/bookingrefund.repo';
 
@@ -181,6 +181,13 @@ export const customerUpdateRequestHandler = async (input: {
 }) => {
   const { productId: newProductId, rooms: newRoomIds, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
   const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
+
+  if (!!bookingDate && isIt3DaysBeforeBookingDate(bookingRecord.startSession))
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Update request failed as it is not allowed to reschedule 3 days before your booked date',
+    });
+
   const newProduct = newProductId ? await ProductRepository.findProductById(newProductId) : undefined;
   const newRooms = newRoomIds ? await RoomRepository.findRoomsByIds(newRoomIds) : undefined;
   const oldProduct = await ProductRepository.findProductById(bookingRecord.productId);

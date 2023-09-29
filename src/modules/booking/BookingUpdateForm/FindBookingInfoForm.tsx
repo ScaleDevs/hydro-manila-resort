@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, AlertIcon, Box, Button, SlideFade } from '@chakra-ui/react';
+import { Alert, AlertIcon, Box, Button, Card, Heading, UnorderedList, ListItem, SlideFade } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,10 +60,16 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
 
   return (
     <>
-      <Alert status='info' borderRadius='sm' color='blue.600'>
-        <AlertIcon />
-        You are only allowed to update the Date, Guests, & Rooms
-      </Alert>
+      <Card p={5} bg='blue.100' color='blue.600'>
+        <Heading size='lg' color='blue.700'>
+          Policy
+        </Heading>
+        <br />
+        <UnorderedList>
+          <ListItem>You are only allowed to update the Date, Guests, & Rooms</ListItem>
+          <ListItem>You are not allowed to reschedule 3 days before your booking date</ListItem>
+        </UnorderedList>
+      </Card>
 
       <br />
 

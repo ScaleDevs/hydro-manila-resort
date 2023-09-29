@@ -20,7 +20,7 @@ import { notifyFailedHostawayDeletion, sendRefundEmailProcessing } from '@/repo/
 import { BookingService } from '@/svc/booking.service';
 import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
-import { createReferenceNumber } from '@/server/util';
+import { createReferenceNumber, isIt3DaysBeforeBookingDate } from '@/server/util';
 import { constants } from '@/server/constants';
 
 export * as PaymentHandler from './payment.handler';
@@ -264,12 +264,16 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
     const bookingRecord = await BookingService.findBookingByReferenceNo(ref_no);
 
     if (!bookingRecord) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Booking record does not exist' });
-
     if (!!bookingRecord.refundId) throw new TRPCError({ code: 'FORBIDDEN', message: 'You have already requested for a refund!' });
     if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'This booking is not valid for a refund since its booked date has already passed!',
+      });
+    if (isIt3DaysBeforeBookingDate(bookingRecord.startSession))
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Cancellation request failed as it is not allowed to cancel 3 days before your booked date',
       });
 
     const { total } = bookingRecord.receipt;

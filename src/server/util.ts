@@ -127,3 +127,13 @@ export const createGuestsSummary = ({ isAllRooms, guests }: { isAllRooms?: boole
   if (guests.overNightGuests > 0) return nonOvernightString + ' ' + `Overnight Guests (${guests.overNightGuests})`;
   return nonOvernightString;
 };
+
+export const isIt3DaysBeforeBookingDate = (dateString: string | Date) => {
+  const bookedDate = dayjs.utc(dateString).tz(constants.general.timezone);
+
+  const startOf3Days = bookedDate.subtract(3, 'days').startOf('day').unix();
+  const endOf3Days = bookedDate.endOf('day').unix();
+  const currentDate = dayjs().unix();
+
+  return startOf3Days <= currentDate && currentDate <= endOf3Days;
+};
