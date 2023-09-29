@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import dayjs from 'dayjs';
 import { UseTRPCQueryResult } from '@trpc/react-query/shared';
 import { inferRouterOutputs } from '@trpc/server';
 import { AppRouter } from '@/server/routers/_app';
@@ -69,7 +70,9 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
   };
 
   const getStatus = () => {
-    if (!data?.refund) return 'BOOKED';
+    if (!data) return 'INVALID';
+    if (!data?.refund && dayjs.utc(data.startSession).unix() < dayjs.utc().unix()) return 'COMPLETED';
+    else if (!data?.refund) return 'BOOKED';
     else if (data.refund.status === 'PROCESSING') return 'REFUND IN PROGRESS';
     else if (data.refund.status === 'SUCCESS') return 'REFUNDED';
     else return 'BOOKED';
