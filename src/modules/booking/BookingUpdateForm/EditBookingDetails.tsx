@@ -369,8 +369,8 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                     : watch('guests.nonOverNightGuests') + freeGuests,
                 overNightGuests:
                   !!scheduleEndNextDay && !!isAllRooms
-                    ? watch('guests.overNightGuests') + freeGuests
-                    : watch('guests.overNightGuests'),
+                    ? parseInt(watch('guests.overNightGuests') as any as string, 10) + freeGuests
+                    : parseInt(watch('guests.overNightGuests') as any as string, 10),
               }}
               bookedDate={watch('bookingDate')}
             />
