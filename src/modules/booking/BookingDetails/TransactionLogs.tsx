@@ -59,6 +59,10 @@ const processTypes = [
     label: 'BANK',
     value: 'BANK',
   },
+  {
+    label: 'GCASH',
+    value: 'GCASH',
+  },
 ];
 
 interface ICreateTransactionLogProps {

@@ -56,11 +56,15 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
   const {
     mutate: sendUpdateRequest,
     isLoading: isSendingUpdateRequest,
-    isError,
-    error,
+    isError: isError1,
+    error: error1,
   } = trpc.booking.customerUpdateRequest.useMutation();
-  const { mutate: inititatePaymentSession, isLoading: isInitiationPaymentSession } =
-    trpc.payment.initiatePaymentSessionForUpdateBooking.useMutation();
+  const {
+    mutate: inititatePaymentSession,
+    isLoading: isInitiationPaymentSession,
+    isError: isError2,
+    error: error2,
+  } = trpc.payment.initiatePaymentSessionForUpdateBooking.useMutation();
 
   const proceed = () => {
     if (bookingUpdateCase === 'ADDITIONAL PAYMENT' && bookingUpdates) {
@@ -114,10 +118,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
 
   return (
     <SlideFade in>
-      <Collapse in={isError}>
+      <Collapse in={isError1 || isError2}>
         <Alert status='error' borderRadius='sm' color='red.600'>
           <AlertIcon />
-          {error?.message || 'Something Went Wrong! Kindly Try Again'}
+          {error1?.message || error2?.message || 'Something Went Wrong! Kindly Try Again'}
         </Alert>
         <br />
       </Collapse>

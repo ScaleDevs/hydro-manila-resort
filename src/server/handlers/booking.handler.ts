@@ -182,10 +182,17 @@ export const customerUpdateRequestHandler = async (input: {
   const { productId: newProductId, rooms: newRoomIds, guests: updatedGuests, bookingDate } = input.bookingRequestUpdate;
   const bookingRecord = await BookingService.findBookingByReferenceNo(input.bookingRefNo);
 
+  if (!!bookingRecord.refundId)
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Update request failed since this booking was already refunded.' });
+  if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Update request failed since booking date already passed.',
+    });
   if (!!bookingDate && isIt3DaysBeforeBookingDate(bookingRecord.startSession))
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: 'Update request failed as it is not allowed to reschedule 3 days before your booked date',
+      message: 'Update request failed as it is not allowed to reschedule 3 days before your booking date',
     });
 
   const newProduct = newProductId ? await ProductRepository.findProductById(newProductId) : undefined;
@@ -412,7 +419,7 @@ export const updateRefundInfo = async ({
     refNo?: string | undefined;
     amount?: number | undefined;
     updatedBy: string;
-    process: 'BANK' | 'CASH';
+    process: ProcessType;
   };
   bookingRefundId: string;
 }) => {

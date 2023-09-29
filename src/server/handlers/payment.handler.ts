@@ -129,7 +129,19 @@ export const initiatePaymentSessionForUpdateBooking = async (
 ) => {
   try {
     const bookingRecord = await BookingRepository.findBookingByReferenceNo(bookingRefNo);
-    if (!bookingRecord) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record Not Found!' });
+
+    if (!!bookingRecord.refundId)
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Update request failed since this booking was already refunded.' });
+    if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Update request failed since booking date already passed.',
+      });
+    if (!!bookingUpdates.bookingDate && isIt3DaysBeforeBookingDate(bookingRecord.startSession))
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Update request failed as it is not allowed to reschedule 3 days before your booking date',
+      });
 
     const product = await ProductRepository.findProductById(bookingUpdates.productId || bookingRecord.productId);
     const roomIds = bookingUpdates.rooms || bookingRecord.rooms;
@@ -263,17 +275,16 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
   try {
     const bookingRecord = await BookingService.findBookingByReferenceNo(ref_no);
 
-    if (!bookingRecord) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Booking record does not exist' });
     if (!!bookingRecord.refundId) throw new TRPCError({ code: 'FORBIDDEN', message: 'You have already requested for a refund!' });
     if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'This booking is not valid for a refund since its booked date has already passed!',
+        message: 'This booking is not valid for a refund since its booking date has already passed!',
       });
     if (isIt3DaysBeforeBookingDate(bookingRecord.startSession))
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: 'Cancellation request failed as it is not allowed to cancel 3 days before your booked date',
+        message: 'Cancellation request failed as it is not allowed to cancel 3 days before your booking date',
       });
 
     const { total } = bookingRecord.receipt;

@@ -58,7 +58,7 @@ export const bookingRouter = router({
         username: z.string().min(1),
         data: z.object({
           refNo: z.string(),
-          process: z.enum(['BANK', 'CASH']),
+          process: z.enum(['BANK', 'CASH', 'GCASH']),
           type: z.enum(['REFUND', 'PAYMENT']),
           amount: z.number().min(1, 'Required'),
         }),
@@ -73,7 +73,7 @@ export const bookingRouter = router({
         bookingRefundId: z.string().min(1),
         data: z.object({
           refNo: z.string().optional(),
-          process: z.enum(['BANK', 'CASH']),
+          process: z.enum(['BANK', 'CASH', 'GCASH']),
           amount: z.number().optional(),
           updatedBy: z.string(),
         }),

@@ -38,6 +38,10 @@ const processTypes = [
     label: 'BANK',
     value: 'BANK',
   },
+  {
+    label: 'GCASH',
+    value: 'GCASH',
+  },
 ];
 
 export interface IUpdateRefundProps {

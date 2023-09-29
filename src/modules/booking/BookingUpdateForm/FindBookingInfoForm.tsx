@@ -64,10 +64,11 @@ export default function FindBookingInfoForm({ nextStep }: IFindBookingInfoFormPr
         <Heading size='lg' color='blue.700'>
           Policy
         </Heading>
-        <br />
-        <UnorderedList>
+        <UnorderedList fontWeight='medium'>
           <ListItem>You are only allowed to update the Date, Guests, & Rooms</ListItem>
           <ListItem>You are not allowed to reschedule 3 days before your booking date</ListItem>
+          <ListItem>You are not allowed to update if booking date has already passed</ListItem>
+          <ListItem>You are not allowed to update if booking is already refunded</ListItem>
         </UnorderedList>
       </Card>
 

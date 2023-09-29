@@ -126,6 +126,10 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
 
     const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
 
+    if (dayjs.utc(bookingInfo.startSession).unix() < dayjs.utc().unix()) {
+      setFormError('This booking is no longer valid for update');
+      return;
+    }
     if (data.bookingDate && dayjs(data.bookingDate).unix() < dayjs().unix()) {
       setFormError('Date is not available! Kindly choose another date');
       return;
