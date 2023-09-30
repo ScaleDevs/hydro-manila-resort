@@ -164,10 +164,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 Booking Changes
               </Heading>
               <Stack spacing={-2}>
-                {!!bookingUpdates?.guests?.overNightGuests && (
+                {(!!bookingUpdates?.guests?.overNightGuests || bookingUpdates?.guests?.overNightGuests === 0) && (
                   <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
                 )}
-                {!!bookingUpdates?.guests?.nonOverNightGuests && (
+                {(!!bookingUpdates?.guests?.nonOverNightGuests || bookingUpdates?.guests?.nonOverNightGuests === 0) && (
                   <FieldValueReport
                     fieldName={selectedProduct.isAllRooms ? 'Guests (Non-Overnight)' : 'Guests'}
                     value={`${bookingUpdates.guests.nonOverNightGuests}`}
@@ -232,6 +232,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
         rooms={Array.from(selectedRooms, (v) => v[1])}
         guests={bookingUpdates.guests || bookingInfo.guests}
         bookedDate={bookingUpdates.bookingDate || (bookingInfo.startSession as string).split('T')[0]}
+        originalBooking={{
+          bookedDate: bookingInfo?.startSession ? bookingInfo.startSession.toString().split('T')[0] : undefined,
+          guests: bookingInfo?.guests,
+        }}
       />
 
       <br />

@@ -365,14 +365,18 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
               guests={{
                 nonOverNightGuests:
                   !!scheduleEndNextDay && !!isAllRooms
-                    ? watch('guests.nonOverNightGuests')
-                    : watch('guests.nonOverNightGuests') + freeGuests,
+                    ? parseInt(watch('guests.nonOverNightGuests') as any as string, 10) || 0
+                    : (parseInt(watch('guests.nonOverNightGuests') as any as string, 10) || 0) + freeGuests,
                 overNightGuests:
                   !!scheduleEndNextDay && !!isAllRooms
-                    ? parseInt(watch('guests.overNightGuests') as any as string, 10) + freeGuests
-                    : parseInt(watch('guests.overNightGuests') as any as string, 10),
+                    ? (parseInt(watch('guests.overNightGuests') as any as string, 10) || 0) + freeGuests
+                    : parseInt(watch('guests.overNightGuests') as any as string, 10) || 0,
               }}
               bookedDate={watch('bookingDate')}
+              originalBooking={{
+                bookedDate: bookingInfo?.startSession ? bookingInfo.startSession.toString().split('T')[0] : undefined,
+                guests: bookingInfo?.guests,
+              }}
             />
 
             <br />

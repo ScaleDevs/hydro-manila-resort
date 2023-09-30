@@ -54,6 +54,10 @@ export const getExtraHeadsTotal = (guests: number, min: number, fee: number) => 
   return 0;
 };
 
+export const getSubtractedHeadsTotal = (guests: number, min: number, fee: number) => {
+  return (guests - min) * fee;
+};
+
 export const getExtraHeads = (guests: number, min: number) => {
   if (guests > min) return guests - min;
   return 0;
