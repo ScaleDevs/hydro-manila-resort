@@ -15,7 +15,7 @@ import { BookingRepository } from '@/repo/booking.repo';
 import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
-import { deleteReservation } from '@/repo/hostaway.repo';
+import { cancelReservation } from '@/repo/hostaway.repo';
 import { notifyFailedHostawayDeletion, sendRefundEmailProcessing } from '@/repo/mailersend.repo';
 import { BookingService } from '@/svc/booking.service';
 import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
@@ -325,7 +325,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
         if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
 
         if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
-          const result = await deleteReservation(bookingRecord.hostawayId.toString());
+          const result = await cancelReservation(bookingRecord.hostawayId.toString(), 'guest');
           if ('conflict' in result)
             await notifyFailedHostawayDeletion({
               ref_no: bookingRecord.ref_no,

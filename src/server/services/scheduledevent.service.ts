@@ -5,7 +5,7 @@ import { ScheduledEventRepository } from '@/server/repository/scheduledevent.rep
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
 import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
-import { createReservation, deleteReservation } from '@/server/repository/hostaway.repo';
+import { createReservation, cancelReservation } from '@/server/repository/hostaway.repo';
 import { constants } from '../constants';
 
 class Service {
@@ -101,7 +101,7 @@ class Service {
 
       if (calendarEventId) await GoogleCalendarRepository.deleteEvent(calendarEventId);
       if (constants.general.appName === 'VillaLeonora' && !!scheduleEventDeleted.hostawayId) {
-        const result = await deleteReservation(scheduleEventDeleted.hostawayId.toString());
+        const result = await cancelReservation(scheduleEventDeleted.hostawayId.toString(), 'host');
         if ('conflict' in result)
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',

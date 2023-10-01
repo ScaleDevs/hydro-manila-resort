@@ -18,7 +18,7 @@ import {
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
-import { createReservation, deleteReservation, updateReservation } from '@/repo/hostaway.repo';
+import { createReservation, cancelReservation, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
 import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
 import { constants } from '@/server/constants';
@@ -334,7 +334,7 @@ export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId
     await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
 
     if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
-      const result = await deleteReservation(bookingRecord.hostawayId.toString());
+      const result = await cancelReservation(bookingRecord.hostawayId.toString(), 'guest');
       if ('conflict' in result)
         await notifyFailedHostawayDeletion({
           ref_no: bookingRecord.ref_no,

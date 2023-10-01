@@ -227,8 +227,8 @@ export const getReservations = async ({
   }
 };
 
-export const deleteReservation = async (reservationId: string) => {
-  console.log('EXECUTING :: deleteReservation');
+export const cancelReservation = async (reservationId: string, cancelledBy: 'guest' | 'host') => {
+  console.log('EXECUTING :: cancelReservation');
 
   try {
     const secrets = await prisma.secrets.findFirst();
@@ -238,8 +238,9 @@ export const deleteReservation = async (reservationId: string) => {
         message: 'Something went wrong! Kindly Try Again!',
       };
 
-    const result = await fetch('https://api.hostaway.com/v1/reservations' + '/' + reservationId, {
-      method: 'delete',
+    const result = await fetch('https://api.hostaway.com/v1/reservations' + '/' + reservationId + '/statuses/cancelled', {
+      method: 'put',
+      body: JSON.stringify({ cancelledBy }),
       headers: {
         'Content-type': 'application/json',
         'Cache-control': 'no-cache',
@@ -257,7 +258,7 @@ export const deleteReservation = async (reservationId: string) => {
       };
     }
 
-    console.log('SUCCESS EXECUTION :: deleteReservation');
+    console.log('SUCCESS EXECUTION :: cancelReservation');
     return res as { status: string };
   } catch (err) {
     console.log(err);
