@@ -32,10 +32,17 @@ export default function TableBookingRecords() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const [refNo, setRefNo] = useState<undefined | string>(undefined);
-  const [dateFilter, setDateFilter] = useState<undefined | SessionFilter>({
-    startDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).startOf('day').toISOString(),
-    endDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).endOf('month').toISOString(),
-  });
+  const [dateFilter, setDateFilter] = useState<undefined | SessionFilter>(
+    !!router.query.startDate && !!router.query.endDate
+      ? {
+          startDate: router.query.startDate as string,
+          endDate: router.query.endDate as string,
+        }
+      : {
+          startDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).startOf('day').toISOString(),
+          endDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).endOf('month').toISOString(),
+        },
+  );
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.booking.getManyBooking.useQuery({
     page,

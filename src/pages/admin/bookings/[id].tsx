@@ -1,7 +1,19 @@
 import { useState } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Tab, TabIndicator, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import Head from 'next/head';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Tab,
+  TabIndicator,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Stack,
+  BreadcrumbSeparator,
+} from '@chakra-ui/react';
 
 import Layout from '@/layouts/admin';
 import { trpc } from '@/utils/trpc';
@@ -12,9 +24,10 @@ import { Logs } from '@/modules/booking/BookingDetails/Logs';
 
 interface Props {
   id: string;
+  goBack: () => void;
 }
 
-function Component({ id }: Props) {
+function Component({ id, goBack }: Props) {
   const [tabIndex, setTabIndex] = useState(0);
   const { data, isLoading } = trpc.booking.getBookingByRefNo.useQuery(id);
 
@@ -27,6 +40,21 @@ function Component({ id }: Props) {
         <meta name='description' content='Sample Home page with nextjs' />
         <link rel='icon' href={GetApp.Favicon} />
       </Head>
+
+      <Stack w='full'>
+        <Breadcrumb fontFamily='primary' color={GetApp.ActiveColor} fontWeight='medium'>
+          <BreadcrumbItem onClick={goBack}>
+            <BreadcrumbSeparator />
+            <BreadcrumbLink>Bookings</BreadcrumbLink>
+          </BreadcrumbItem>
+
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink href='#'>{id}</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+      </Stack>
+
+      <br />
 
       <Tabs isLazy position='relative' variant='unstyled' w='100%' index={tabIndex} onChange={handleTabsChange}>
         <TabList>
@@ -60,7 +88,7 @@ function Component({ id }: Props) {
 function Bookings() {
   const router = useRouter();
 
-  if (router.query.id) return <Component id={router.query.id as string} />;
+  if (router.query.id) return <Component id={router.query.id as string} goBack={router.back} />;
 
   return '';
 }

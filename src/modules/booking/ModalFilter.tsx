@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useState } from 'react';
+import { useRouter } from 'next/router';
 import {
   Modal,
   ModalOverlay,
@@ -48,6 +49,7 @@ type IFormProps = {
 };
 
 const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
+  const router = useRouter();
   const [error, setError] = useState('');
 
   const {
@@ -59,7 +61,6 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
   });
 
   const applyFilter = (data: DateFilterFormSchemaType) => {
-    console.log('data');
     const startDate = dayjs.tz(data.startDate, process.env.NEXT_PUBLIC_TIMEZONE);
     const endDate = dayjs.tz(data.endDate, process.env.NEXT_PUBLIC_TIMEZONE);
 
@@ -68,14 +69,17 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
       return;
     }
 
+    const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
+
     setError('');
-
     setRefNo(undefined);
-
     setDateFilter({
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
+      startDate: startISO,
+      endDate: endISO,
     });
+
+    router.push(`/admin/bookings/?startDate=${startISO}&endDate=${endISO}`, undefined, { shallow: true });
 
     onClose();
   };
