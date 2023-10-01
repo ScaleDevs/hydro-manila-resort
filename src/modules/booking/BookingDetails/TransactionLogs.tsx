@@ -34,7 +34,7 @@ import { NumberFieldV2 } from '@/components/NumberFieldV2';
 
 const schema = z.object({
   refNo: z.string(),
-  process: z.enum(['BANK', 'CASH'], {
+  process: z.enum(['BANK', 'CASH', 'GCASH'], {
     errorMap: (issue) => {
       switch (issue.code) {
         case 'invalid_enum_value':
