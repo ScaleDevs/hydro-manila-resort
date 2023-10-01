@@ -58,7 +58,7 @@ export default function ControlledChooseRooms({
                     borderRadius='md'
                     boxShadow='lg'
                     overflow='hidden'
-                    transition='outline 0.1s linear'
+                    transition='outline 0.06s linear'
                     cursor={isIncludedInSched ? 'not-allowed' : 'pointer'}
                     _hover={isActive || isIncludedInSched ? {} : { outline: 'solid 2px', outlineColor: 'primary.1' }}
                     outline={isActive || isIncludedInSched ? 'solid 4px' : '2px'}

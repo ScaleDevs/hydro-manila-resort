@@ -53,7 +53,7 @@ export function ChooseRoom({ chosenSchedule, chosenRoomsMap, setChosenRoomsMap }
                 boxShadow='lg'
                 borderRadius='sm'
                 overflow='hidden'
-                transition='outline 0.03s linear'
+                transition='outline 0.06s linear'
                 cursor={isIncludedInSched ? 'not-allowed' : 'pointer'}
                 _hover={isActive || isIncludedInSched ? {} : { outline: 'solid 2px', outlineColor: 'primary.1' }}
                 outline={isActive || isIncludedInSched ? 'solid 4px' : '2px'}
