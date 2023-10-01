@@ -57,17 +57,17 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule, 
       <Grid templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={4} p='10px'>
         {isFetchingProducts || isFetchingBookedDates || isGettingRooms ? (
           <>
-            <Skeleton height='40px' w='100%' />
-            <Skeleton height='40px' w='100%' />
-            <Skeleton height='40px' w='100%' />
-            <Skeleton height='40px' w='100%' />
+            <Skeleton height='180px' w='100%' />
+            <Skeleton height='180px' w='100%' />
+            <Skeleton height='180px' w='100%' />
+            <Skeleton height='180px' w='100%' />
           </>
         ) : (
           productsData?.records.map((record, index) => {
             const isActive = chosenSchedule?.productId === record.productId;
             let isBlocked = false;
 
-            if (!!data) {
+            if (!!data && !!chosenDate) {
               const startDate = dayjs
                 .tz(
                   dayjs(getISOFormatFromSchedule(`${chosenDate} ${record.scheduleStart}`)).format('YYYY-MM-DDTHH:mm'),

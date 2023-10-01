@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Stack, Button, Box, Collapse } from '@chakra-ui/react';
+import { Stack, Button, Box, ScaleFade } from '@chakra-ui/react';
 
 import { trpc } from '@/utils/trpc';
 import { IRoom, ProductV2 } from '@/utils/types';
@@ -59,16 +59,14 @@ export function Step1({ onNext }: Step1Props) {
   return (
     <Stack direction='column' spacing={5}>
       <ChooseDate chosenDate={chosenDate} setChosenDate={setChosenDate} setChosenSchedule={setChosenSchedule} />
-      {chosenDate && (
-        <Collapse in={!!chosenDate} animateOpacity>
-          <ChooseSchedule
-            chosenDate={chosenDate}
-            chosenSchedule={chosenSchedule}
-            setChosenSchedule={setChosenSchedule}
-            isGettingRooms={isLoading}
-          />
-        </Collapse>
-      )}
+      <ScaleFade initialScale={0.9} in={!!chosenDate}>
+        <ChooseSchedule
+          chosenDate={chosenDate}
+          chosenSchedule={chosenSchedule}
+          setChosenSchedule={setChosenSchedule}
+          isGettingRooms={isLoading}
+        />
+      </ScaleFade>
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
           <CostView
