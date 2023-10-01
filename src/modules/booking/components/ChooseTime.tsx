@@ -99,7 +99,7 @@ export function ChooseSchedule({ chosenDate, chosenSchedule, setChosenSchedule, 
                 borderRadius='md'
                 boxShadow='lg'
                 overflow='hidden'
-                transition='outline 0.1s linear'
+                transition='outline 0.06s linear'
                 cursor={isBlocked ? 'not-allowed' : 'pointer'}
                 _hover={isActive || isBlocked ? {} : { outline: 'solid 2px', outlineColor: 'primary.1' }}
                 outline={isActive ? 'solid 4px' : '2px'}
