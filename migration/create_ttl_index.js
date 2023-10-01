@@ -1,4 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+require('dotenv').config();
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -12,7 +15,7 @@ const bookingAttempt = new Schema(
 async function main() {
   console.log('RUNNING SCRIPT ...');
 
-  await mongoose.connect('mongodb+srv://MyScaleDevsAdmin123:zS5qkJN438X5DTAa@scaledevs.5zsdyi2.mongodb.net/devdb');
+  await mongoose.connect(process.env.DATABASE_URL);
 
   console.log('CREATING INDEX TTL FOR BOOKING ATTEMPT COLLECTION ...');
 
