@@ -164,9 +164,10 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
                 Booking Changes
               </Heading>
               <Stack spacing={-2}>
-                {(!!bookingUpdates?.guests?.overNightGuests || bookingUpdates?.guests?.overNightGuests === 0) && (
-                  <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
-                )}
+                {(!!bookingUpdates?.guests?.overNightGuests || bookingUpdates?.guests?.overNightGuests === 0) &&
+                  bookingUpdates.guests.overNightGuests !== bookingInfo.guests.overNightGuests && (
+                    <FieldValueReport fieldName='Guests (Overnight)' value={`${bookingUpdates.guests.overNightGuests}`} />
+                  )}
                 {(!!bookingUpdates?.guests?.nonOverNightGuests || bookingUpdates?.guests?.nonOverNightGuests === 0) && (
                   <FieldValueReport
                     fieldName={selectedProduct.isAllRooms ? 'Guests (Non-Overnight)' : 'Guests'}
@@ -235,6 +236,7 @@ export default function ReviewDetails({ previousStep, nextStep }: IReviewDetails
         originalBooking={{
           bookedDate: bookingInfo?.startSession ? bookingInfo.startSession.toString().split('T')[0] : undefined,
           guests: bookingInfo?.guests,
+          rooms: bookingInfo.roomsObject,
         }}
       />
 

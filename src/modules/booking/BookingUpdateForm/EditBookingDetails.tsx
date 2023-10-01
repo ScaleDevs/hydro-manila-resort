@@ -325,6 +325,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
                     control={control}
                     property='guests.nonOverNightGuests'
                     disabled={isAdditionalInputsDisabled()}
+                    maxValue={extraHeadsTotalNonOvernight}
                   />
                   <Box w='70%' fontSize='12px' lineHeight={1.5}>
                     <Text color='gray.400'>
@@ -376,6 +377,7 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
               originalBooking={{
                 bookedDate: bookingInfo?.startSession ? bookingInfo.startSession.toString().split('T')[0] : undefined,
                 guests: bookingInfo?.guests,
+                rooms: bookingInfo?.roomsObject,
               }}
             />
 

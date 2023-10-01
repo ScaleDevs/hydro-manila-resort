@@ -61,8 +61,15 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
 
     rooms.forEach((roomInfo) => {
       if (product.includedRooms.includes(roomInfo.roomId)) return;
+      if (!!originalBooking?.rooms && originalBooking.rooms.some((v) => v.roomId === roomInfo.roomId)) return;
       total += roomInfo.price;
     });
+
+    // subtracting (for update form)
+    if (!!originalBooking?.rooms && originalBooking.rooms.length > 0)
+      originalBooking.rooms.forEach((orig) => {
+        if (!rooms.some((v) => v.roomId === orig.roomId)) total -= orig.price;
+      });
 
     return total;
   };
@@ -99,18 +106,33 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
           </HStack>
         </Collapse>
 
-        {rooms.length > 0
-          ? rooms.map((roomInfo) => {
-              if (includedRooms.includes(roomInfo.roomId)) return null;
+        {rooms.length > 0 &&
+          rooms.map((roomInfo) => {
+            if (!!originalBooking?.rooms && originalBooking.rooms.some((v) => v.roomId === roomInfo.roomId)) return null;
+            if (includedRooms.includes(roomInfo.roomId)) return null;
 
+            return (
+              <HStack key={roomInfo.roomId} justifyContent='space-between'>
+                <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
+                <Text>{PHpeso.format(roomInfo.price)}</Text>
+              </HStack>
+            );
+          })}
+
+        {/* For Update Form subtracting unselected rooms */}
+        {!!originalBooking?.rooms &&
+          originalBooking.rooms.length > 0 &&
+          originalBooking.rooms.map((roomInfo) => {
+            if (!rooms.some((v) => v.roomId === roomInfo.roomId))
               return (
                 <HStack key={roomInfo.roomId} justifyContent='space-between'>
-                  <Text>ADDITIONAL ROOM ({roomInfo.roomIdentityName})</Text>
-                  <Text>{PHpeso.format(roomInfo.price)}</Text>
+                  <Text>REMOVED ROOM ({roomInfo.roomIdentityName})</Text>
+                  <Text>{PHpeso.format(-Math.abs(roomInfo.price))}</Text>
                 </HStack>
               );
-            })
-          : ''}
+
+            return null;
+          })}
 
         <Collapse
           in={guests && guests.overNightGuests > (originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax)}
