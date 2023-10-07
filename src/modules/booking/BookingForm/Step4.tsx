@@ -99,7 +99,7 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
           <Stack divider={<StackDivider />} spacing='4'>
             <Box>
               <Heading size='md' textTransform='uppercase' fontWeight='medium'>
-                Date & Time
+                Booking Details
               </Heading>
               <Stack spacing={-2}>
                 <FieldValueReport
@@ -111,12 +111,6 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
                   value={tzSchedToDayJsInsance(endDate, selectedProduct.scheduleEnd).format('hh:mm A MMM DD, YYYY')}
                 />
               </Stack>
-            </Box>
-
-            <Box>
-              <Heading size='md' textTransform='uppercase' fontWeight='medium'>
-                Addons
-              </Heading>
               <Stack spacing={-2}>
                 {!!data.guests.nonOverNightGuests && (
                   <FieldValueReport
