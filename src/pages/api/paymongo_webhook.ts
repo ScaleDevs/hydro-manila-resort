@@ -13,9 +13,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
   const targetApplication = response.data.attributes.data.attributes.metadata.application;
-  console.log('CHECKING IF CORRECT TARGET APPLICATION ...', targetApplication);
+  console.log('CHECKING IF TARGET APPLICATION ...', targetApplication);
   if (targetApplication === constants.general.appName) {
-    console.log('TARGET APP CORRECT');
+    console.log('TARGET APP matches');
     if (eventType === 'payment.paid') {
       // update booking
       if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         paymentIntentId,
         response.data?.attributes.data.attributes.refunds[0].id,
       );
-  }
+  } else console.log('TARGET APP does not match');
 
   res.end();
 }
