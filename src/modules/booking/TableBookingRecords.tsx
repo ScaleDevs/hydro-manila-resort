@@ -148,7 +148,17 @@ export default function TableBookingRecords() {
                     </Td>
                     <Td>{v.guests.nonOverNightGuests + v.guests.overNightGuests}</Td>
                     <Td>{v.ref_no}</Td>
-                    <Td>{v.refundId ? 'REFUNDED' : 'BOOKED'}</Td>
+                    <Td>
+                      <Box
+                        bg={v.refundId ? 'red.300' : 'green.300'}
+                        textAlign='center'
+                        p='5px'
+                        borderRadius='md'
+                        color={v.refundId ? 'red.700' : 'green.700'}
+                      >
+                        {v.refundId ? 'REFUNDED' : 'BOOKED'}
+                      </Box>
+                    </Td>
                   </Tr>
                 ))
               )}
