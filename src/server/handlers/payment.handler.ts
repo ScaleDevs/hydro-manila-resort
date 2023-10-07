@@ -103,6 +103,7 @@ export const initiatePaymentSessionForBooking = async (input: {
           },
         },
         metadata: {
+          application: constants.general.appName,
           statusDisplay: JSON.stringify(statusDisplay),
           bookedSchedule: JSON.stringify({
             startSession: data.startSession,
@@ -218,6 +219,7 @@ export const initiatePaymentSessionForUpdateBooking = async (
           },
         },
         metadata: {
+          application: constants.general.appName,
           statusDisplay: JSON.stringify(statusDisplay),
           bookedSchedule,
           bookingUpdateParams: JSON.stringify({
@@ -294,6 +296,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
       payment_id: bookingRecord.paymentId,
       reason: 'requested_by_customer',
       metadata: {
+        application: constants.general.appName,
         reason,
       },
     });

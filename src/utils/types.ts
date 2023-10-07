@@ -135,6 +135,7 @@ export type BookingStatusDisplay = {
 };
 
 export interface PayMongoPaymentIntentMetaData {
+  application: string;
   bookedSchedule: {
     ref_no?: string;
     startSession: string;

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PayMongoWebHookResponse } from '@/utils/types';
 import { PaymentEventsHandler } from '@/server/handlers/payment_events.handler';
+import { constants } from '@/server/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('==========PAYMONGO WEBHOOK API INVOKED========');
@@ -11,19 +12,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
-  if (eventType === 'payment.paid') {
-    // update booking
-    if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
-      await PaymentEventsHandler.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
-      return res.end();
+  const targetApplication = response.data.attributes.data.attributes.metadata.application;
+  console.log('CHECKING IF CORRECT TARGET APPLICATION ...', targetApplication);
+  if (targetApplication === constants.general.appName) {
+    console.log('TARGET APP CORRECT');
+    if (eventType === 'payment.paid') {
+      // update booking
+      if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
+        await PaymentEventsHandler.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
+        return res.end();
+      }
+
+      // create booking
+      await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
     }
 
-    // create booking
-    await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
+    if (eventType === 'payment.refunded')
+      await PaymentEventsHandler.handleRefundPaymentEvent(
+        paymentIntentId,
+        response.data?.attributes.data.attributes.refunds[0].id,
+      );
   }
-
-  if (eventType === 'payment.refunded')
-    await PaymentEventsHandler.handleRefundPaymentEvent(paymentIntentId, response.data?.attributes.data.attributes.refunds[0].id);
 
   res.end();
 }
