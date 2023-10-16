@@ -94,6 +94,7 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
 
     return { bookedDates };
   } catch (err) {
+    console.error(err);
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
 };

@@ -164,8 +164,8 @@ model BookingRefund {
 
 model ScheduledEvent {
   scheduledEventId String   @id @default(auto()) @map("_id") @db.ObjectId
-  guestName        String
-  guests           Int
+  guestName        String   @default("None")
+  guests           Int      @default(0)
   startSession     DateTime
   endSession       DateTime
   description      String
