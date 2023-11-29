@@ -95,8 +95,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
 
   const bookingRecordCheck = await BookingRepository.findBookingByPaymentIntentId(paymentIntentRecord.id);
 
-  if (bookingRecordCheck) {
-    console.log('Booking Record already exist in DB!');
+  if (!bookingRecordCheck) {
+    console.log('Booking Record does not exist!');
     return;
   }
 
@@ -224,16 +224,10 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     },
   });
 
-  const bookingRecord = await BookingRepository.createBooking({
-    ...parsed.data,
-    paymentIntentId: paymentIntentRecord.id,
+  const bookingRecord = await BookingRepository.updateBooking(bookingRecordCheck.id, {
+    status: 'BOOKED',
     paymentId: paymentIntentRecord.attributes.payments[0].id || '',
-    startSession: parsed.data.startSession,
-    endSession: parsed.data.endSession,
     calendarEventId,
-    refundId: null,
-    updateLogs: [],
-    transactionLogs: [],
     hostawayId: hostawayId,
   });
 
@@ -248,7 +242,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     });
   }
 
-  console.log('SUCCESSFULLY ADDED BOOKING');
+  console.log('SUCCESSFULLY UPDATED BOOKING STATUS "BOOKED"');
 
   await sendBookingSuccessEmail({
     recipientEmail: [parsed.data.email, constants.mailerSend.supportEmail],
@@ -265,10 +259,6 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   });
 
   console.log('EMAIL SUCCESSFULLY SENT');
-  console.log('CLEANUP BOOKING ATTEMP RECORD ...');
-
-  await BookingAttemptRepository.deleteBookingAttemptWithRefNo(parsed.data.ref_no);
-
   console.log('DONE');
 };
 
