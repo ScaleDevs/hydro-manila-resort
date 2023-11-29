@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const targetApplication = response.data.attributes.data.attributes.metadata.application;
   console.log('CHECKING IF TARGET APPLICATION ...', targetApplication);
   if (targetApplication === constants.general.appName) {
-    console.log('TARGET APP matches');
+    console.log('TARGET APP matches', eventType);
     if (eventType === 'payment.paid') {
       // update booking
       if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
@@ -24,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // create booking
+      console.log('Inserting Booking ...');
       await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
     }
 
