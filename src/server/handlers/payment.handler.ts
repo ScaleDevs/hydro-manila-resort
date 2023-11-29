@@ -12,14 +12,13 @@ import {
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
 import { BookingRepository } from '@/repo/booking.repo';
-import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import { cancelReservation } from '@/repo/hostaway.repo';
 import { notifyFailedHostawayDeletion, sendRefundEmailProcessing } from '@/repo/mailersend.repo';
 import { BookingService } from '@/svc/booking.service';
 import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
-import { BookingStatusDisplay, CustomerUpdateBookingParams, DateSession } from '@/utils/types';
+import { BookingStatusDisplay, CustomerUpdateBookingParams, IBooking } from '@/utils/types';
 import { createReferenceNumber, isIt3DaysBeforeBookingDate } from '@/server/util';
 import { constants } from '@/server/constants';
 
@@ -68,7 +67,7 @@ export const initiatePaymentSessionForBooking = async (input: {
       startSession: startSessionDayInstance.toISOString(),
       endSession: endSessionDayInstance.toISOString(),
       receipt,
-    };
+    } as IBooking;
 
     const refNo = createReferenceNumber();
 
@@ -241,10 +240,10 @@ export const initiatePaymentSessionForUpdateBooking = async (
 
 export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMethodToIntentAttr) => {
   try {
-    const result = await getPaymentIntentSession(data.paymentIntentId);
+    const currentPaymentIntent = await getPaymentIntentSession(data.paymentIntentId);
 
-    if (!!result.attributes.metadata.bookedSchedule) {
-      const session = JSON.parse(result.attributes.metadata.bookedSchedule) as DateSession & { ref_no: string };
+    if (!!currentPaymentIntent.attributes.metadata.bookingRecord) {
+      const session = JSON.parse(currentPaymentIntent.attributes.metadata.bookingRecord) as IBooking;
 
       const isTaken = await BookingService.checkScheduleAvailability({
         startDate: session.startSession,
@@ -253,15 +252,22 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
       if (isTaken) return { data: null };
 
-      await BookingAttemptRepository.createBookingAttempt({
-        startSession: session.startSession,
-        endSession: session.endSession,
-        ref_no: session.ref_no,
-        expireAt: dayjs().toDate(),
+      await BookingRepository.createBooking({
+        ...session,
+        paymentIntentId: currentPaymentIntent.id,
+        paymentId: null,
+        status: 'PENDING',
+        calendarEventId: null,
+        refundId: null,
+        updateLogs: [],
+        transactionLogs: [],
+        hostawayId: null,
       });
     }
 
-    return attachPaymentMethodToIntent(data);
+    const newPaymentIntent = await attachPaymentMethodToIntent(data);
+
+    return newPaymentIntent;
   } catch (err) {
     console.log(err);
     const error = err as any;
@@ -277,6 +283,8 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
   try {
     const bookingRecord = await BookingService.findBookingByReferenceNo(ref_no);
 
+    if (!bookingRecord.paymentId)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'No payment found for this booking record!' });
     if (!!bookingRecord.refundId) throw new TRPCError({ code: 'FORBIDDEN', message: 'You have already requested for a refund!' });
     if (dayjs.utc(bookingRecord.startSession).unix() < dayjs.utc().unix())
       throw new TRPCError({
