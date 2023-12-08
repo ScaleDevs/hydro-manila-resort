@@ -89,6 +89,13 @@ enum BookingRefundType {
   MANUAL
 }
 
+enum BookingStatus {
+  BOOKED
+  REFUNDED
+  FAILED
+  PENDING
+}
+
 model Product {
   productId          String        @id @default(auto()) @map("_id") @db.ObjectId
   name               String
@@ -132,8 +139,9 @@ model Booking {
   receipt         Receipt
   updateLogs      BookingUpdateLog[]
   transactionLogs TransactionLog[]
+  status          BookingStatus      @default(BOOKED)
   paymentIntentId String             @unique
-  paymentId       String
+  paymentId       String?
   refundId        String?
   calendarEventId String?
   hostawayId      Int?
