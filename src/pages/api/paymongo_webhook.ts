@@ -35,5 +35,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
   } else console.log('TARGET APP does not match');
 
-  res.end();
+  return res.end();
 }
