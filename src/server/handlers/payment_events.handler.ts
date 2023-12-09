@@ -15,7 +15,6 @@ import {
   sendRefundEmailSuccess,
   updateBookingConfirmation,
 } from '@/repo/mailersend.repo';
-import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { createReservation, cancelReservation, updateReservation } from '@/repo/hostaway.repo';
@@ -66,6 +65,10 @@ const bookingUpdatesSchema = z.object({
 
 type FormSchemaType = z.infer<typeof bookingDataSchema>;
 
+const logger = (funcName: string, message: string) => {
+  console.log(`payment_event_handler.ts :: (${funcName}) :: ${message}`);
+};
+
 export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   if (!paymentIntentId) {
     console.log('No Payment Intent Id!');
@@ -80,7 +83,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     paymentIntentRecord.attributes.payments.length === 0 ||
     !paymentIntentRecord.attributes.metadata
   ) {
-    console.log('Invalid Payment Intent!');
+    logger('handlePaymentPaidEvent', 'Invalid Payment Intent!');
     return;
   }
 
@@ -88,54 +91,30 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   const parsed = bookingDataSchema.safeParse(bookingData);
 
   if (!parsed.success) {
-    console.log('Invalid Booking Data!');
-    console.log(parsed.error.message);
+    logger('handlePaymentPaidEvent', 'Invalid Booking Data!');
+    logger('handlePaymentPaidEvent', parsed.error.message);
     return;
   }
 
   const bookingRecordCheck = await BookingRepository.findBookingByPaymentIntentId(paymentIntentRecord.id);
 
   if (!bookingRecordCheck) {
-    console.log('Booking Record does not exist!');
-    return;
-  }
-
-  const isBookingDateTaken = await BookingRepository.findBookingConflicts({
-    startDate: parsed.data.startSession,
-    endDate: parsed.data.endSession,
-  });
-
-  const isEventSchedTaken = await ScheduledEventRepository.checkIfScheduleIsTaken({
-    startDate: parsed.data.startSession,
-    endDate: parsed.data.endSession,
-  });
-
-  if (isBookingDateTaken || isEventSchedTaken) {
-    // SEND EMAIL REGARDING MANUAL PROCESSING OF Refund/Reschedule - due to conflict booking at the same time
-    await sendRefundEmailConflictBooking({
-      recipientEmail: parsed.data.email,
-      customer_name: parsed.data.name,
-      payment_id: paymentIntentRecord.attributes.payments[0].id,
-    });
+    logger('handlePaymentPaidEvent', 'Booking Record does not exist!');
     return;
   }
 
   const { guests } = parsed.data;
-  const product = await ProductRepository.findProductById(parsed.data.productId);
+  const [product, rooms, bookedDate, checkOutDate] = await Promise.all([
+    ProductRepository.findProductById(parsed.data.productId),
+    RoomRepository.findRoomsByIds(parsed.data.rooms),
+    dayjs.utc(parsed.data.startSession),
+    dayjs.utc(parsed.data.endSession),
+  ]);
   const { guestSetting } = product;
-  const rooms = await RoomRepository.findRoomsByIds(parsed.data.rooms);
-  const bookedDate = dayjs.utc(parsed.data.startSession);
-  const checkOutDate = dayjs.utc(parsed.data.endSession);
-  const extraOverNightGuestsTotal = getExtraHeadsTotal(
-    guests.overNightGuests,
-    guestSetting.minOverNightGuestPax,
-    guestSetting.overNightGuestFee,
-  );
-  const extraNonOverNightGuestsTotal = getExtraHeadsTotal(
-    guests.nonOverNightGuests,
-    guestSetting.minNonOverNightGuestPax,
-    guestSetting.nonOverNightGuestFee,
-  );
+  const [extraOverNightGuestsTotal, extraNonOverNightGuestsTotal] = await Promise.all([
+    getExtraHeadsTotal(guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee),
+    getExtraHeadsTotal(guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax, guestSetting.nonOverNightGuestFee),
+  ]);
   let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
 
   const googleCalendarRoomsArr: string[] = [];
@@ -173,6 +152,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   let hostawayId: null | number = null;
 
   if (constants.general.appName === 'VillaLeonora') {
+    logger('handlePaymentPaidEvent', 'creating hostaway reservation ...');
     const arrivalDateInstance = dayjs.utc(parsed.data.startSession).tz(constants.general.timezone);
     const departureDateInstance = dayjs.utc(parsed.data.endSession).tz(constants.general.timezone);
 
@@ -195,6 +175,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
         isHostawayConflict: true,
       });
 
+      logger('handlePaymentPaidEvent', 'hostaway reservation creation failed!');
+
       return;
     } else if ('conflict' in reservationResult) {
       await sendRefundEmailConflictBooking({
@@ -203,9 +185,16 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
         payment_id: paymentIntentRecord.attributes.payments[0].id,
       });
 
+      logger('handlePaymentPaidEvent', 'hostaway reservation creation failed!');
+
       return;
-    } else if ('guestName' in reservationResult) hostawayId = reservationResult.id;
+    } else if ('guestName' in reservationResult) {
+      hostawayId = reservationResult.id;
+      console.log('payment_event_handler.ts :: (handlePaymentPaidEvent) hostaway reservation created');
+    }
   }
+
+  logger('handlePaymentPaidEvent', 'creating google calendar event ...');
 
   const calendarEventId = await GoogleCalendarRepository.createEvent({
     summary: parsed.data.name,
@@ -231,7 +220,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     hostawayId: hostawayId,
   });
 
-  if (!bookingRecord) {
+  if (!bookingRecord)
     // notify hydro support if booking record was not added (so they can add manually on their end)
     await notifyAdminDbInsertionError({
       customer_name: parsed.data.name,
@@ -240,9 +229,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
       startSession: dayjs(parsed.data.startSession).format('MMM DD, YYYY hh:mm:ss A'),
       endSession: dayjs(parsed.data.endSession).format('MMM DD, YYYY hh:mm:ss A'),
     });
-  }
 
-  console.log('SUCCESSFULLY UPDATED BOOKING STATUS "BOOKED"');
+  logger('handlePaymentPaidEvent', 'Updated booking status to "BOOKED"');
 
   await sendBookingSuccessEmail({
     recipientEmail: [parsed.data.email, constants.mailerSend.supportEmail],
@@ -258,8 +246,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     total_payment: PHpeso.format(parsed.data.receipt.total),
   });
 
-  console.log('EMAIL SUCCESSFULLY SENT');
-  console.log('DONE');
+  logger('handlePaymentPaidEvent', 'Email successfuly sent');
+  logger('handlePaymentPaidEvent', 'Operation done');
 };
 
 export const handleRefundPaymentEvent = async (paymentIntentId: string, refundId: string) => {

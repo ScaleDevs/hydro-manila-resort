@@ -150,13 +150,13 @@ export default function TableBookingRecords() {
                     <Td>{v.ref_no}</Td>
                     <Td>
                       <Box
-                        bg={v.refundId ? 'red.300' : 'green.300'}
+                        bg={v.refundId ? 'red.300' : v.status === 'PENDING' ? 'orange.300' : 'green.300'}
                         textAlign='center'
                         p='5px'
                         borderRadius='md'
-                        color={v.refundId ? 'red.700' : 'green.700'}
+                        color={v.refundId ? 'red.700' : v.status === 'PENDING' ? 'orange.700' : 'green.700'}
                       >
-                        {v.refundId ? 'REFUNDED' : 'BOOKED'}
+                        {v.refundId ? 'REFUNDED' : v.status}
                       </Box>
                     </Td>
                   </Tr>

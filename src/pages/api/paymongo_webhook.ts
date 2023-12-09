@@ -4,7 +4,7 @@ import { PaymentEventsHandler } from '@/server/handlers/payment_events.handler';
 import { constants } from '@/server/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('==========PAYMONGO WEBHOOK API INVOKED========');
+  console.log('/api/paymongo_webhook :: invoked');
 
   const response = (req.body as PayMongoWebHookResponse) ?? '{}';
 
@@ -13,9 +13,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
   const targetApplication = response.data.attributes.data.attributes.metadata.application;
-  console.log('CHECKING IF TARGET APPLICATION ...', targetApplication);
+
+  console.log('/api/paymongo_webhook :: targetApplication', targetApplication);
+
   if (targetApplication === constants.general.appName) {
-    console.log('TARGET APP matches', eventType);
+    console.log('/api/paymongo_webhook :: target application matches');
     if (eventType === 'payment.paid') {
       // update booking
       if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
@@ -24,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // create booking
-      console.log('Inserting Booking ...');
+      console.log('/api/paymongo_webhook :: Inserting Booking ...');
       await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
     }
 
@@ -33,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         paymentIntentId,
         response.data?.attributes.data.attributes.refunds[0].id,
       );
-  } else console.log('TARGET APP does not match');
+  } else console.log('/api/paymongo_webhook :: target application does not match. ignoring request ...');
 
   return res.end();
 }

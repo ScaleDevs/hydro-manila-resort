@@ -242,17 +242,20 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
   try {
     const currentPaymentIntent = await getPaymentIntentSession(data.paymentIntentId);
 
-    if (!!currentPaymentIntent.attributes.metadata.bookingRecord) {
-      const session = JSON.parse(currentPaymentIntent.attributes.metadata.bookingRecord) as IBooking;
+    if (!currentPaymentIntent.attributes.metadata.bookingRecord) return { data: null };
 
-      const isTaken = await BookingService.checkScheduleAvailability({
-        startDate: session.startSession,
-        endDate: session.endSession,
-      });
+    const session = JSON.parse(currentPaymentIntent.attributes.metadata.bookingRecord) as IBooking;
 
-      if (isTaken) return { data: null };
+    const isTaken = await BookingService.checkScheduleAvailability({
+      startDate: session.startSession,
+      endDate: session.endSession,
+    });
 
-      await BookingRepository.createBooking({
+    if (isTaken) return { data: null };
+
+    const [newPaymentIntent] = await Promise.all([
+      attachPaymentMethodToIntent(data),
+      BookingRepository.createBooking({
         ...session,
         paymentIntentId: currentPaymentIntent.id,
         paymentId: null,
@@ -262,10 +265,8 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         updateLogs: [],
         transactionLogs: [],
         hostawayId: null,
-      });
-    }
-
-    const newPaymentIntent = await attachPaymentMethodToIntent(data);
+      }),
+    ]);
 
     return newPaymentIntent;
   } catch (err) {
