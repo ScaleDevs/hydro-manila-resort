@@ -43,11 +43,10 @@ class Respository {
 
   public async findManyBooking({ page, limit, ref_no, dateFilter }: IFindManyBookingInput) {
     try {
-      const whereFilter: Prisma.BookingWhereInput = {
-        ref_no,
-      };
+      const whereFilter: Prisma.BookingWhereInput = {};
 
-      if (dateFilter)
+      if (!!ref_no) whereFilter.ref_no = ref_no;
+      else if (dateFilter)
         whereFilter['AND'] = [
           {
             startSession: {
@@ -63,16 +62,20 @@ class Respository {
           },
         ];
 
-      const result = await prisma.booking.findMany({
-        where: whereFilter,
-        orderBy: [{ startSession: 'asc' }],
-        skip: page > 0 ? (page - 1) * limit : 0,
-        take: limit,
-      });
+      console.log('QUERYING1...');
 
-      const totalCount = await prisma.booking.count({
-        where: whereFilter,
-      });
+      const [result, totalCount] = await Promise.all([
+        prisma.booking.findMany({
+          where: whereFilter,
+          orderBy: [{ startSession: 'asc' }],
+          skip: page > 0 ? (page - 1) * limit : 0,
+          take: limit,
+        }),
+        prisma.booking.count({
+          where: whereFilter,
+        }),
+      ]);
+      console.log('QUERYING2...');
 
       return {
         pageCount: Math.ceil(totalCount / limit),

@@ -183,15 +183,6 @@ model ScheduledEvent {
   createdBy        String?
 }
 
-model BookingAttempt {
-  bookingAttemptId String   @id @default(auto()) @map("_id") @db.ObjectId
-  startSession     DateTime
-  endSession       DateTime
-  ref_no           String   @unique
-  createdAt        DateTime @default(now())
-  expireAt         DateTime
-}
-
 model Secrets {
   secretId        String   @id @default(auto()) @map("_id") @db.ObjectId
   secretsIdentity String

@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 import { IScheduledEvent } from '@/utils/types';
 import { ScheduledEventRepository } from '@/server/repository/scheduledevent.repo';
 import { GoogleCalendarRepository } from '@/server/repository/googlecalender.repo';
-import { BookingAttemptRepository } from '@/server/repository/bookingattempt.repo';
 import { BookingRepository } from '@/server/repository/booking.repo';
 import { createReservation, cancelReservation } from '@/server/repository/hostaway.repo';
 import { constants } from '../constants';
@@ -27,13 +26,7 @@ class Service {
         startDate: startISOString,
         endDate: endISOString,
       });
-
-      const isBookingAttemptTaken = await BookingAttemptRepository.checkIfBookingAttemptIsTaken({
-        startDate: startISOString,
-        endDate: endISOString,
-      });
-
-      if (isBookingDateTaken || isSchedTaken || isBookingAttemptTaken)
+      if (isBookingDateTaken || isSchedTaken)
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Schedule_not_available',

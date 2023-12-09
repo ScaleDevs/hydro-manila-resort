@@ -7,7 +7,6 @@ import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
 import { bookingUpdateNoAdditionalPaymentConfirmation, sendBookingSuccessEmail } from '@/repo/mailersend.repo';
-import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
@@ -48,7 +47,6 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
     };
     const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
     const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
-    const bookingAttemptRecords = await BookingAttemptRepository.findAllBookingAttemptsByDates(getRecordsParams);
     const bookedDates: IBookingDates = {};
 
     if (constants.general.appName === 'VillaLeonora') {
@@ -76,7 +74,7 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
         }
     }
 
-    for (const record of [...bookingRecords, ...eventsRecords, ...bookingAttemptRecords]) {
+    for (const record of [...bookingRecords, ...eventsRecords]) {
       if ('id' in record) if (!!record.refundId) continue;
 
       const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');

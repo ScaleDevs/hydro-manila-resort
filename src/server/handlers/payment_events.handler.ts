@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
 import { BookingRepository } from '@/repo/booking.repo';
-import { BookingAttemptRepository } from '@/repo/bookingattempt.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import {
   notificationUpdateFailed,
@@ -404,8 +403,6 @@ export const handleUpdateBookingPayment = async (paymentIntentId: string, amount
 
   if (metadata.statusDisplay) {
     const statusDisplay = JSON.parse(metadata.statusDisplay) as BookingStatusDisplay;
-
-    if (!!metadata.bookedSchedule) await BookingAttemptRepository.deleteBookingAttemptWithRefNo(statusDisplay.ref_no);
     await updateBookingConfirmation(bookingRecord.email, {
       customer_name: statusDisplay.customerName,
       guests: createGuestsSummary({ guests: statusDisplay.guests, isAllRooms: product.isAllRooms }),
