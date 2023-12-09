@@ -15,6 +15,10 @@ export type IBookingDates = {
   }[];
 };
 
+const logger = (funcName: string, message: string) => {
+  console.log(`booking.repo.ts :: (${funcName}) :: ${message}`);
+};
+
 class Respository {
   public async createBooking(data: Omit<IBooking, 'id' | 'createdAt'>) {
     try {
@@ -62,7 +66,7 @@ class Respository {
           },
         ];
 
-      console.log('QUERYING1...');
+      logger('findManyBooking', 'Querying ...');
 
       const [result, totalCount] = await Promise.all([
         prisma.booking.findMany({
@@ -75,7 +79,8 @@ class Respository {
           where: whereFilter,
         }),
       ]);
-      console.log('QUERYING2...');
+
+      logger('findManyBooking', 'Querying Successful');
 
       return {
         pageCount: Math.ceil(totalCount / limit),
