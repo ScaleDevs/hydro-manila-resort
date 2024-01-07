@@ -242,6 +242,11 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
   try {
     const currentPaymentIntent = await getPaymentIntentSession(data.paymentIntentId);
 
+    if (!!currentPaymentIntent.attributes.metadata.bookingUpdateParams) {
+      const newPaymentIntent = await attachPaymentMethodToIntent(data);
+      return newPaymentIntent;
+    }
+
     if (!currentPaymentIntent.attributes.metadata.bookingRecord) return { data: null };
 
     const session = JSON.parse(currentPaymentIntent.attributes.metadata.bookingRecord) as IBooking;

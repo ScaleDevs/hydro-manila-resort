@@ -76,11 +76,12 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
             nonOverNightGuests: guests.nonOverNightGuests,
           };
 
+        console.log('ITO', freeGuests, guests.nonOverNightGuests);
+
         if (freeGuests === guestSetting.minNonOverNightGuestPax)
           return {
             overNightGuests: guests.overNightGuests,
-            nonOverNightGuests:
-              guests.nonOverNightGuests > freeGuests ? guests.nonOverNightGuests - freeGuests : guests.nonOverNightGuests,
+            nonOverNightGuests: guests.nonOverNightGuests > freeGuests ? guests.nonOverNightGuests - freeGuests : 0,
           };
 
         return {
