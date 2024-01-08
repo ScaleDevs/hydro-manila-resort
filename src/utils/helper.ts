@@ -67,11 +67,13 @@ export const getExtraHeads = (guests: number, min: number) => {
 export const getProductPrice = (bookingDate: string, product: IProduct) => {
   if (process.env.GENERAL_APP_NAME === 'HydroResortManila' || process.env.NEXT_PUBLIC_APP === 'HydroResortManila') {
     const bookedDate = dayjs(bookingDate);
-    const isRegularRates = bookedDate.month() >= 3 && bookedDate.year() >= 2024;
+    const isPeakMonth = bookedDate.year() >= 2024 && [2, 3, 4, 11].includes(bookedDate.month());
 
-    if (product.name === 'DAY SWIMMING' && !isRegularRates) return 7500;
-    if (product.name === 'NIGHT SWIMMING' && !isRegularRates) return 7500;
-    if (product.name.includes('OVERNIGHT SWIMMING')) return 15000;
+    if (!isPeakMonth) return product.price;
+
+    if (product.name === 'DAY SWIMMING') return 8500;
+    if (product.name === 'NIGHT SWIMMING') return 8500;
+    if (product.name.includes('OVERNIGHT SWIMMING')) return 17000;
   }
 
   if (process.env.GENERAL_APP_NAME === 'VillaLeonora' || process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
