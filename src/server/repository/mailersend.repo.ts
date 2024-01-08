@@ -292,6 +292,31 @@ export const updateBookingPartialRefundEmail = async (
   });
 };
 
+export const processingUpdateEmail = async (
+  userEmail: string,
+  variables: {
+    customer_name: string,
+    modification: {
+      name: string;
+      value: string;
+    }[];
+  },
+) => {
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.processingUpdate,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: variables,
+    subject: constants.general.companyName + ' ' + 'Processing Customer Booking Update Request',
+  });
+
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.processingUpdate,
+    recipientEmail: userEmail,
+    variables: variables,
+    subject: constants.general.companyName + ' ' + 'Processing Customer Booking Update Request',
+  });
+};
+
 export const bookingUpdateNoAdditionalPaymentConfirmation = async (
   customerEmail: string,
   variables: {

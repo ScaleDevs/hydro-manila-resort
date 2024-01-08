@@ -29,9 +29,12 @@ import { trpc } from '@/utils/trpc';
 import UpdateRefund from './UpdateRefund';
 
 const BadgeColor = {
-  FAILED: 'gray',
-  PROCESSING: 'gray',
-  SUCCESS: 'red',
+  INVALID: 'red',
+  'PENDING PAYMENT': 'orange',
+  COMPLETED: 'green',
+  BOOKED: 'green',
+  'REFUND IN PROGRESS': 'gray',
+  REFUNDED: 'red',
 };
 
 const InfoField = ({ label, value, children }: { label: string; value?: string | number | null; children?: ReactNode }) => {
@@ -71,6 +74,7 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
 
   const getStatus = () => {
     if (!data) return 'INVALID';
+    if (data.status === 'PENDING') return 'PENDING PAYMENT';
     if (!data?.refund && dayjs.utc(data.startSession).unix() < dayjs.utc().unix()) return 'COMPLETED';
     else if (!data?.refund) return 'BOOKED';
     else if (data.refund.status === 'PROCESSING') return 'REFUND IN PROGRESS';
@@ -119,13 +123,7 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
           <>
             <Stack direction={{ base: 'column', md: 'row' }} justify='space-between'>
               <Stack direction='row' align='end'>
-                <Badge
-                  py={3}
-                  px={5}
-                  variant='subtle'
-                  colorScheme={!!data?.refund ? BadgeColor[data.refund.status] : 'green'}
-                  fontFamily='primary'
-                >
+                <Badge py={3} px={5} variant='subtle' colorScheme={BadgeColor[getStatus()]} fontFamily='primary'>
                   {getStatus()}
                 </Badge>
                 <Stack spacing={0} justifyContent='space-between'>

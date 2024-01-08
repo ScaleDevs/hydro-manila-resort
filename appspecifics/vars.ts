@@ -8,6 +8,7 @@ export const GetVars = {
         updateBookingRequestId: 'z86org888kegew13',
         updateBookingConfirmationId: 'v69oxl5vvw24785k',
         updateBookingConfirmationV2Id: '0p7kx4xmdw7l9yjr',
+        processingUpdate: 'zr6ke4nz5xy4on12',
       },
       HydroResortManila: {
         bookingConfirmationId: 'z86org89om04ew13',
@@ -15,6 +16,7 @@ export const GetVars = {
         updateBookingRequestId: 'z3m5jgr9wqxgdpyo',
         updateBookingConfirmationId: 'pq3enl6xz87l2vwr',
         updateBookingConfirmationV2Id: 'neqvygmrjnzl0p7w',
+        processingUpdate: 'yzkq340yjzkld796',
       },
     };
 

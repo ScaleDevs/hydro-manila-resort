@@ -15,11 +15,11 @@ import { BookingRepository } from '@/repo/booking.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import { cancelReservation } from '@/repo/hostaway.repo';
-import { notifyFailedHostawayDeletion, sendRefundEmailProcessing } from '@/repo/mailersend.repo';
+import { notifyFailedHostawayDeletion, processingUpdateEmail, sendRefundEmailProcessing } from '@/repo/mailersend.repo';
 import { BookingService } from '@/svc/booking.service';
 import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingStatusDisplay, CustomerUpdateBookingParams, IBooking } from '@/utils/types';
-import { createReferenceNumber, isIt3DaysBeforeBookingDate } from '@/server/util';
+import { createGuestsSummary, createReferenceNumber, isIt3DaysBeforeBookingDate } from '@/server/util';
 import { constants } from '@/server/constants';
 
 export * as PaymentHandler from './payment.handler';
@@ -244,6 +244,68 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
     if (!!currentPaymentIntent.attributes.metadata.bookingUpdateParams) {
       const newPaymentIntent = await attachPaymentMethodToIntent(data);
+      const params = JSON.parse(currentPaymentIntent.attributes.metadata.bookingUpdateParams);
+      const session = params.currentBookingRecord as IBooking;
+      const bookingRequestUpdate = params.updates as {
+        productId?: string | undefined;
+        rooms?: string[] | undefined;
+        guests?: Guests | undefined;
+        bookingDate?: string | undefined;
+      };
+      const oldProduct = await ProductRepository.findProductById(session.productId);
+      const newProduct = bookingRequestUpdate.productId ? await ProductRepository.findProductById(bookingRequestUpdate.productId) : undefined;
+      const newRooms = bookingRequestUpdate.rooms ? await RoomRepository.findRoomsByIds(bookingRequestUpdate.rooms) : undefined;
+      const modification: { name: string; value: string }[] = [];
+
+      if (!!bookingRequestUpdate.guests)
+        modification.push({
+          name: 'No. of Guests',
+          value: createGuestsSummary({ guests: bookingRequestUpdate.guests }),
+        });
+
+      if (!!newRooms)
+        modification.push({
+          name: 'Rooms',
+          value: newRooms.length > 0 ? newRooms.map((v) => v.roomIdentityName).join(', ') : 'None',
+        });
+      else if (!!newProduct && !!newProduct.isAllRooms)
+        modification.push({
+          name: 'Rooms',
+          value: 'Whole Place',
+        });
+
+      if (!!newProduct || bookingRequestUpdate.bookingDate) {
+        const product = newProduct || oldProduct;
+        const bookingDate =
+          bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(session.startSession).format('YYYY-MM-DD');
+
+        modification.push({
+          name: 'Type of Booking',
+          value: product.name,
+        });
+
+        modification.push({
+          name: 'Check-In Date',
+          value: tzSchedToDayJsInsance(bookingDate as string, product?.scheduleStart).format(
+            'MMM DD, YYYY / hh:mm A',
+          ),
+        });
+
+        modification.push({
+          name: 'Check-Out Date',
+          value: tzSchedToDayJsInsance(
+            dayjs(bookingDate)
+              .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
+              .format('YYYY-MM-DD'),
+              product.scheduleEnd,
+          ).format('MMM DD, YYYY / hh:mm A'),
+        });
+      }
+
+      console.log("HERE========================================================", modification);
+
+      await processingUpdateEmail(session.email, { customer_name: session.name, modification });
+
       return newPaymentIntent;
     }
 
