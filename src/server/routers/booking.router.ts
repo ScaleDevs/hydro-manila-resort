@@ -135,24 +135,26 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.checkBookingAvailability(input);
     }),
-  adminCreateBooking: protectedProcedure.input(
-    z.object({
-      payload: z.object({
-        name: z.string(),
-        email: z.string().email(),
-        phoneNumber: z.string(),
-        bookingDate: z.string(),
-        guests: z.object({
-          overNightGuests: z.number(),
-          nonOverNightGuests: z.number(),
+  adminCreateBooking: protectedProcedure
+    .input(
+      z.object({
+        payload: z.object({
+          name: z.string(),
+          email: z.string().email(),
+          phoneNumber: z.string(),
+          bookingDate: z.string(),
+          guests: z.object({
+            overNightGuests: z.number(),
+            nonOverNightGuests: z.number(),
+          }),
+          roomIds: z.array(z.string().min(1)),
+          productId: z.string(),
+          paymentId: z.string().nullable(),
         }),
-        roomIds: z.array(z.string().min(1)),
-        productId: z.string(),
-        paymentId: z.string().nullable(),
+        username: z.string(),
       }),
-      username: z.string()
-    })
-  ).mutation(async ({ input }) => {
-    return BookingHandler.adminCreateBooking(input.username, input.payload);
-  }),
+    )
+    .mutation(async ({ input }) => {
+      return BookingHandler.adminCreateBooking(input.username, input.payload);
+    }),
 });

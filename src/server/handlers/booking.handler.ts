@@ -7,7 +7,11 @@ import { getExtraHeads, getExtraHeadsTotal, tzSchedToDayJsInsance, tzSchedToUnix
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
-import { bookingUpdateNoAdditionalPaymentConfirmation, sendBookingSuccessEmail, sendRefundEmailConflictBooking } from '@/repo/mailersend.repo';
+import {
+  bookingUpdateNoAdditionalPaymentConfirmation,
+  sendBookingSuccessEmail,
+  sendRefundEmailConflictBooking,
+} from '@/repo/mailersend.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
 import { createReservation, getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
@@ -36,7 +40,7 @@ export const getBookingByRefNoPublic = async (refNo: string) => {
     product: bookingInfo.product,
     roomsObject: bookingInfo.roomsObject,
     currentTotal: bookingInfo.receipt.total,
-    isFromAdmin: !!booking.createdBy && booking.createdBy !== 'SYSTEM'
+    isFromAdmin: !!booking.createdBy && booking.createdBy !== 'SYSTEM',
   };
 };
 
@@ -449,16 +453,19 @@ export const updateRefundInfo = async ({
   }
 };
 
-export const adminCreateBooking = async (username: string, input: {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  guests: Guests;
-  roomIds: string[];
-  productId: string;
-  bookingDate: string;
-  paymentId: string | null;
-}) => {
+export const adminCreateBooking = async (
+  username: string,
+  input: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    guests: Guests;
+    roomIds: string[];
+    productId: string;
+    bookingDate: string;
+    paymentId: string | null;
+  },
+) => {
   try {
     const product = await ProductRepository.findProductById(input.productId);
     const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
@@ -469,7 +476,7 @@ export const adminCreateBooking = async (username: string, input: {
       product.scheduleEnd,
     );
     const startSessionISO = startSessionDayInstance.toISOString();
-    const endSessionISO = endSessionDayInstance.toISOString()
+    const endSessionISO = endSessionDayInstance.toISOString();
 
     const isTaken = await BookingService.checkScheduleAvailability({
       startDate: startSessionISO,
@@ -509,7 +516,11 @@ export const adminCreateBooking = async (username: string, input: {
     const { guestSetting } = product;
     const [extraOverNightGuestsTotal, extraNonOverNightGuestsTotal] = await Promise.all([
       getExtraHeadsTotal(input.guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee),
-      getExtraHeadsTotal(input.guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax, guestSetting.nonOverNightGuestFee),
+      getExtraHeadsTotal(
+        input.guests.nonOverNightGuests,
+        guestSetting.minNonOverNightGuestPax,
+        guestSetting.nonOverNightGuestFee,
+      ),
     ]);
 
     let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
@@ -541,7 +552,7 @@ export const adminCreateBooking = async (username: string, input: {
 
     if (constants.general.appName === 'VillaLeonora') {
       logger('adminCreateBooking', 'creating hostaway reservation ...');
-  
+
       const reservationResult = await createReservation({
         guestName: input.name,
         numberOfGuests: input.guests.nonOverNightGuests + input.guests.overNightGuests,
@@ -552,7 +563,7 @@ export const adminCreateBooking = async (username: string, input: {
         phone: '+63' + input.phoneNumber,
         totalPrice: receipt.total,
       });
-  
+
       if ('conflict' in reservationResult && reservationResult.message === 'Requested date is not available') {
         await sendRefundEmailConflictBooking({
           recipientEmail: input.email,
@@ -560,9 +571,9 @@ export const adminCreateBooking = async (username: string, input: {
           payment_id: input.paymentId ?? 'None',
           isHostawayConflict: true,
         });
-  
+
         logger('adminCreateBooking', 'hostaway reservation creation failed!');
-  
+
         return;
       } else if ('conflict' in reservationResult) {
         await sendRefundEmailConflictBooking({
@@ -570,9 +581,9 @@ export const adminCreateBooking = async (username: string, input: {
           customer_name: input.name,
           payment_id: input.paymentId ?? 'None',
         });
-  
+
         logger('adminCreateBooking', 'hostaway reservation creation failed!');
-  
+
         return;
       } else if ('guestName' in reservationResult) {
         hostawayId = reservationResult.id;
@@ -598,7 +609,7 @@ export const adminCreateBooking = async (username: string, input: {
         timeZone: constants.general.timezone,
       },
     });
-    
+
     await BookingRepository.createBooking({
       ...data,
       paymentId: input.paymentId,
@@ -625,7 +636,7 @@ export const adminCreateBooking = async (username: string, input: {
       elements: emailAddonsTable,
       total_payment: PHpeso.format(data.receipt.total),
     });
-  
+
     logger('handlePaymentPaidEvent', 'Email successfuly sent');
     logger('handlePaymentPaidEvent', 'Operation done');
 
@@ -635,4 +646,4 @@ export const adminCreateBooking = async (username: string, input: {
     const error = err as any;
     throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
-}
+};

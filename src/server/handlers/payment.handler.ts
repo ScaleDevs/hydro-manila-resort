@@ -253,7 +253,9 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         bookingDate?: string | undefined;
       };
       const oldProduct = await ProductRepository.findProductById(session.productId);
-      const newProduct = bookingRequestUpdate.productId ? await ProductRepository.findProductById(bookingRequestUpdate.productId) : undefined;
+      const newProduct = bookingRequestUpdate.productId
+        ? await ProductRepository.findProductById(bookingRequestUpdate.productId)
+        : undefined;
       const newRooms = bookingRequestUpdate.rooms ? await RoomRepository.findRoomsByIds(bookingRequestUpdate.rooms) : undefined;
       const modification: { name: string; value: string }[] = [];
 
@@ -276,8 +278,7 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
       if (!!newProduct || bookingRequestUpdate.bookingDate) {
         const product = newProduct || oldProduct;
-        const bookingDate =
-          bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(session.startSession).format('YYYY-MM-DD');
+        const bookingDate = bookingRequestUpdate.bookingDate || utcDateToTzDayInstance(session.startSession).format('YYYY-MM-DD');
 
         modification.push({
           name: 'Type of Booking',
@@ -286,9 +287,7 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
         modification.push({
           name: 'Check-In Date',
-          value: tzSchedToDayJsInsance(bookingDate as string, product?.scheduleStart).format(
-            'MMM DD, YYYY / hh:mm A',
-          ),
+          value: tzSchedToDayJsInsance(bookingDate as string, product?.scheduleStart).format('MMM DD, YYYY / hh:mm A'),
         });
 
         modification.push({
@@ -297,12 +296,12 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
             dayjs(bookingDate)
               .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
               .format('YYYY-MM-DD'),
-              product.scheduleEnd,
+            product.scheduleEnd,
           ).format('MMM DD, YYYY / hh:mm A'),
         });
       }
 
-      console.log("HERE========================================================", modification);
+      console.log('HERE========================================================', modification);
 
       await processingUpdateEmail(session.email, { customer_name: session.name, modification });
 
@@ -367,57 +366,60 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
       });
 
     const { total } = bookingRecord.receipt;
-    
+
     const isFromAdmin = !!bookingRecord.createdBy && bookingRecord.createdBy !== 'SYSTEM';
-    const result = isFromAdmin ? null : await createRefund({
-      amount: total * 100,
-      payment_id: bookingRecord.paymentId,
-      reason: 'requested_by_customer',
-      metadata: {
-        application: constants.general.appName,
-        reason,
-      },
-    });
+    const result = isFromAdmin
+      ? null
+      : await createRefund({
+          amount: total * 100,
+          payment_id: bookingRecord.paymentId,
+          reason: 'requested_by_customer',
+          metadata: {
+            application: constants.general.appName,
+            reason,
+          },
+        });
     const isError = !!result && 'error' in result;
 
     if ((isError && !!['available_balance_insufficient', 'parameter_above_maximum'].includes(result.error)) || isFromAdmin) {
-        const refundRecord = await BookingRefundRepository.createBookingRefund({
-          paymongoRefundId: null,
-          referenceNo: null,
-          type: 'MANUAL',
-          reason: reason,
-          status: 'PROCESSING',
-          amount: bookingRecord.receipt.total,
-          process: null,
-          updatedBy: null,
-        });
+      const refundRecord = await BookingRefundRepository.createBookingRefund({
+        paymongoRefundId: null,
+        referenceNo: null,
+        type: 'MANUAL',
+        reason: reason,
+        status: 'PROCESSING',
+        amount: bookingRecord.receipt.total,
+        process: null,
+        updatedBy: null,
+      });
 
-        await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
+      await BookingRepository.updateBooking(bookingRecord.id, { refundId: refundRecord.bookingRefundId });
 
-        // SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND - due to balance issue
-        await sendRefundEmailProcessing({
-          recipientEmail: bookingRecord.email,
-          customer_name: bookingRecord.name,
-          ref_no: bookingRecord.ref_no,
-          amount: bookingRecord.receipt.total,
-          messageType: isError ? result?.error === 'parameter_above_maximum' ? 'ABOVE_MAXIMUM' : 'INSUFFICIENT' : 'FROMADMIN',
-        });
+      // SEND EMAIL REGARDING MANUAL PROCESSING OF REFUND - due to balance issue
+      await sendRefundEmailProcessing({
+        recipientEmail: bookingRecord.email,
+        customer_name: bookingRecord.name,
+        ref_no: bookingRecord.ref_no,
+        amount: bookingRecord.receipt.total,
+        messageType: isError ? (result?.error === 'parameter_above_maximum' ? 'ABOVE_MAXIMUM' : 'INSUFFICIENT') : 'FROMADMIN',
+      });
 
-        if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
+      if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
 
-        if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
-          const result = await cancelReservation(bookingRecord.hostawayId.toString(), 'guest');
-          if ('conflict' in result)
-            await notifyFailedHostawayDeletion({
-              ref_no: bookingRecord.ref_no,
-              hostaway_id: bookingRecord.hostawayId.toString(),
-            });
-        }
+      if (constants.general.appName === 'VillaLeonora' && !!bookingRecord.hostawayId) {
+        const result = await cancelReservation(bookingRecord.hostawayId.toString(), 'guest');
+        if ('conflict' in result)
+          await notifyFailedHostawayDeletion({
+            ref_no: bookingRecord.ref_no,
+            hostaway_id: bookingRecord.hostawayId.toString(),
+          });
+      }
 
-        return {
-          status: 'MANUAL_PROCESSING',
-        };
-    } else if (isError && result.error === 'something_went_wrong') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Something went wrong!' });
+      return {
+        status: 'MANUAL_PROCESSING',
+      };
+    } else if (isError && result.error === 'something_went_wrong')
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Something went wrong!' });
 
     if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
 

@@ -135,11 +135,14 @@ export const sendRefundEmailProcessing = async ({
   });
 
   const message = {
-    INSUFFICIENT: 'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.',
-    ABOVE_MAXIMUM: 'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
-    FROMADMIN: 'and this booking was made through admin booking page so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
-  }
-  
+    INSUFFICIENT:
+      'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.',
+    ABOVE_MAXIMUM:
+      'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
+    FROMADMIN:
+      'and this booking was made through admin booking page so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
+  };
+
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
     recipientEmail: constants.mailerSend.supportEmail,
@@ -295,7 +298,7 @@ export const updateBookingPartialRefundEmail = async (
 export const processingUpdateEmail = async (
   userEmail: string,
   variables: {
-    customer_name: string,
+    customer_name: string;
     modification: {
       name: string;
       value: string;
