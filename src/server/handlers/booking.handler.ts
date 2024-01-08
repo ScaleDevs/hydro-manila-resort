@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { v4 } from 'uuid';
 import { TRPCError } from '@trpc/server';
 import { Guests, ProcessType, TransactionType } from '@prisma/client';
 
@@ -6,15 +7,21 @@ import { getExtraHeads, getExtraHeadsTotal, tzSchedToDayJsInsance, tzSchedToUnix
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
-import { bookingUpdateNoAdditionalPaymentConfirmation, sendBookingSuccessEmail } from '@/repo/mailersend.repo';
+import { bookingUpdateNoAdditionalPaymentConfirmation, sendBookingSuccessEmail, sendRefundEmailConflictBooking } from '@/repo/mailersend.repo';
 import { ScheduledEventRepository } from '@/repo/scheduledevent.repo';
-import { getReservations, updateReservation } from '@/repo/hostaway.repo';
+import { createReservation, getReservations, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
-import { PHpeso, createGuestsSummary, isIt3DaysBeforeBookingDate } from '../util';
+import { PHpeso, createGuestsSummary, createReferenceNumber, isIt3DaysBeforeBookingDate } from '../util';
 import { constants } from '../constants';
 import { BookingRefundRepository } from '../repository/bookingrefund.repo';
+import { GoogleCalendarRepository } from '../repository/googlecalender.repo';
+import { IBooking } from '@/utils/types';
 
 export * as BookingHandler from './booking.handler';
+
+const logger = (funcName: string, message: string) => {
+  console.log(`booking_handler.ts :: (${funcName}) :: ${message}`);
+};
 
 export const getBookingByRefNoPublic = async (refNo: string) => {
   const booking = await BookingRepository.findBookingByReferenceNo(refNo);
@@ -29,6 +36,7 @@ export const getBookingByRefNoPublic = async (refNo: string) => {
     product: bookingInfo.product,
     roomsObject: bookingInfo.roomsObject,
     currentTotal: bookingInfo.receipt.total,
+    isFromAdmin: !!booking.createdBy && booking.createdBy !== 'SYSTEM'
   };
 };
 
@@ -440,3 +448,191 @@ export const updateRefundInfo = async ({
     throw new TRPCError({ code: err.code || 'INTERNAL_SERVER_ERROR', message: err.message || 'Something went wrong. Try Again' });
   }
 };
+
+export const adminCreateBooking = async (username: string, input: {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  guests: Guests;
+  roomIds: string[];
+  productId: string;
+  bookingDate: string;
+  paymentId: string | null;
+}) => {
+  try {
+    const product = await ProductRepository.findProductById(input.productId);
+    const startSessionDayInstance = tzSchedToDayJsInsance(input.bookingDate, product.scheduleStart);
+    const endSessionDayInstance = tzSchedToDayJsInsance(
+      dayjs(input.bookingDate)
+        .add(!!product.scheduleEndNextDay ? 1 : 0, 'day')
+        .format('YYYY-MM-DD'),
+      product.scheduleEnd,
+    );
+    const startSessionISO = startSessionDayInstance.toISOString();
+    const endSessionISO = endSessionDayInstance.toISOString()
+
+    const isTaken = await BookingService.checkScheduleAvailability({
+      startDate: startSessionISO,
+      endDate: endSessionISO,
+    });
+
+    if (isTaken) throw new TRPCError({ code: 'CONFLICT', message: 'Schedule is not available' });
+
+    const finalRoomIds = Array.from(
+      new Map<string, string>([...input.roomIds.map((v) => [v, v]), ...product.includedRooms.map((v) => [v, v])] as [
+        string,
+        string,
+      ][]),
+      (entry) => entry[1],
+    );
+    const rooms = await RoomRepository.findRoomsByIds(finalRoomIds);
+    const receipt = await BookingService.getBookingDetailsTotal({
+      bookedDate: startSessionDayInstance.format('YYYY-MM-DD'),
+      product,
+      rooms,
+      guests: input.guests,
+    });
+
+    const data = {
+      name: input.name,
+      email: input.email,
+      phoneNumber: input.phoneNumber,
+      guests: input.guests,
+      rooms: finalRoomIds,
+      productId: input.productId,
+      startSession: startSessionISO,
+      endSession: endSessionISO,
+      receipt,
+      ref_no: createReferenceNumber(),
+    } as IBooking;
+
+    const { guestSetting } = product;
+    const [extraOverNightGuestsTotal, extraNonOverNightGuestsTotal] = await Promise.all([
+      getExtraHeadsTotal(input.guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee),
+      getExtraHeadsTotal(input.guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax, guestSetting.nonOverNightGuestFee),
+    ]);
+
+    let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
+    const googleCalendarRoomsArr: string[] = [];
+    const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [];
+
+    if (extraNonOverNightGuestsTotal > 0)
+      emailAddonsTable.push({
+        name: product.isAllRooms ? 'Additional Non-Overnight Guests' : 'Additional Guests',
+        price: PHpeso.format(guestSetting.nonOverNightGuestFee),
+        qty: `${getExtraHeads(input.guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax)}`,
+        summary: PHpeso.format(extraNonOverNightGuestsTotal),
+      });
+
+    rooms.forEach((info) => {
+      const isNotAddOn = product.includedRooms.some((val) => val === info.roomId);
+      addonsTotal += isNotAddOn ? 0 : info.price;
+      googleCalendarRoomsArr.push(info.roomIdentityName);
+      emailAddonsTable.push({
+        name: info.roomIdentityName,
+        price: PHpeso.format(info.price),
+        qty: '1',
+        summary: PHpeso.format(isNotAddOn ? 0 : info.price),
+      });
+    });
+    emailAddonsTable.push({ name: '', price: '', qty: 'Total Extra', summary: PHpeso.format(addonsTotal) });
+
+    let hostawayId: null | number = null;
+
+    if (constants.general.appName === 'VillaLeonora') {
+      logger('adminCreateBooking', 'creating hostaway reservation ...');
+  
+      const reservationResult = await createReservation({
+        guestName: input.name,
+        numberOfGuests: input.guests.nonOverNightGuests + input.guests.overNightGuests,
+        arrivalDate: startSessionDayInstance.format('YYYY-MM-DD'),
+        departureDate: endSessionDayInstance.format('YYYY-MM-DD'),
+        checkInTime: startSessionDayInstance.hour(),
+        checkOutTime: endSessionDayInstance.hour(),
+        phone: '+63' + input.phoneNumber,
+        totalPrice: receipt.total,
+      });
+  
+      if ('conflict' in reservationResult && reservationResult.message === 'Requested date is not available') {
+        await sendRefundEmailConflictBooking({
+          recipientEmail: input.email,
+          customer_name: input.name,
+          payment_id: input.paymentId ?? 'None',
+          isHostawayConflict: true,
+        });
+  
+        logger('adminCreateBooking', 'hostaway reservation creation failed!');
+  
+        return;
+      } else if ('conflict' in reservationResult) {
+        await sendRefundEmailConflictBooking({
+          recipientEmail: input.email,
+          customer_name: input.name,
+          payment_id: input.paymentId ?? 'None',
+        });
+  
+        logger('adminCreateBooking', 'hostaway reservation creation failed!');
+  
+        return;
+      } else if ('guestName' in reservationResult) {
+        hostawayId = reservationResult.id;
+        logger('adminCreateBooking', 'hostaway reservation created');
+      }
+    }
+
+    logger('handlePaymentPaidEvent', 'creating google calendar event ...');
+
+    const calendarEventId = await GoogleCalendarRepository.createEvent({
+      summary: input.name,
+      description: `${product?.name} / ${input.guests.nonOverNightGuests ?? 0} Non-Overnight Guests / ${
+        input.guests.overNightGuests ?? 0
+      } Overnight Guests / ${
+        product.isAllRooms ? 'Whole Place' : rooms.length > 0 ? googleCalendarRoomsArr.join(', ') : 'No Rooms'
+      }`,
+      start: {
+        dateTime: startSessionDayInstance.utc().format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        timeZone: constants.general.timezone,
+      },
+      end: {
+        dateTime: endSessionDayInstance.utc().format('YYYY-MM-DDTHH:mm:00.000') + 'Z',
+        timeZone: constants.general.timezone,
+      },
+    });
+    
+    await BookingRepository.createBooking({
+      ...data,
+      paymentId: input.paymentId,
+      calendarEventId,
+      hostawayId,
+      paymentIntentId: `ai_${v4()}`,
+      status: 'BOOKED',
+      refundId: null,
+      updateLogs: [],
+      transactionLogs: [],
+      createdBy: username,
+    });
+
+    await sendBookingSuccessEmail({
+      recipientEmail: [data.email, constants.mailerSend.supportEmail],
+      reference_number: data.ref_no,
+      guest_name: data.name,
+      num_pax: data.guests.overNightGuests + data.guests.nonOverNightGuests,
+      checkin: startSessionDayInstance.format('MMM DD, YYYY / hh:mm A'),
+      checkout: endSessionDayInstance.format('MMM DD, YYYY / hh:mm A'),
+      booking_type: product?.name || '',
+      booking_rate: 'BEST AVAILABLE RATE',
+      product_price: PHpeso.format(data.receipt.productPrice),
+      elements: emailAddonsTable,
+      total_payment: PHpeso.format(data.receipt.total),
+    });
+  
+    logger('handlePaymentPaidEvent', 'Email successfuly sent');
+    logger('handlePaymentPaidEvent', 'Operation done');
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    const error = err as any;
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
+  }
+}

@@ -33,7 +33,6 @@ const ActiveForm = ({ activeStep, setActiveStep }: IActiveFormProps) => {
       <UpdateBookingRequestForm
         onNext={() => {
           setActiveStep(2);
-          setStateField('stepDescription', 'Addons');
         }}
         onPrev={() => {
           previousStep(0, 'Find Booking Record');

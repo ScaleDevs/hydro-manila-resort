@@ -196,6 +196,7 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
               <VStack align='flex-start'>
                 <Heading size='md'>Extra Details</Heading>
                 <InfoField label='Payment ID' value={data?.paymentId} />
+                <InfoField label='Created By' value={data?.createdBy || 'SYSTEM'} />
                 <InfoField label='Created At' value={!!data?.createdAt ? tableFormatTimeDisplay(data.createdAt) : 'N/A'} />
               </VStack>
             </Stack>

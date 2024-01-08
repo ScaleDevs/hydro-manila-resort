@@ -5,7 +5,6 @@ import {
   BookingSetting,
   BookingRefund,
   ScheduledEvent,
-  BookingAttempt,
   Receipt,
   UpdateLog,
   Guests,
@@ -24,7 +23,6 @@ export type IBooking = Omit<Booking, 'startSession' | 'endSession'> & DateSessio
 export type IBookingSetting = BookingSetting;
 export type IBookingRefund = BookingRefund;
 export type IScheduledEvent = Omit<ScheduledEvent, 'startSession' | 'endSession'> & DateSession;
-export type IBookingAttempt = Omit<BookingAttempt, 'startSession' | 'endSession'> & DateSession;
 export type IBookingPublicOnly = {
   guests: Guests;
   startSession: Date | string;
@@ -34,6 +32,7 @@ export type IBookingPublicOnly = {
   product: IProduct;
   roomsObject: IRoom[];
   currentTotal: number;
+  isFromAdmin: boolean;
 };
 
 export type CustomerUpdateBookingParams = {

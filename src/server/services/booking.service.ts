@@ -191,7 +191,7 @@ class Service {
         transactionRefNo: paymentId ? paymentId : null,
         updatedBy,
         fieldUpdated: 'startSession',
-        fromValue: bookingRecord.startSession as string,
+        fromValue: bookingRecord.startSession.toString() as string,
         toValue: startSessionISOString,
         createdAt: dayjs().toDate(),
       });
@@ -200,7 +200,7 @@ class Service {
         transactionRefNo: paymentId ? paymentId : null,
         updatedBy,
         fieldUpdated: 'endSession',
-        fromValue: bookingRecord.endSession as string,
+        fromValue: bookingRecord.endSession.toString() as string,
         toValue: endSessionISOString,
         createdAt: dayjs().toDate(),
       });
@@ -254,6 +254,7 @@ class Service {
 
       return updatedBooking;
     } catch (err) {
+      console.error('booking.service.ts :: updateBooking() :: ', err);
       const bookingRecord = await BookingRepository.findBookingById(bookingId);
       await notificationUpdateFailed({
         customer_name: bookingRecord.name,

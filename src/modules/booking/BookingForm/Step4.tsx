@@ -20,6 +20,8 @@ import { useBookingStore } from '@/store/booking.store';
 import usePaymentStoreTrack from '@/store/payment.store';
 import CostView from '../components/CostView';
 import { TermsAndConditionModal } from './T&CModal';
+import { ConfirmModal } from './ConfirmModal';
+import useAuthStoreTrack from '@/store/auth.store';
 
 const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: string }) => {
   return (
@@ -37,9 +39,11 @@ const FieldValueReport = ({ fieldName, value }: { fieldName: string; value: stri
 export interface IStep4Props {
   onPrev: () => void;
   onNext: () => void;
+  fromAdmin?: boolean;
 }
 
-export function Step4({ onPrev, onNext }: IStep4Props) {
+export function Step4({ onPrev, onNext, fromAdmin }: IStep4Props) {
+  const { username } = useAuthStoreTrack();
   const { data, selectedProduct, selectedRooms } = useBookingStore();
   const { setPaymentStates } = usePaymentStoreTrack();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -50,6 +54,12 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
     error,
     isLoading: isInitiatingPaymentSession,
   } = trpc.payment.initiatePaymentSessionForBooking.useMutation();
+  const {
+    mutate: adminCreateBooking,
+    isLoading: isInserting,
+    isError: isErrorInserting,
+    error: errorInserting,
+  } = trpc.booking.adminCreateBooking.useMutation();
 
   const proceedToPayment = () => {
     console.log('data', data);
@@ -77,6 +87,29 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
     onClose();
   };
 
+  const insertBooking = (paymentId: string | null) => {
+    const { firstName, lastName, ...rest } = data;
+
+    const payload = {
+      ...rest,
+      name: capsFirstLetter(firstName) + ' ' + capsFirstLetter(lastName),
+      paymentId,
+    };
+
+    if (username)
+      adminCreateBooking(
+        {
+          username,
+          payload,
+        },
+        {
+          onSuccess(data) {
+            onNext();
+          },
+        },
+      );
+  };
+
   if (!selectedProduct) return null;
 
   const endDate = dayjs(data.bookingDate)
@@ -85,10 +118,10 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
 
   return (
     <Stack spacing={5}>
-      {isError ? (
+      {isError || isErrorInserting ? (
         <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
           <AlertIcon />
-          {error.message}
+          {error?.message || errorInserting?.message}
         </Alert>
       ) : (
         ''
@@ -147,7 +180,8 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
         </CardBody>
       </Card>
 
-      <TermsAndConditionModal isOpen={isOpen} onClose={onClose} onAccept={proceedToPayment} />
+      <TermsAndConditionModal isOpen={!fromAdmin && isOpen} onClose={onClose} onAccept={proceedToPayment} />
+      <ConfirmModal isOpen={!!fromAdmin && isOpen} onClose={onClose} onAccept={insertBooking} isLoading={isInserting} />
 
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
@@ -162,9 +196,13 @@ export function Step4({ onPrev, onNext }: IStep4Props) {
 
       <Stack direction='row' justifyContent='space-between'>
         <Button onClick={onPrev}>Back</Button>
-        <Button onClick={onOpen} isLoading={isInitiatingPaymentSession}>
-          PROCEED TO PAYMENT
-        </Button>
+        {fromAdmin ? (
+          <Button onClick={onOpen}>PROCEED</Button>
+        ) : (
+          <Button onClick={onOpen} isLoading={isInitiatingPaymentSession}>
+            PROCEED TO PAYMENT
+          </Button>
+        )}
       </Stack>
     </Stack>
   );

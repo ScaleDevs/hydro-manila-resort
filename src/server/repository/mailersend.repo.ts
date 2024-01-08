@@ -113,7 +113,7 @@ type SendRefundEmailProcessingInput = {
   customer_name: string;
   ref_no: string;
   amount: number;
-  isParameterAboveMaximum?: boolean;
+  messageType: 'INSUFFICIENT' | 'ABOVE_MAXIMUM' | 'FROMADMIN';
 };
 
 export const sendRefundEmailProcessing = async ({
@@ -121,7 +121,7 @@ export const sendRefundEmailProcessing = async ({
   customer_name,
   ref_no,
   amount,
-  isParameterAboveMaximum,
+  messageType,
 }: SendRefundEmailProcessingInput) => {
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
@@ -134,20 +134,19 @@ export const sendRefundEmailProcessing = async ({
     subject: constants.general.companyName + ' ' + 'Customer Refund Request',
   });
 
-  const messageForParameterAboveMaximum =
-    'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.';
-  const messageForInsufficientBalance =
-    'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.';
-
+  const message = {
+    INSUFFICIENT: 'and currently your paymongo upcoming payouts is insufficient to pay for the refund so this refund request will go through manual processing.',
+    ABOVE_MAXIMUM: 'and currently this booking has made additional payments due to customer updates so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
+    FROMADMIN: 'and this booking was made through admin booking page so this refund request will go through manual processing by cooperating with customer to send refund manually. Kindly review this booking properly before proceeding.',
+  }
+  
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
     recipientEmail: constants.mailerSend.supportEmail,
     variables: {
       title_of_message: 'Booking Refund Request (Requires Manual Processing)',
       greetings: 'Hi Support Team,',
-      message_body: `A customer named ${customer_name} has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} ${
-        isParameterAboveMaximum ? messageForParameterAboveMaximum : messageForInsufficientBalance
-      }`,
+      message_body: `A customer named ${customer_name} has requested for a refund with booking reference "${ref_no}" with the amount of ₱${amount} ${message[messageType]}`,
     },
     subject: constants.general.companyName + ' ' + 'Customer Refund Request',
   });
@@ -229,7 +228,6 @@ export const notificationUpdateFailed = async ({
   payment_id?: string;
   ref_no: string;
 }) => {
-  console.log('payment here', payment_id);
   await sendTemplateEmail({
     templateId: GetVars.CalendarTemplates.reuseableId,
     recipientEmail: constants.mailerSend.supportEmail,

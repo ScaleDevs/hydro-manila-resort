@@ -270,6 +270,7 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         updateLogs: [],
         transactionLogs: [],
         hostawayId: null,
+        createdBy: 'SYSTEM',
       }),
     ]);
 
@@ -304,8 +305,9 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
       });
 
     const { total } = bookingRecord.receipt;
-
-    const result = await createRefund({
+    
+    const isFromAdmin = !!bookingRecord.createdBy && bookingRecord.createdBy !== 'SYSTEM';
+    const result = isFromAdmin ? null : await createRefund({
       amount: total * 100,
       payment_id: bookingRecord.paymentId,
       reason: 'requested_by_customer',
@@ -314,9 +316,9 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
         reason,
       },
     });
+    const isError = !!result && 'error' in result;
 
-    if ('error' in result) {
-      if (!!['available_balance_insufficient', 'parameter_above_maximum'].includes(result.error)) {
+    if ((isError && !!['available_balance_insufficient', 'parameter_above_maximum'].includes(result.error)) || isFromAdmin) {
         const refundRecord = await BookingRefundRepository.createBookingRefund({
           paymongoRefundId: null,
           referenceNo: null,
@@ -336,7 +338,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
           customer_name: bookingRecord.name,
           ref_no: bookingRecord.ref_no,
           amount: bookingRecord.receipt.total,
-          isParameterAboveMaximum: result.error === 'parameter_above_maximum',
+          messageType: isError ? result?.error === 'parameter_above_maximum' ? 'ABOVE_MAXIMUM' : 'INSUFFICIENT' : 'FROMADMIN',
         });
 
         if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
@@ -353,10 +355,7 @@ export const createRefundHandler: CreateRefundHandler = async (ref_no: string, r
         return {
           status: 'MANUAL_PROCESSING',
         };
-      }
-
-      if (result.error === 'something_went_wrong') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Something went wrong!' });
-    }
+    } else if (isError && result.error === 'something_went_wrong') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Something went wrong!' });
 
     if (bookingRecord.calendarEventId) await GoogleCalendarRepository.deleteEvent(bookingRecord.calendarEventId);
 

@@ -115,7 +115,6 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     getExtraHeadsTotal(guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax, guestSetting.nonOverNightGuestFee),
   ]);
   let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
-
   const googleCalendarRoomsArr: string[] = [];
   const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [];
 

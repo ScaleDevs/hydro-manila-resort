@@ -183,14 +183,17 @@ export default function UpdateBookingRequestForm({ onPrev, onNext }: IUpdateBook
       if (newTotal > bookingInfo.currentTotal) {
         onNext('Review Details');
         setStateField('bookingUpdateCase', 'ADDITIONAL PAYMENT');
+        setStateField('stepDescription', 'Review Details');
         setStateField('stepsLength', 2);
       } else if (newTotal < bookingInfo.currentTotal) {
         onNext('Customer Bank Info');
         setStateField('bookingUpdateCase', 'PARTIAL REFUND');
+        setStateField('stepDescription', 'Bank Info');
         setStateField('stepsLength', 3);
       } else {
         onNext('Review Details');
         setStateField('bookingUpdateCase', 'NORMAL');
+        setStateField('stepDescription', 'Review Details');
         setStateField('stepsLength', 2);
       }
 
