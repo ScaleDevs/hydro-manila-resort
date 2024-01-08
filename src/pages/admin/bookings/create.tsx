@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, Heading, Stack } from '@chakra-ui/react';
+import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, Stack } from '@chakra-ui/react';
 import Layout from '@/layouts/admin';
 import { BookingForm } from '@/modules/booking/BookingForm/BookingForm';
 import { GetApp } from '@/appspecs/theme';

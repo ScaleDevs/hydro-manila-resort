@@ -103,7 +103,7 @@ export function Step4({ onPrev, onNext, fromAdmin }: IStep4Props) {
           payload,
         },
         {
-          onSuccess(data) {
+          onSuccess() {
             onNext();
           },
         },
