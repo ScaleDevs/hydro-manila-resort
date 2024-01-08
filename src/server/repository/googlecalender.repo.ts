@@ -15,7 +15,7 @@ class Respository {
   public async createEvent(event: calendar_v3.Schema$Event) {
     try {
       const authClient = await auth.getClient();
-      google.options({ auth: authClient });
+      google.options({ auth: authClient as any });
 
       const response = await calendar.events.insert({
         calendarId: constants.googleCalendar.calendarId,
@@ -43,7 +43,7 @@ class Respository {
   public async updateEvent(eventId: string, event: calendar_v3.Schema$Event) {
     try {
       const authClient = await auth.getClient();
-      google.options({ auth: authClient });
+      google.options({ auth: authClient as any });
 
       const response = await calendar.events.update({
         calendarId: constants.googleCalendar.calendarId,
@@ -64,7 +64,7 @@ class Respository {
   public async deleteEvent(eventId: string) {
     try {
       const authClient = await auth.getClient();
-      google.options({ auth: authClient });
+      google.options({ auth: authClient as any });
 
       const response = await calendar.events.delete({
         calendarId: constants.googleCalendar.calendarId,
