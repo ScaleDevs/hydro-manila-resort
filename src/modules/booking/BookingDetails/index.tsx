@@ -51,18 +51,20 @@ const InfoField = ({ label, value, children }: { label: string; value?: string |
 };
 
 export interface IDetailsProps {
+  bookingRefNo: string;
   isIn?: boolean;
   isLoading: boolean;
   data: UseTRPCQueryResult<inferRouterOutputs<AppRouter>['booking']['getBookingByRefNo'], TRPCClientErrorLike<AppRouter>>['data'];
 }
 
-export function Details({ isLoading, isIn, data }: IDetailsProps) {
+export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isOpenFailBookingModal, onOpen: onOpenFailBookingModal, onClose: closeFailBookingModal } = useDisclosure();
   const { isOpen: isOpenRefundModal, onOpen: onOpenRefundModal, onClose: closeRefundModal } = useDisclosure();
   const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
   const { mutate: failBooking, isLoading: isUpdatingBookingStatus } = trpc.booking.adminForceFailBooking.useMutation();
+  const ctx = trpc.useContext();
 
   const getConvenienceFee = () => {
     if (!data?.receipt) return 0;
@@ -110,6 +112,11 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
     if (!data?.id) return;
     failBooking(data.id, {
       onSuccess() {
+        ctx.booking.getBookingByRefNo.setData(bookingRefNo, (updater) => {
+          if (updater) return { ...updater, status: 'FAILED' };
+
+          return updater;
+        });
         closeFailBookingModal();
       },
     });
@@ -166,6 +173,7 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
                   colorScheme='red'
                   aria-label='Fail Booking'
                   icon={<FcExpired />}
+                  isDisabled={getStatus() !== 'PENDING PAYMENT'}
                   onClick={onOpenFailBookingModal}
                 />
                 <IconButton variant='outline' colorScheme='teal' aria-label='Send email' icon={<MdEmail />} onClick={onOpen} />

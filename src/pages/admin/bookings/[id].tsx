@@ -73,7 +73,7 @@ function Component({ id, goBack }: Props) {
 
         <TabPanels mt='10px'>
           <TabPanel p='0'>
-            <Details data={data} isLoading={isLoading} isIn={tabIndex === 0} />
+            <Details bookingRefNo={id} data={data} isLoading={isLoading} isIn={tabIndex === 0} />
           </TabPanel>
           <TabPanel p='0'>
             <Logs data={data} isIn={tabIndex === 1} />
