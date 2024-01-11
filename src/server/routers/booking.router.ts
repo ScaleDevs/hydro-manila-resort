@@ -157,4 +157,7 @@ export const bookingRouter = router({
     .mutation(async ({ input }) => {
       return BookingHandler.adminCreateBooking(input.username, input.payload);
     }),
+  adminForceFailBooking: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
+    return BookingHandler.adminForceFailBookingHandler(input);
+  }),
 });

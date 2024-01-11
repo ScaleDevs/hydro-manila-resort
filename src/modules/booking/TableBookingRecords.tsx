@@ -26,6 +26,24 @@ import Paginator from '@/components/Paginator';
 import ModalFilter, { SessionFilter } from './ModalFilter';
 import { GetApp } from '@/appspecs/theme';
 
+const BadgeColor = {
+  PENDING: 'orange.300',
+  COMPLETED: 'green.300',
+  BOOKED: 'green.300',
+  REFUNDING: 'gray.300',
+  REFUNDED: 'gray.300',
+  FAILED: 'red.300',
+};
+
+const TextColor = {
+  PENDING: 'orange.700',
+  COMPLETED: 'green.700',
+  BOOKED: 'green.700',
+  REFUNDING: 'gray.700',
+  REFUNDED: 'gray.700',
+  FAILED: 'red.700',
+};
+
 const FilterIcon = chakra(BsFilterCircleFill);
 
 export default function TableBookingRecords() {
@@ -150,11 +168,11 @@ export default function TableBookingRecords() {
                     <Td>{v.ref_no}</Td>
                     <Td>
                       <Box
-                        bg={v.refundId ? 'red.300' : v.status === 'PENDING' ? 'orange.300' : 'green.300'}
+                        bg={BadgeColor[v.refundId ? 'REFUNDED' : v.status]}
                         textAlign='center'
                         p='5px'
                         borderRadius='md'
-                        color={v.refundId ? 'red.700' : v.status === 'PENDING' ? 'orange.700' : 'green.700'}
+                        color={TextColor[v.refundId ? 'REFUNDED' : v.status]}
                       >
                         {v.refundId ? 'REFUNDED' : v.status}
                       </Box>

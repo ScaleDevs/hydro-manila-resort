@@ -21,6 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { MdEmail } from 'react-icons/md';
 import { RiRefund2Fill } from 'react-icons/ri';
+import { FcExpired } from 'react-icons/fc';
 
 import { tableFormatTimeDisplay } from '@/modules/utils/helper';
 import { PHpeso } from '@/utils/helper';
@@ -35,6 +36,7 @@ const BadgeColor = {
   BOOKED: 'green',
   'REFUND IN PROGRESS': 'gray',
   REFUNDED: 'red',
+  'FAILED BOOKING': 'red',
 };
 
 const InfoField = ({ label, value, children }: { label: string; value?: string | number | null; children?: ReactNode }) => {
@@ -57,8 +59,10 @@ export interface IDetailsProps {
 export function Details({ isLoading, isIn, data }: IDetailsProps) {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenFailBookingModal, onOpen: onOpenFailBookingModal, onClose: closeFailBookingModal } = useDisclosure();
   const { isOpen: isOpenRefundModal, onOpen: onOpenRefundModal, onClose: closeRefundModal } = useDisclosure();
   const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
+  const { mutate: failBooking, isLoading: isUpdatingBookingStatus } = trpc.booking.adminForceFailBooking.useMutation();
 
   const getConvenienceFee = () => {
     if (!data?.receipt) return 0;
@@ -75,6 +79,8 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
   const getStatus = () => {
     if (!data) return 'INVALID';
     if (data.status === 'PENDING') return 'PENDING PAYMENT';
+    if (data.status === 'FAILED') return 'FAILED BOOKING';
+
     if (!data?.refund && dayjs.utc(data.startSession).unix() < dayjs.utc().unix()) return 'COMPLETED';
     else if (!data?.refund) return 'BOOKED';
     else if (data.refund.status === 'PROCESSING') return 'REFUND IN PROGRESS';
@@ -100,6 +106,15 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
     });
   };
 
+  const expireBooking = () => {
+    if (!data?.id) return;
+    failBooking(data.id, {
+      onSuccess() {
+        closeFailBookingModal();
+      },
+    });
+  };
+
   const openRefundModal = () => {
     if (!data?.refundId) return;
     onOpenRefundModal();
@@ -109,6 +124,17 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
     <SlideFade in={isIn} offsetY='20px'>
       <Modal title='Resend Email' {...{ isOpen, onClose, isLoading: isResendingEmail, onConfirm }}>
         <Text>Are you sure you want to resend booking confirmation email to customer?</Text>
+      </Modal>
+      <Modal
+        title='Expire Booking'
+        {...{
+          isOpen: isOpenFailBookingModal,
+          onClose: closeFailBookingModal,
+          isLoading: isUpdatingBookingStatus,
+          onConfirm: expireBooking,
+        }}
+      >
+        <Text>Are you sure you want to expire this booking record?</Text>
       </Modal>
       <UpdateRefund isOpen={isOpenRefundModal} onClose={closeRefundModal} bookingRefundId={data?.refundId} />
       <Box w='100%' mx='auto' bg='gray.50' p='25px' boxShadow='xl' borderRadius='sm'>
@@ -135,6 +161,13 @@ export function Details({ isLoading, isIn, data }: IDetailsProps) {
               </Stack>
 
               <Stack direction='row'>
+                <IconButton
+                  variant='outline'
+                  colorScheme='red'
+                  aria-label='Fail Booking'
+                  icon={<FcExpired />}
+                  onClick={onOpenFailBookingModal}
+                />
                 <IconButton variant='outline' colorScheme='teal' aria-label='Send email' icon={<MdEmail />} onClick={onOpen} />
                 <IconButton
                   variant='outline'

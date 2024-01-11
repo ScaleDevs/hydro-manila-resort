@@ -57,8 +57,11 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
       page: 1,
       limit: 1000,
     };
-    const bookingRecords = await BookingRepository.findAllBookingsByDates(getRecordsParams);
-    const eventsRecords = await ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams);
+    const [bookingRecords, eventsRecords] = await Promise.all([
+      BookingRepository.findAllBookingsByDates(getRecordsParams),
+      ScheduledEventRepository.findAllScheduledEventByDates(getRecordsParams),
+    ]);
+
     const bookedDates: IBookingDates = {};
 
     if (constants.general.appName === 'VillaLeonora') {
@@ -87,7 +90,7 @@ export const findAllBookingsByDates = async (inputs: { startDate: string; endDat
     }
 
     for (const record of [...bookingRecords, ...eventsRecords]) {
-      if ('id' in record) if (!!record.refundId) continue;
+      if ('id' in record) if (!!record.refundId || record.status === 'FAILED') continue;
 
       const keyStart = dayjs(record.startSession).format('YYYY-MM-DD');
       const keyEnd = dayjs(record.endSession).format('YYYY-MM-DD');
@@ -642,8 +645,22 @@ export const adminCreateBooking = async (
 
     return true;
   } catch (err) {
-    console.log(err);
     const error = err as any;
+    logger('handlePaymentPaidEvent :: error ::', error);
+    throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
+  }
+};
+
+export const adminForceFailBookingHandler = async (bookingId: string) => {
+  try {
+    await BookingRepository.updateBooking(bookingId, {
+      status: 'FAILED',
+    });
+
+    return true;
+  } catch (err) {
+    const error = err as any;
+    logger('adminForceFailBookingHandler :: error ::', error);
     throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
   }
 };
