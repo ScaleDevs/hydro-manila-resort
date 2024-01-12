@@ -129,10 +129,15 @@ class Respository {
 
     if (result.length === 0) return false;
 
+    let isConflict = false;
+
     for (const booking of result) {
-      if (!!booking.refundId) return false;
-      return true;
+      if (!!booking.refundId) continue;
+      if (booking.status === 'FAILED') continue;
+      isConflict = true;
     }
+
+    return isConflict;
   }
 
   public async findAllBookingsByDates({ page, limit, startDate, endDate }: IFindManyBookingInput & DatesInput) {
