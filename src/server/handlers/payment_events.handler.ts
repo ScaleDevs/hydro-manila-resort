@@ -69,12 +69,14 @@ const logger = (funcName: string, message: string) => {
 };
 
 export const handleFailedBooking = async (paymentIntentId: string) => {
-  const booking = await BookingRepository.findBookingByPaymentIntentIdWithIdOnly(paymentIntentId);
+  const booking = await BookingRepository.findBookingByPaymentIntentIdWithPartial(paymentIntentId);
 
-  if (!!booking)
+  if (!!booking && booking.status === 'PENDING') {
+    logger('handleFailedBooking', `Update booking ${booking.id} to failed status`);
     await BookingRepository.updateBooking(booking.id, {
       status: 'FAILED',
     });
+  }
 };
 
 export const handlePaymentPaidEvent = async (paymentIntentId: string) => {

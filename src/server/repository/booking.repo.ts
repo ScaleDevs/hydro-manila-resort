@@ -45,11 +45,12 @@ class Respository {
     return booking;
   }
 
-  public async findBookingByPaymentIntentIdWithIdOnly(paymentIntentId: string) {
+  public async findBookingByPaymentIntentIdWithPartial(paymentIntentId: string) {
     const booking = await prisma.booking.findFirst({
       where: { paymentIntentId },
       select: {
         id: true,
+        status: true,
       },
     });
     return booking;
