@@ -68,6 +68,15 @@ const logger = (funcName: string, message: string) => {
   console.log(`payment_event_handler.ts :: (${funcName}) :: ${message}`);
 };
 
+export const handleFailedBooking = async (paymentIntentId: string) => {
+  const booking = await BookingRepository.findBookingByPaymentIntentIdWithIdOnly(paymentIntentId);
+
+  if (!!booking)
+    await BookingRepository.updateBooking(booking.id, {
+      status: 'FAILED',
+    });
+};
+
 export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
   if (!paymentIntentId) {
     console.log('No Payment Intent Id!');

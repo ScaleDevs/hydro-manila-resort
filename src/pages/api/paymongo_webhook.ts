@@ -12,20 +12,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const paymentIntentId = response.data?.attributes?.data?.attributes?.payment_intent_id;
 
-  const targetApplication = response.data.attributes.data.attributes.metadata.application;
+  const targetApplication = response.data.attributes.data.attributes.metadata?.application;
 
   console.log('/api/paymongo_webhook :: targetApplication', targetApplication);
+  console.log('/api/paymongo_webhook :: eventType', eventType);
 
-  if (targetApplication === constants.general.appName) {
+  if (eventType === 'payment.failed') {
+    console.log('/api/paymongo_webhook :: failed payment');
+    await PaymentEventsHandler.handleFailedBooking(paymentIntentId);
+  } else if (targetApplication === constants.general.appName) {
     console.log('/api/paymongo_webhook :: target application matches');
+
     if (eventType === 'payment.paid') {
-      // update booking
       if (!!response.data.attributes.data.attributes.metadata.bookingUpdateParams) {
         await PaymentEventsHandler.handleUpdateBookingPayment(paymentIntentId, response.data.attributes.data.attributes.amount);
         return res.end();
       }
 
-      // create booking
       console.log('/api/paymongo_webhook :: Inserting Booking ...');
       await PaymentEventsHandler.handlePaymentPaidEvent(paymentIntentId);
     }

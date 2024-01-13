@@ -45,6 +45,16 @@ class Respository {
     return booking;
   }
 
+  public async findBookingByPaymentIntentIdWithIdOnly(paymentIntentId: string) {
+    const booking = await prisma.booking.findFirst({
+      where: { paymentIntentId },
+      select: {
+        id: true,
+      },
+    });
+    return booking;
+  }
+
   public async findManyBooking({ page, limit, ref_no, dateFilter }: IFindManyBookingInput) {
     try {
       const whereFilter: Prisma.BookingWhereInput = {};
