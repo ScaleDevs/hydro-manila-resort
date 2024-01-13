@@ -301,8 +301,6 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         });
       }
 
-      console.log('HERE========================================================', modification);
-
       await processingUpdateEmail(session.email, { customer_name: session.name, modification });
 
       return newPaymentIntent;
