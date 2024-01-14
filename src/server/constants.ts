@@ -17,6 +17,12 @@ export const constants = {
     timezone: process.env.GENERAL_TIMEZONE ?? 'Asia/Manila',
   },
 
+  cron: {
+    lambdaArn: process.env.LAMBDA_ARN || '',
+    lambdaRoleArn: process.env.LAMBDA_ROLE_ARN || '',
+    serverUrl: process.env.SERVER_URL || '',
+  },
+
   mailerSend: {
     supportEmail: process.env.MAILER_SEND_SUPPORT_EMAIL ?? 'scaledevs@gmail.com',
     fromEmail: process.env.MAILER_SEND_FROM_EMAIL,

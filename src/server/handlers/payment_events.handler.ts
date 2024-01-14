@@ -8,6 +8,7 @@ import { GoogleCalendarRepository } from '@/repo/googlecalender.repo';
 import {
   notificationUpdateFailed,
   notifyAdminDbInsertionError,
+  notifyAdminFailedBookingButPaid,
   notifyFailedHostawayDeletion,
   sendBookingSuccessEmail,
   sendRefundEmailConflictBooking,
@@ -23,6 +24,7 @@ import { constants } from '@/server/constants';
 import { BookingStatusDisplay } from '@/utils/types';
 import { ProcessType, TransactionLog } from '@prisma/client';
 import { createGuestsSummary } from '../util';
+import { deleteSchedule } from '../repository/scheduler.repo';
 
 export * as PaymentEventsHandler from './payment_events.handler';
 
@@ -71,11 +73,16 @@ const logger = (funcName: string, message: string) => {
 export const handleFailedBooking = async (paymentIntentId: string) => {
   const booking = await BookingRepository.findBookingByPaymentIntentIdWithPartial(paymentIntentId);
 
-  if (!!booking && booking.status === 'PENDING') {
-    logger('handleFailedBooking', `Update booking ${booking.id} to failed status`);
-    await BookingRepository.updateBooking(booking.id, {
-      status: 'FAILED',
-    });
+  if (!!booking) {
+    logger('handleFailedBooking', `deleting fail schedule ... `);
+    await deleteSchedule(`${constants.general.appName}_booking_${booking.ref_no}`);
+
+    if (booking.status === 'PENDING') {
+      logger('handleFailedBooking', `Update booking ${booking.id} to failed status`);
+      await BookingRepository.updateBooking(booking.id, {
+        status: 'FAILED',
+      });
+    } else logger('handleFailedBooking', `booking status already updated to failed `);
   }
 };
 
@@ -110,6 +117,17 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
 
   if (!bookingRecordCheck) {
     logger('handlePaymentPaidEvent', 'Booking Record does not exist!');
+    return;
+  }
+
+  if (bookingRecordCheck.status === 'FAILED') {
+    logger('handlePaymentPaidEvent', 'Booking Record Already Failed');
+    await notifyAdminFailedBookingButPaid({
+      payment_id: paymentIntentRecord.attributes.payments[0].id,
+      ref_no: parsed.data.ref_no,
+      recipientEmail: parsed.data.email,
+      customer_name: parsed.data.name,
+    });
     return;
   }
 
@@ -228,6 +246,8 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     calendarEventId,
     hostawayId: hostawayId,
   });
+
+  await deleteSchedule(`${constants.general.appName}_booking_${bookingRecord.ref_no}`);
 
   if (!bookingRecord)
     // notify hydro support if booking record was not added (so they can add manually on their end)

@@ -220,6 +220,51 @@ export const notifyAdminDbInsertionError = async ({
   });
 };
 
+export const notifyAdminFailedBookingButPaid = async ({
+  payment_id,
+  ref_no,
+  recipientEmail,
+  customer_name,
+}: {
+  payment_id: string;
+  ref_no: string;
+  recipientEmail: string;
+  customer_name: string;
+}) => {
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.reuseableId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Booking Record Paid with Failed status',
+      greetings: 'Hi Support Team,',
+      message_body: `The booking with reference ${ref_no} has been paid with payment_id ${payment_id} but with failed status. Kindly process manual refund or contact tech support to update the booking status to "BOOKED" if the schedule is available.`,
+    },
+    subject: constants.general.companyName + ' ' + 'Booking Record Paid with Failed status (URGENT!!!)',
+  });
+
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.reuseableId,
+    recipientEmail,
+    variables: {
+      title_of_message: 'Booking Failed',
+      greetings: 'Hi ' + customer_name + ',',
+      message_body: `Your booking request has failed but we have already notified our team to handle the refund or process your booking if the schedule is available. Kindly reach our team with the contact details below if you have questions`,
+    },
+    subject: constants.general.companyName + ' ' + 'Booking Failed',
+  });
+
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.reuseableId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Booking Record Paid with Failed status',
+      greetings: 'Hi Support Team,',
+      message_body: `The booking with reference ${ref_no} has been paid with payment_id ${payment_id} but with failed status. Kindly process manual refund or contact tech support to update the booking status to "BOOKED" if the schedule is available.`,
+    },
+    subject: constants.general.companyName + ' ' + 'Booking Record Paid with Failed status (URGENT!!!)',
+  });
+};
+
 export const notificationUpdateFailed = async ({
   customer_name,
   customer_email,

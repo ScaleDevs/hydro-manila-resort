@@ -20,6 +20,7 @@ import { constants } from '../constants';
 import { BookingRefundRepository } from '../repository/bookingrefund.repo';
 import { GoogleCalendarRepository } from '../repository/googlecalender.repo';
 import { IBooking } from '@/utils/types';
+import { deleteSchedule } from '../repository/scheduler.repo';
 
 export * as BookingHandler from './booking.handler';
 
@@ -653,14 +654,39 @@ export const adminCreateBooking = async (
 
 export const adminForceFailBookingHandler = async (bookingId: string) => {
   try {
-    await BookingRepository.updateBooking(bookingId, {
-      status: 'FAILED',
-    });
+    const booking = await BookingRepository.findBookingByIdPartial(bookingId);
+
+    if (booking.status === 'PENDING')
+      await BookingRepository.updateBooking(bookingId, {
+        status: 'FAILED',
+      });
+
+    await deleteSchedule(`${constants.general.appName}_booking_${booking.ref_no}`);
 
     return true;
   } catch (err) {
     const error = err as any;
     logger('adminForceFailBookingHandler :: error ::', error);
     throw new TRPCError({ code: error.code || 'INTERNAL_SERVER_ERROR', message: error.message || 'Something went wrong' });
+  }
+};
+
+export const expiredBookingHandler = async (refNo: string, schedName: string) => {
+  try {
+    const booking = await BookingRepository.findBookingByReferenceNoPartial(refNo);
+
+    if (!!booking && booking.status === 'PENDING') {
+      logger('expiredBookingHandler', `Update booking ${booking.id} to failed status`);
+      await BookingRepository.updateBooking(booking.id, {
+        status: 'FAILED',
+      });
+    }
+
+    await deleteSchedule(schedName);
+
+    return true;
+  } catch (err) {
+    const error = err as any;
+    logger('expiredBookingHandler :: error ::', error);
   }
 };

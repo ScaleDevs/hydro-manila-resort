@@ -34,8 +34,26 @@ class Respository {
     return booking;
   }
 
+  public async findBookingByIdPartial(id: string) {
+    const booking = await prisma.booking.findFirst({ where: { id }, select: { status: true, ref_no: true } });
+    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking Record not found' });
+    return booking;
+  }
+
   public async findBookingByReferenceNo(refNo: string) {
     const booking = await prisma.booking.findFirst({ where: { ref_no: refNo } });
+    if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
+    return booking;
+  }
+
+  public async findBookingByReferenceNoPartial(refNo: string) {
+    const booking = await prisma.booking.findFirst({
+      where: { ref_no: refNo },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
     if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'No Booking Record Found' });
     return booking;
   }
@@ -51,6 +69,7 @@ class Respository {
       select: {
         id: true,
         status: true,
+        ref_no: true,
       },
     });
     return booking;

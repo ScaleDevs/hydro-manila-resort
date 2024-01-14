@@ -21,6 +21,7 @@ import { tzSchedToDayJsInsance, utcDateToTzDayInstance } from '@/utils/helper';
 import { BookingStatusDisplay, CustomerUpdateBookingParams, IBooking } from '@/utils/types';
 import { createGuestsSummary, createReferenceNumber, isIt3DaysBeforeBookingDate } from '@/server/util';
 import { constants } from '@/server/constants';
+import { createScheduleFromNow } from '../repository/scheduler.repo';
 
 export * as PaymentHandler from './payment.handler';
 
@@ -317,6 +318,11 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
 
     if (isTaken) return { data: null };
 
+    const url = new URL(constants.cron.serverUrl + '/api/fail_booking');
+    const schedName = `${constants.general.appName}_booking_${session.ref_no}`;
+    url.searchParams.append('ref_no', session.ref_no);
+    url.searchParams.append('sched_name', schedName);
+
     const [newPaymentIntent] = await Promise.all([
       attachPaymentMethodToIntent(data),
       BookingRepository.createBooking({
@@ -330,6 +336,17 @@ export const attachPaymentMethodToIntentHandler = async (data: AttachPaymentMeth
         transactionLogs: [],
         hostawayId: null,
         createdBy: 'SYSTEM',
+      }),
+      createScheduleFromNow({
+        scheduleName: schedName,
+        minutes: 60, // 1hr
+        Target: {
+          Arn: constants.cron.lambdaArn,
+          RoleArn: constants.cron.lambdaRoleArn,
+          Input: {
+            url: url.toString(),
+          },
+        },
       }),
     ]);
 
