@@ -23,6 +23,7 @@ import dayjs from 'dayjs';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { DateTimeField } from '@/components/DateTimeField';
 
@@ -33,6 +34,7 @@ const refFormSchema = z.object({
 const dateFilterFormSchema = z.object({
   startDate: z.string().min(1, 'Required'),
   endDate: z.string().min(1, 'Required'),
+  status: z.enum(['ALL', 'BOOKED', 'FAILED', 'PENDING', 'REFUNDED']),
 });
 
 type RefFormSchemaType = z.infer<typeof refFormSchema>;
@@ -45,10 +47,34 @@ export type SessionFilter = {
 type IFormProps = {
   onClose: () => void;
   setDateFilter: Dispatch<SetStateAction<SessionFilter | undefined>>;
+  setStatus: Dispatch<SetStateAction<'ALL' | 'BOOKED' | 'FAILED' | 'PENDING' | 'REFUNDED'>>;
   setRefNo: Dispatch<SetStateAction<string | undefined>>;
 };
 
-const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
+const bookingStatus = [
+  {
+    label: 'ALL',
+    value: 'ALL',
+  },
+  {
+    label: 'BOOKED',
+    value: 'BOOKED',
+  },
+  {
+    label: 'PENDING',
+    value: 'PENDING',
+  },
+  {
+    label: 'FAILED',
+    value: 'FAILED',
+  },
+  {
+    label: 'REFUNDED',
+    value: 'REFUNDED',
+  },
+];
+
+const DateFilterForm = ({ setDateFilter, setStatus, setRefNo, onClose }: IFormProps) => {
   const router = useRouter();
   const [error, setError] = useState('');
 
@@ -56,6 +82,7 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
     handleSubmit,
     register,
     formState: { errors },
+    watch,
   } = useForm<DateFilterFormSchemaType>({
     resolver: zodResolver(dateFilterFormSchema),
   });
@@ -78,6 +105,7 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
       startDate: startISO,
       endDate: endISO,
     });
+    setStatus(data.status);
 
     router.push(`/admin/bookings/?startDate=${startISO}&endDate=${endISO}`, undefined, { shallow: true });
 
@@ -97,6 +125,16 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
           <DateTimeField required label='START:' register={register} property='startDate' errMsg={errors.startDate?.message} />
           <DateTimeField required label='END:' register={register} property='endDate' errMsg={errors.endDate?.message} />
         </Stack>
+        <SelectField
+          register={register}
+          property='status'
+          placeholder='*Status'
+          label='Status'
+          options={bookingStatus}
+          value={watch('status')}
+          errMsg={!!errors.status?.message ? 'Required!' : undefined}
+          required
+        />
         <br />
         <Button type='submit'>APPLY</Button>
       </form>
@@ -104,7 +142,7 @@ const DateFilterForm = ({ setDateFilter, setRefNo, onClose }: IFormProps) => {
   );
 };
 
-const ReferenceNumberForm = ({ setRefNo, setDateFilter, onClose }: IFormProps) => {
+const ReferenceNumberForm = ({ setRefNo, setDateFilter, onClose }: Omit<IFormProps, 'setStatus'>) => {
   const { handleSubmit, register } = useForm<RefFormSchemaType>({
     resolver: zodResolver(refFormSchema),
   });
@@ -136,7 +174,7 @@ export interface IModalFilterProps {
   isOpen: boolean;
 }
 
-export default function ModalFilter({ isOpen, onClose, setRefNo, setDateFilter }: IModalFilterProps & IFormProps) {
+export default function ModalFilter({ isOpen, onClose, setRefNo, setDateFilter, setStatus }: IModalFilterProps & IFormProps) {
   return (
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     <Modal isOpen={isOpen} closeOnOverlayClick={true} onClose={onClose} isCentered size='xl'>
@@ -160,7 +198,7 @@ export default function ModalFilter({ isOpen, onClose, setRefNo, setDateFilter }
                 <ReferenceNumberForm {...{ onClose, setRefNo, setDateFilter }} />
               </TabPanel>
               <TabPanel>
-                <DateFilterForm {...{ onClose, setRefNo, setDateFilter }} />
+                <DateFilterForm {...{ onClose, setRefNo, setStatus, setDateFilter }} />
               </TabPanel>
             </TabPanels>
           </Tabs>

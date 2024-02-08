@@ -16,6 +16,7 @@ export const bookingRouter = router({
           .optional(),
         page: z.number().optional().default(1),
         limit: z.number().optional().default(10),
+        status: z.enum(['ALL', 'BOOKED', 'FAILED', 'PENDING', 'REFUNDED']),
       }),
     )
     .query(({ input }) => {

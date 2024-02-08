@@ -157,6 +157,7 @@ model Booking {
   createdBy       String?
 
   @@index([startSession, endSession])
+  @@index([startSession, endSession, status])
 }
 
 model BookingSetting {

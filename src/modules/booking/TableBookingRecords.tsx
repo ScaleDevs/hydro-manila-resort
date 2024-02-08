@@ -61,12 +61,14 @@ export default function TableBookingRecords() {
           endDate: dayjs.tz(dayjs(), process.env.NEXT_PUBLIC_TIMEZONE).endOf('month').toISOString(),
         },
   );
+  const [status, setStatus] = useState<'ALL' | 'BOOKED' | 'FAILED' | 'PENDING' | 'REFUNDED'>('BOOKED');
   const { isOpen, onToggle } = useDisclosure();
   const { data, isLoading } = trpc.booking.getManyBooking.useQuery({
     page,
     limit: 10,
     ref_no: refNo,
     dateFilter,
+    status,
   });
 
   const handlePageChange = (pageNumber: number) => {
@@ -79,7 +81,7 @@ export default function TableBookingRecords() {
 
   return (
     <>
-      <ModalFilter {...{ isOpen, setRefNo, setDateFilter, onClose: onToggle }} />
+      <ModalFilter {...{ isOpen, setRefNo, setDateFilter, setStatus, onClose: onToggle }} />
 
       <Stack spacing={5} direction={{ base: 'column', sm: 'row' }}>
         <FilterIcon
