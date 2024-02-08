@@ -6,7 +6,6 @@ import { IPaginationInputs, IBooking, DatesInput } from '@/utils/types';
 export type IFindManyBookingInput = {
   ref_no?: string;
   dateFilter?: DatesInput;
-  status: 'ALL' | 'BOOKED' | 'FAILED' | 'PENDING' | 'REFUNDED';
 } & IPaginationInputs;
 
 export type IBookingDates = {
@@ -76,7 +75,13 @@ class Respository {
     return booking;
   }
 
-  public async findManyBooking({ page, limit, ref_no, dateFilter, status }: IFindManyBookingInput) {
+  public async findManyBooking({
+    page,
+    limit,
+    ref_no,
+    dateFilter,
+    status,
+  }: IFindManyBookingInput & { status: 'ALL' | 'BOOKED' | 'FAILED' | 'PENDING' | 'REFUNDED' }) {
     try {
       const whereFilter: Prisma.BookingWhereInput = {};
 
