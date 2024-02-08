@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TableContainer, Table, Thead, Tr, Th, Tbody, Td, Skeleton, Box, useToast, Button, ScaleFade } from '@chakra-ui/react';
 import { BsFillTrashFill } from 'react-icons/bs';
+import { useRouter } from 'next/router';
 
 import { trpc } from '@/utils/trpc';
 import { PHpeso } from '@/utils/helper';
@@ -10,6 +11,7 @@ export interface ITableProductsProps {}
 
 export default function TableProducts({}: ITableProductsProps) {
   const toast = useToast();
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const { data, isLoading } = trpc.product.getProducts.useQuery({ page, limit: 5 });
   const { mutate } = trpc.product.deleteProduct.useMutation();
@@ -38,6 +40,10 @@ export default function TableProducts({}: ITableProductsProps) {
 
   const handlePageChange = (pageNumber: number) => {
     setPage(pageNumber);
+  };
+
+  const linkTo = (id: string) => {
+    router.push('/admin/products/schedules' + '/' + id);
   };
 
   return (
@@ -88,7 +94,7 @@ export default function TableProducts({}: ITableProductsProps) {
               </Tr>
             ) : (
               data?.records.map((v, i) => (
-                <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }}>
+                <Tr key={i} _hover={{ cursor: 'pointer', bg: 'secondary.1' }} onClick={() => linkTo(v.productId)}>
                   <Td>{v.name}</Td>
                   <Td>
                     {v.scheduleStart} - {v.scheduleEnd}

@@ -79,4 +79,18 @@ export const productRouter = router({
     .query(({ input }) => {
       return ProductHandler.getProductsHandler(input);
     }),
+  addPromo: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        promo: z.object({
+          promoStart: z.string(),
+          promoEnd: z.string(),
+          price: z.number(),
+        }),
+      }),
+    )
+    .mutation(({ input }) => {
+      return ProductHandler.addPromoHandler(input.id, input.promo);
+    }),
 });

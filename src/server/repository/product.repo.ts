@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import prisma from './prisma.client';
-import { IPaginationInputs, IProduct } from '@/utils/types';
+import { IPaginationInputs, IProduct, IPromo } from '@/utils/types';
 
 export type IFindProductsInput = {
   name?: string;
@@ -52,6 +52,19 @@ class Respository {
     const result = await prisma.product.delete({ where: { productId: id } });
     if (!result) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Product Failed to delete' });
     return result;
+  }
+
+  public async addPromo(id: string, promo: IPromo) {
+    await prisma.product.update({
+      where: {
+        productId: id,
+      },
+      data: {
+        promos: {
+          push: promo,
+        },
+      },
+    });
   }
 }
 

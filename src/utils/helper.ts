@@ -65,6 +65,25 @@ export const getExtraHeads = (guests: number, min: number) => {
 
 // temporary helper for price rates
 export const getProductPrice = (bookingDate: string, product: IProduct) => {
+  const promos = !!product.promos ? product.promos : [];
+
+  if (promos.length > 0) {
+    for (const promo of promos) {
+      const now = dayjs(bookingDate).unix();
+      const promoStart = dayjs(promo.promoStart).unix();
+      const promoEnd = dayjs(promo.promoEnd).unix();
+
+      console.log(now, promoStart, promoEnd);
+      console.log(now > promoStart);
+      console.log(now < promoEnd);
+
+      if (now >= promoStart && now < promoEnd) {
+        console.log('G', promo.price);
+        return promo.price;
+      }
+    }
+  }
+
   if (process.env.GENERAL_APP_NAME === 'HydroResortManila' || process.env.NEXT_PUBLIC_APP === 'HydroResortManila') {
     const bookedDate = dayjs(bookingDate);
     const isPeakMonth = bookedDate.year() >= 2024 && [2, 3, 4, 11].includes(bookedDate.month());

@@ -8,6 +8,7 @@ import {
   Receipt,
   UpdateLog,
   Guests,
+  Promo,
 } from '@prisma/client';
 
 export type DateSession = {
@@ -15,9 +16,10 @@ export type DateSession = {
   endSession: string | Date;
 };
 
+export type IPromo = Omit<Promo, 'promoStart' | 'promoEnd'> & { promoStart: string | Date; promoEnd: string | Date };
 export type IUpdateLog = Omit<UpdateLog, 'createdAt'> & { createdAt: string | Date };
 
-export type IProduct = Omit<Product, 'updateLogs'> & { updateLogs: IUpdateLog[] };
+export type IProduct = Omit<Product, 'updateLogs' | 'promos'> & { updateLogs: IUpdateLog[]; promos: IPromo[] };
 export type IRoom = Omit<Room, 'updateLogs'> & { updateLogs: IUpdateLog[] };
 export type IBooking = Omit<Booking, 'startSession' | 'endSession'> & DateSession;
 export type IBookingSetting = BookingSetting;

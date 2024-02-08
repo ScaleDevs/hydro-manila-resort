@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
 import { UpdateLog } from '@prisma/client';
 import { IFindProductsInput, ProductRepository } from '@/repo/product.repo';
-import { ProductV2, IProduct } from '@/utils/types';
+import { ProductV2, IProduct, IPromo } from '@/utils/types';
 import { RoomRepository } from '../repository/room.repo';
 
 export * as ProductHandler from './product.handler';
@@ -60,6 +60,7 @@ export const createProductHandler = async (details: {
       includedRooms,
       description: description === undefined ? null : description,
       updateLogs: [],
+      promos: [],
       ...rest,
     };
 
@@ -148,6 +149,20 @@ export const updateProductHandler = async (
       updateLogs,
     });
   } catch (_err) {
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
+  }
+};
+
+export const addPromoHandler = async (id: string, promo: IPromo) => {
+  try {
+    await ProductRepository.addPromo(id, {
+      price: promo.price,
+      promoStart: dayjs(promo.promoStart).toISOString(),
+      promoEnd: dayjs(promo.promoEnd).endOf('day').toISOString(),
+    });
+    return true;
+  } catch (err) {
+    console.log('ERROR :: addPromoHandler() :: ', err);
     throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
   }
 };
