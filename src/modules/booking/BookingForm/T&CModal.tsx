@@ -42,7 +42,7 @@ const HydroTermsTC = () => {
       <Text fontWeight='semibold' pb='5px'>
         *IMPORTANT:
       </Text>
-      <Text>This promo rate does not include the security deposit and liquor corkage.</Text>
+      <Text>This promo rate does not include the security deposit.</Text>
 
       <br />
 
@@ -52,9 +52,10 @@ const HydroTermsTC = () => {
       <UnorderedList pl='10px'>
         <ListItem fontFamily='primary'>Wi-Fi Access</ListItem>
         <ListItem fontFamily='primary'>Swimming Pool</ListItem>
-        <ListItem fontFamily='primary'>Videoke Machine</ListItem>
+        <ListItem fontFamily='primary'>Videoke Room</ListItem>
         <ListItem fontFamily='primary'>Kitchen and Dining Facility</ListItem>
-        <ListItem fontFamily='primary'>Parking for 3 Cars</ListItem>
+        <ListItem fontFamily='primary'>Parking for 1 Car</ListItem>
+        <ListItem fontFamily='primary'>Jacuzzi (Free for the first 30 min.)</ListItem>
       </UnorderedList>
 
       <br />
@@ -63,8 +64,9 @@ const HydroTermsTC = () => {
         CHECK-IN INSTRUCTION:
       </Text>
       <Text>Upon arrival, please contact:</Text>
-      <Text>Manang Eva</Text>
-      <Text>+639772890414</Text>
+      <Text>Hydro Caretaker</Text>
+      <Text>+639604024517 (Smart)</Text>
+      <Text>+639972640606 (Globe)</Text>
 
       <br />
 
