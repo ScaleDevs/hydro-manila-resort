@@ -65,8 +65,8 @@ const HydroTermsTC = () => {
       </Text>
       <Text>Upon arrival, please contact:</Text>
       <Text>Hydro Caretaker</Text>
-      <Text>+639604024517 (Smart)</Text>
-      <Text>+639972640606 (Globe)</Text>
+      <Text>+6309604024517 (Smart)</Text>
+      <Text>+639560848433 (Globe)</Text>
 
       <br />
 
