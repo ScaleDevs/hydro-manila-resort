@@ -99,6 +99,13 @@ export const getProductPrice = (bookingDate: string, product: IProduct) => {
     const bookedDate = dayjs(bookingDate);
     const bookedDay = bookedDate.day();
 
+    const isPeakMonth = bookedDate.year() === 2024 && [8, 9].includes(bookedDate.month());
+
+    if (isPeakMonth && product.name.includes('OVERNIGHT')) {
+      if (bookedDay > 0 && bookedDay < 5) return 10000;
+      else return 15000;
+    }
+
     if (product.name.includes('OVERNIGHT')) {
       if (bookedDay > 0 && bookedDay < 5) return 15000;
       else return 20000;
