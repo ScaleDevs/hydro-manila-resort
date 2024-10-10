@@ -64,23 +64,17 @@ export const getExtraHeads = (guests: number, min: number) => {
 };
 
 // temporary helper for price rates
-export const getProductPrice = (bookingDate: string, product: IProduct) => {
+export const getProductPrice = (bookingDate: string, product: IProduct, tz?: string) => {
   const promos = !!product.promos ? product.promos : [];
 
   if (promos.length > 0) {
     for (const promo of promos) {
-      const now = dayjs(bookingDate).unix();
-      const promoStart = dayjs(promo.promoStart).unix();
-      const promoEnd = dayjs(promo.promoEnd).unix();
+      const now = dayjs.utc(bookingDate).unix();
 
-      console.log(now, promoStart, promoEnd);
-      console.log(now > promoStart);
-      console.log(now < promoEnd);
+      const promoStart = dayjs.utc(promo.promoStart).unix();
+      const promoEnd = dayjs.utc(promo.promoEnd).unix();
 
-      if (now >= promoStart && now < promoEnd) {
-        console.log('G', promo.price);
-        return promo.price;
-      }
+      if (now >= promoStart && now < promoEnd) return promo.price;
     }
   }
 
