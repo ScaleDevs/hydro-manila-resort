@@ -64,7 +64,7 @@ export const getExtraHeads = (guests: number, min: number) => {
 };
 
 // temporary helper for price rates
-export const getProductPrice = (bookingDate: string, product: IProduct, tz?: string) => {
+export const getProductPrice = (bookingDate: string, product: IProduct) => {
   const promos = !!product.promos ? product.promos : [];
 
   if (promos.length > 0) {
