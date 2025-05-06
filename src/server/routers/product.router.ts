@@ -83,20 +83,74 @@ export const productRouter = router({
     .input(
       z.object({
         id: z.string(),
-        promo: z.object({
-          promoStart: z.string(),
-          promoEnd: z.string(),
-          price: z.number(),
-          dayRates: z.array(
-            z.object({
-              days: z.array(z.number()),
-              price: z.number(),
-            }),
-          ),
-        }),
+        promo: z
+          .object({
+            promoStart: z.string(),
+            promoEnd: z.string(),
+            price: z.number().optional(),
+            dayRates: z.array(
+              z.object({
+                days: z.array(z.number().int().min(0).max(6)),
+                price: z.number().nonnegative(),
+              }),
+            ),
+          })
+          .superRefine((promo, ctx) => {
+            const { price, dayRates } = promo;
+
+            // Check if dayRates is empty — if so, price must be present and valid
+            if (!dayRates || dayRates.length === 0) {
+              if (price === undefined || price === null || typeof price !== 'number' || isNaN(price)) {
+                ctx.addIssue({
+                  path: ['price'],
+                  code: z.ZodIssueCode.custom,
+                  message: 'Price is required when dayRates are not provided.',
+                });
+              }
+              return;
+            }
+
+            // Validate full day coverage and no duplicates
+            const allDays = new Set<number>();
+            const duplicates = new Set<number>();
+
+            for (let i = 0; i < dayRates.length; i++) {
+              const rate = dayRates[i];
+
+              for (const day of rate.days) {
+                if (allDays.has(day)) {
+                  duplicates.add(day);
+                } else {
+                  allDays.add(day);
+                }
+              }
+            }
+
+            if (duplicates.size > 0) {
+              ctx.addIssue({
+                path: ['dayRates'],
+                code: z.ZodIssueCode.custom,
+                message: `Each day can only belong to one rate. Duplicates found for: ${[...duplicates]
+                  .sort()
+                  .map((d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d])
+                  .join(', ')}.`,
+              });
+            }
+
+            if (allDays.size !== 7) {
+              ctx.addIssue({
+                path: ['dayRates'],
+                code: z.ZodIssueCode.custom,
+                message: 'You must provide promo rates for every day of the week.',
+              });
+            }
+          }),
       }),
     )
     .mutation(({ input }) => {
-      return ProductHandler.addPromoHandler(input.id, input.promo);
+      return ProductHandler.addPromoHandler(input.id, {
+        ...input.promo,
+        price: input.promo.price ?? null,
+      });
     }),
 });
