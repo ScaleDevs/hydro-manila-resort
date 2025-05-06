@@ -5,6 +5,7 @@ import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import useBookingStoreTrack from '@/store/booking.store';
 import { ChooseRoom } from '../components/ChooseRoom';
 import CostView from '../components/CostView';
+import { getPromo } from '@/utils/helper';
 
 export interface IStep2Props {
   onPrev: () => void;
@@ -61,6 +62,7 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
     guests < (!!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
   const getMainMin = () =>
     !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
+  const currentPromo = getPromo(data.bookingDate, selectedProduct);
   const extraHeadsTotalNonOvernight = guestSetting.maxNonOverNightGuestPax - guestSetting.minNonOverNightGuestPax;
   const extraHeadsTotalOvernight = guestSetting.maxOverNightGuestPax - guestSetting.minOverNightGuestPax;
 
@@ -89,7 +91,12 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
           />
         </Box>
         <Box w='70%' fontSize='12px' lineHeight={1.5}>
-          <Text color='gray.400'>PACKAGE IS INCLUSIVE OF {getMainMin()} pax.</Text>
+          <Text color='gray.400'>
+            {currentPromo?.paxInclusion
+              ? `${currentPromo.promoName ?? 'N/A'} is inclusive of ${currentPromo.paxInclusion} pax only`
+              : 'PACKAGE IS INCLUSIVE OF ' + getMainMin() + ' pax'}
+            .
+          </Text>
           <Text color='gray.400'>CHILDREN 2 YEARS BELOW ARE FREE Do not add in # of pax</Text>
           <Text color='gray.400'>
             You'll only be able to add additional guests if you enter {guestSetting.minOverNightGuestPax} pax
