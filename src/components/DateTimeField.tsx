@@ -1,10 +1,10 @@
 import { Input, Box, Text } from '@chakra-ui/react';
-import { UseFormRegister } from 'react-hook-form';
+import { Path, UseFormRegister } from 'react-hook-form';
 import { GetApp } from '@/appspecs/theme';
 
-export interface IDateTimeFieldProps {
-  register: UseFormRegister<any>;
-  property: string;
+export interface IDateTimeFieldProps<T extends Record<string, any>> {
+  register: UseFormRegister<T>;
+  property: Path<T>;
   errMsg?: string;
   onBlur?: () => void;
   label?: string;
@@ -13,7 +13,7 @@ export interface IDateTimeFieldProps {
   defaultValue?: string;
 }
 
-export function DateTimeField({
+export function DateTimeField<T extends Record<string, any>>({
   register,
   property,
   errMsg,
@@ -22,7 +22,7 @@ export function DateTimeField({
   required,
   type = 'datetime-local',
   defaultValue,
-}: IDateTimeFieldProps) {
+}: IDateTimeFieldProps<T>) {
   return (
     <Box w='100%'>
       <Text fontSize='md'>
