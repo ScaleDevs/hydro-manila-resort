@@ -84,10 +84,12 @@ type DayRate {
 }
 
 type Promo {
-  promoStart DateTime
-  promoEnd   DateTime
-  price      Float?
-  dayRates   DayRate[]
+  promoName    String?
+  promoStart   DateTime
+  promoEnd     DateTime
+  price        Float?
+  dayRates     DayRate[]
+  paxInclusion Int?
 }
 
 enum BookingRefundStatus {

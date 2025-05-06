@@ -1,10 +1,10 @@
 import { Input, Box, Text } from '@chakra-ui/react';
-import { UseFormRegister } from 'react-hook-form';
+import { Path, UseFormRegister } from 'react-hook-form';
 import { GetApp } from '@/appspecs/theme';
 
-export interface ITextFieldProps {
-  register?: UseFormRegister<any>;
-  property: string;
+export interface ITextFieldProps<T extends Record<string, any>> {
+  register?: UseFormRegister<T>;
+  property: Path<T>;
   placeholder?: string;
   errMsg?: string;
   onBlur?: () => void;
@@ -13,7 +13,16 @@ export interface ITextFieldProps {
   onChange?: (value: string) => void;
 }
 
-export function TextField({ register, property, placeholder, errMsg, onBlur, label, required, onChange }: ITextFieldProps) {
+export function TextField<T extends Record<string, any>>({
+  register,
+  property,
+  placeholder,
+  errMsg,
+  onBlur,
+  label,
+  required,
+  onChange,
+}: ITextFieldProps<T>) {
   const fieldProps = register
     ? {
         ...register(property, {
