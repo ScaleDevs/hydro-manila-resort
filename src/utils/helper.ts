@@ -69,12 +69,25 @@ export const getProductPrice = (bookingDate: string, product: IProduct) => {
 
   if (promos.length > 0) {
     for (const promo of promos) {
-      const now = dayjs.utc(bookingDate).unix();
+      const now = dayjs.utc(bookingDate);
+      const nowUnix = now.unix();
 
       const promoStart = dayjs.utc(promo.promoStart).unix();
       const promoEnd = dayjs.utc(promo.promoEnd).unix();
 
-      if (now >= promoStart && now < promoEnd) return promo.price;
+      if (nowUnix >= promoStart && nowUnix < promoEnd) {
+        if (!!promo.price) return promo.price;
+
+        if (promo.dayRates.length > 0) {
+          const bookingDay = now.day();
+
+          for (const item of promo.dayRates) {
+            if (item.days.includes(bookingDay)) {
+              return item.price;
+            }
+          }
+        }
+      }
     }
   }
 
