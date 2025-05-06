@@ -34,7 +34,7 @@ export function ScheduleDetails({ id, isIn }: IScheduleDetailsProps) {
           </Center>
         ) : (
           <>
-            <Stack direction={{ base: 'column', lg: 'row' }} justify='space-around' minH='210px'>
+            <Stack direction={{ base: 'column', lg: 'row' }} justify='space-left' minH='210px' gap={20}>
               <VStack align='flex-start'>
                 <Heading size='md'>Product Details</Heading>
                 <InfoField label='Id' value={data?.productId} />
