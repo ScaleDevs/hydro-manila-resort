@@ -58,13 +58,13 @@ export function Step2({ onPrev, onNext }: IStep2Props) {
 
   if (!selectedProduct) return null;
   const { guestSetting, scheduleEndNextDay, isAllRooms } = selectedProduct;
-  const isAdditionalInputsDisabled = () =>
-    guests < (!!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
-  const getMainMin = () =>
-    !!scheduleEndNextDay && !!isAllRooms ? guestSetting.minOverNightGuestPax : guestSetting.minNonOverNightGuestPax;
   const currentPromo = getPromo(data.bookingDate, selectedProduct);
+  const minOverNightGuestPax = currentPromo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
+  const isAdditionalInputsDisabled = () =>
+    guests < (!!scheduleEndNextDay && !!isAllRooms ? minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
+  const getMainMin = () => (!!scheduleEndNextDay && !!isAllRooms ? minOverNightGuestPax : guestSetting.minNonOverNightGuestPax);
   const extraHeadsTotalNonOvernight = guestSetting.maxNonOverNightGuestPax - guestSetting.minNonOverNightGuestPax;
-  const extraHeadsTotalOvernight = guestSetting.maxOverNightGuestPax - guestSetting.minOverNightGuestPax;
+  const extraHeadsTotalOvernight = guestSetting.maxOverNightGuestPax - minOverNightGuestPax;
 
   return (
     <Stack direction='column' spacing={5}>

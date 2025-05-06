@@ -71,10 +71,13 @@ export function NumberFieldV2<T extends Record<string, any>>(props: INumberField
                     outlineColor: GetApp.ActiveColor,
                   }}
                 />
-                <NumberInputStepper>
-                  <NumberIncrementStepper color='BlackAlpha.400' />
-                  <NumberDecrementStepper color='BlackAlpha.400' />
-                </NumberInputStepper>
+
+                {disabled ? null : (
+                  <NumberInputStepper>
+                    <NumberIncrementStepper color='BlackAlpha.400' />
+                    <NumberDecrementStepper color='BlackAlpha.400' />
+                  </NumberInputStepper>
+                )}
               </NumberInput>
 
               {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}
@@ -119,10 +122,12 @@ export function NumberFieldV2<T extends Record<string, any>>(props: INumberField
             outlineColor: GetApp.ActiveColor,
           }}
         />
-        <NumberInputStepper>
-          <NumberIncrementStepper color='BlackAlpha.400' />
-          <NumberDecrementStepper color='BlackAlpha.400' />
-        </NumberInputStepper>
+        {disabled ? null : (
+          <NumberInputStepper>
+            <NumberIncrementStepper color='BlackAlpha.400' />
+            <NumberDecrementStepper color='BlackAlpha.400' />
+          </NumberInputStepper>
+        )}
       </NumberInput>
 
       {errMsg ? <Text color='red'>{errMsg}!</Text> : ''}

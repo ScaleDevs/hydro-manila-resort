@@ -2,7 +2,7 @@ import { Guests } from '@prisma/client';
 import { HStack, Box, Text, Collapse } from '@chakra-ui/react';
 import { PHpeso } from '@/modules/utils/helper';
 import { IProduct, IRoom } from '@/utils/types';
-import { getExtraHeadsTotal, getProductPrice, getSubtractedHeadsTotal } from '@/utils/helper';
+import { getExtraHeadsTotal, getProductPrice, getPromo, getSubtractedHeadsTotal } from '@/utils/helper';
 
 export interface ICostViewProps {
   product?: IProduct;
@@ -20,6 +20,9 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
   const getTotal = () => {
     if (!product) return 0;
     const { guestSetting } = product;
+    const promo = bookedDate ? getPromo(bookedDate, product) : null;
+    const minOverNightGuestPax = promo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
+
     let total = 0;
 
     if (bookedDate) total += getProductPrice(bookedDate, product);
@@ -31,10 +34,10 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
     }
 
     if (guests) {
-      if (guests.overNightGuests > guestSetting.minOverNightGuestPax)
+      if (guests.overNightGuests > minOverNightGuestPax)
         total += getExtraHeadsTotal(
           guests.overNightGuests,
-          originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax,
+          originalBooking?.guests?.overNightGuests || minOverNightGuestPax,
           guestSetting.overNightGuestFee,
         );
       if (guests.nonOverNightGuests > guestSetting.minNonOverNightGuestPax)
@@ -77,6 +80,8 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
   if (!product) return null;
 
   const { guestSetting, includedRooms } = product;
+  const promo = bookedDate ? getPromo(bookedDate, product) : null;
+  const minOverNightGuestPax = promo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
 
   return (
     <>
@@ -134,14 +139,12 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
             return null;
           })}
 
-        <Collapse
-          in={guests && guests.overNightGuests > (originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax)}
-        >
+        <Collapse in={guests && guests.overNightGuests > (originalBooking?.guests?.overNightGuests || minOverNightGuestPax)}>
           <HStack justifyContent='space-between'>
             <Text>
               ADDITIONAL OVERNIGHT PAX (
               {guests?.overNightGuests
-                ? (guests?.overNightGuests || 0) - (originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax)
+                ? (guests?.overNightGuests || 0) - (originalBooking?.guests?.overNightGuests || minOverNightGuestPax)
                 : ''}
               )
             </Text>
@@ -149,7 +152,7 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
               {PHpeso.format(
                 getExtraHeadsTotal(
                   guests?.overNightGuests || 0,
-                  originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax,
+                  originalBooking?.guests?.overNightGuests || minOverNightGuestPax,
                   guestSetting.overNightGuestFee,
                 ),
               )}
@@ -169,7 +172,7 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
             <Text>
               REMOVED OVERNIGHT PAX (
               {guests?.overNightGuests
-                ? (guests?.overNightGuests || 0) - (originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax)
+                ? (guests?.overNightGuests || 0) - (originalBooking?.guests?.overNightGuests || minOverNightGuestPax)
                 : ''}
               )
             </Text>
@@ -177,7 +180,7 @@ export default function CostView({ bookedDate, rooms = [], product, guests, orig
               {PHpeso.format(
                 getSubtractedHeadsTotal(
                   guests?.overNightGuests || 0,
-                  originalBooking?.guests?.overNightGuests || guestSetting.minOverNightGuestPax,
+                  originalBooking?.guests?.overNightGuests || minOverNightGuestPax,
                   guestSetting.overNightGuestFee,
                 ),
               )}
