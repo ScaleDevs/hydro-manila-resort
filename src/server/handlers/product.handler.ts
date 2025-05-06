@@ -159,6 +159,7 @@ export const addPromoHandler = async (id: string, promo: IPromo) => {
       price: promo.price,
       promoStart: dayjs(promo.promoStart).startOf('day').toISOString(),
       promoEnd: dayjs(promo.promoEnd).endOf('day').toISOString(),
+      dayRates: promo.dayRates,
     });
     return true;
   } catch (err) {

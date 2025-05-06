@@ -87,6 +87,12 @@ export const productRouter = router({
           promoStart: z.string(),
           promoEnd: z.string(),
           price: z.number(),
+          dayRates: z.array(
+            z.object({
+              days: z.array(z.number()),
+              price: z.number(),
+            }),
+          ),
         }),
       }),
     )
