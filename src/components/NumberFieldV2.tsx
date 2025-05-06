@@ -8,12 +8,12 @@ import {
   NumberInputStepper,
   Text,
 } from '@chakra-ui/react';
-import { Control, Controller } from 'react-hook-form';
+import { Control, Controller, Path } from 'react-hook-form';
 import { GetApp } from '@/appspecs/theme';
 
-export interface INumberFieldV2Props {
-  control?: Control<any, any>;
-  property: string;
+export interface INumberFieldV2Props<T extends Record<string, any>> {
+  control?: Control<T, any>;
+  property: Path<T>;
   value?: string | number;
   placeholder?: string;
   label?: string;
@@ -26,7 +26,7 @@ export interface INumberFieldV2Props {
   precion?: number;
 }
 
-export function NumberFieldV2(props: INumberFieldV2Props) {
+export function NumberFieldV2<T extends Record<string, any>>(props: INumberFieldV2Props<T>) {
   const { label, required, control, property, onBlur, onChange, value, errMsg, maxValue, disabled, precion = 0 } = props;
 
   if (control)
