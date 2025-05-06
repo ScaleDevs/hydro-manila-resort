@@ -66,6 +66,30 @@ class Respository {
       },
     });
   }
+
+  public async deletePromoByIdx(id: string, idx: number) {
+    const product = await prisma.product.findUnique({
+      where: { productId: id },
+      select: { promos: true },
+    });
+
+    if (!product) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Product not found' });
+
+    // Remove by index
+    const newPromos = [...product.promos];
+    newPromos.splice(idx, 1);
+
+    await prisma.product.update({
+      where: {
+        productId: id,
+      },
+      data: {
+        promos: {
+          set: newPromos,
+        },
+      },
+    });
+  }
 }
 
 export const ProductRepository = new Respository();

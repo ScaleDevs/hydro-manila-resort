@@ -155,4 +155,14 @@ export const productRouter = router({
         price: input.promo.price,
       });
     }),
+  deletePromoByIdx: protectedProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        idxToRemove: z.number(),
+      }),
+    )
+    .mutation(({ input }) => {
+      return ProductRepository.deletePromoByIdx(input.productId, input.idxToRemove);
+    }),
 });
