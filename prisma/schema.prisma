@@ -78,10 +78,16 @@ type GuestSettings {
   maxOverNightGuestPax    Int
 }
 
+type DayRate {
+  days  Int[]
+  price Float
+}
+
 type Promo {
   promoStart DateTime
   promoEnd   DateTime
-  price      Float
+  price      Float?
+  dayRates   DayRate[]
 }
 
 enum BookingRefundStatus {
