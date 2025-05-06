@@ -156,10 +156,12 @@ export const updateProductHandler = async (
 export const addPromoHandler = async (id: string, promo: IPromo) => {
   try {
     await ProductRepository.addPromo(id, {
+      promoName: promo.promoName,
       price: promo.price,
       promoStart: dayjs(promo.promoStart).startOf('day').toISOString(),
       promoEnd: dayjs(promo.promoEnd).endOf('day').toISOString(),
       dayRates: promo.dayRates,
+      paxInclusion: promo.paxInclusion,
     });
     return true;
   } catch (err) {

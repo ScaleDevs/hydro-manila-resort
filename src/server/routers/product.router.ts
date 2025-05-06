@@ -85,9 +85,11 @@ export const productRouter = router({
         id: z.string(),
         promo: z
           .object({
+            promoName: z.string(),
+            paxInclusion: z.number().nullable(),
             promoStart: z.string(),
             promoEnd: z.string(),
-            price: z.number().optional(),
+            price: z.number().nullable(),
             dayRates: z.array(
               z.object({
                 days: z.array(z.number().int().min(0).max(6)),
@@ -150,7 +152,7 @@ export const productRouter = router({
     .mutation(({ input }) => {
       return ProductHandler.addPromoHandler(input.id, {
         ...input.promo,
-        price: input.promo.price ?? null,
+        price: input.promo.price,
       });
     }),
 });

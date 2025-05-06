@@ -16,12 +16,13 @@ import {
   Checkbox,
   Input,
 } from '@chakra-ui/react';
+import { BsTrash } from 'react-icons/bs';
 
 import { trpc } from '@/utils/trpc';
 import { DateTimeField } from '@/components/DateTimeField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { GetApp } from '@/appspecs/theme';
-import { BsTrash } from 'react-icons/bs';
+import { TextField } from '@/components/TextField';
 
 export interface IAddPromoProps {
   productId: string;
@@ -34,6 +35,14 @@ const DayRateSchema = z.object({
 });
 
 const baseSchema = z.object({
+  promoName: z.string(),
+  paxInclusion: z
+    .preprocess((v) => {
+      if (typeof v === 'string' && v.trim() === '') return undefined;
+      const parsed = Number.parseInt(v as string, 10);
+      return isNaN(parsed) ? undefined : parsed;
+    }, z.number().optional())
+    .optional(),
   promoStart: z.string(),
   promoEnd: z.string(),
   promoType: z.enum(['FLAT_RATE', 'DAY_RATES']),
@@ -248,8 +257,9 @@ export function AddPromo({ productId, isIn }: IAddPromoProps) {
         id: productId,
         promo: {
           ...rest,
-          dayRates: promoType === 'FLAT_RATE' ? [] : data.dayRates ?? [], // validation is on the form
-          price: promoType === 'FLAT_RATE' ? data.price : undefined,
+          dayRates: promoType === 'FLAT_RATE' ? [] : rest.dayRates ?? [], // validation is on the form
+          price: promoType === 'FLAT_RATE' ? rest.price ?? null : null,
+          paxInclusion: rest.paxInclusion ?? null,
         },
       },
       {
@@ -269,96 +279,111 @@ export function AddPromo({ productId, isIn }: IAddPromoProps) {
 
         <Box w={{ base: '95%', md: '90%' }} mx='auto'>
           <form onSubmit={handleSubmit(submitUpdate)}>
-            <Stack spacing={1}>
-              <Text fontSize='md'>
-                Choose Promo Type:
-                <Text as='span' color='red' pl='1'>
-                  *
-                </Text>
-              </Text>
-              <Controller
-                control={control}
-                name='promoType'
-                render={({ field: { onChange, value } }) => {
-                  return (
-                    <Box w='100%'>
-                      <RadioGroup
-                        value={value === undefined ? undefined : value}
-                        onClick={(v) => {
-                          onChange({ target: { value: (v.target as any).value } });
-                        }}
-                      >
-                        <Stack direction='row'>
-                          <Radio value='FLAT_RATE' colorScheme='default'>
-                            FLAT RATE
-                          </Radio>
-                          <Radio value='DAY_RATES' colorScheme='default'>
-                            DAY RATES
-                          </Radio>
-                        </Stack>
-                      </RadioGroup>
-                      {errors.promoType?.message ? <Text color='red'>{errors.promoType?.message}!</Text> : ''}
-                    </Box>
-                  );
-                }}
-              />
-            </Stack>
-
-            <br />
-
             <Stack spacing={5}>
-              <DateTimeField
-                type='date'
+              <Stack spacing={1}>
+                <Text fontSize='md'>
+                  Choose Promo Type:
+                  <Text as='span' color='red' pl='1'>
+                    *
+                  </Text>
+                </Text>
+                <Controller
+                  control={control}
+                  name='promoType'
+                  render={({ field: { onChange, value } }) => {
+                    return (
+                      <Box w='100%'>
+                        <RadioGroup
+                          value={value === undefined ? undefined : value}
+                          onClick={(v) => {
+                            onChange({ target: { value: (v.target as any).value } });
+                          }}
+                        >
+                          <Stack direction='row'>
+                            <Radio value='FLAT_RATE' colorScheme='default'>
+                              FLAT RATE
+                            </Radio>
+                            <Radio value='DAY_RATES' colorScheme='default'>
+                              DAY RATES
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                        {errors.promoType?.message ? <Text color='red'>{errors.promoType?.message}!</Text> : ''}
+                      </Box>
+                    );
+                  }}
+                />
+              </Stack>
+
+              <TextField
                 required
-                label='Promo Start Period:'
+                label='Promo Name:'
                 register={register}
-                property='promoStart'
-                errMsg={errors.promoStart?.message}
+                property='promoName'
+                placeholder='Enter promo name'
+                errMsg={errors.promoName?.message}
               />
 
-              <DateTimeField
-                type='date'
-                required
-                label='Promo End Period:'
-                register={register}
-                property='promoEnd'
-                errMsg={errors.promoEnd?.message}
+              <NumberFieldV2
+                control={control}
+                property='paxInclusion'
+                label='Pax Inclusion'
+                errMsg={errors.paxInclusion?.message}
               />
 
-              {watch('promoType') === 'FLAT_RATE' && (
-                <NumberFieldV2 control={control} property='price' label='Price' errMsg={errors.price?.message} required />
+              <Stack spacing={5}>
+                <DateTimeField
+                  type='date'
+                  required
+                  label='Promo Start Period:'
+                  register={register}
+                  property='promoStart'
+                  errMsg={errors.promoStart?.message}
+                />
+
+                <DateTimeField
+                  type='date'
+                  required
+                  label='Promo End Period:'
+                  register={register}
+                  property='promoEnd'
+                  errMsg={errors.promoEnd?.message}
+                />
+
+                {watch('promoType') === 'FLAT_RATE' && (
+                  <NumberFieldV2 control={control} property='price' label='Price' errMsg={errors.price?.message} required />
+                )}
+
+                {watch('promoType') === 'DAY_RATES' && (
+                  <DayRatesInput control={control} register={register} errMessage={errors.dayRates?.message} />
+                )}
+              </Stack>
+
+              {isSuccess && (
+                <>
+                  <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
+                    <AlertIcon color='green.200' />
+                    Promo Successfuly Added!
+                  </Alert>
+                </>
               )}
 
-              {watch('promoType') === 'DAY_RATES' && (
-                <DayRatesInput control={control} register={register} errMessage={errors.dayRates?.message} />
+              {!!error && (
+                <>
+                  <Alert status='error' borderRadius='sm' color='red.600'>
+                    <AlertIcon />
+                    {error?.message || ''}
+                  </Alert>
+                </>
               )}
+
+              <div>
+                {' '}
+                <Button type='submit' isLoading={isLoading}>
+                  ADD PROMO
+                </Button>
+              </div>
             </Stack>
-
-            <br />
-
-            {isSuccess && (
-              <>
-                <Alert status='success' bg='green.500' borderRadius='sm' color='white'>
-                  <AlertIcon color='green.200' />
-                  Promo Successfuly Added!
-                </Alert>
-                <br />
-              </>
-            )}
-
-            {!!error && (
-              <>
-                <Alert status='error' borderRadius='sm' color='red.600'>
-                  <AlertIcon />
-                  {error?.message || ''}
-                </Alert>
-                <br />
-              </>
-            )}
-
-            <Button type='submit' isLoading={isLoading}>
-              ADD PROMO
-            </Button>
           </form>
         </Box>
 
