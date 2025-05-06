@@ -10,6 +10,7 @@ import {
   PHpeso,
   getExtraHeadsTotal,
   getProductPrice,
+  getPromo,
 } from '@/utils/helper';
 import { IBooking, IProduct, IRoom, CustomerUpdateBookingParams } from '@/utils/types';
 import { BookingRepository } from '@/server/repository/booking.repo';
@@ -287,9 +288,10 @@ class Service {
       newTotal += productPrice;
       if (!!guests) {
         const { guestSetting } = product;
+        const promo = getPromo(bookedDate, product);
         const extraOverNightPaxTotal = getExtraHeadsTotal(
           guests.overNightGuests,
-          guestSetting.minOverNightGuestPax,
+          promo?.paxInclusion ?? guestSetting.minOverNightGuestPax,
           guestSetting.overNightGuestFee,
         );
         const extraNonOverNightPaxTotal = getExtraHeadsTotal(

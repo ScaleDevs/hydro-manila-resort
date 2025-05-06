@@ -3,7 +3,14 @@ import { v4 } from 'uuid';
 import { TRPCError } from '@trpc/server';
 import { Guests, ProcessType, TransactionType } from '@prisma/client';
 
-import { getExtraHeads, getExtraHeadsTotal, tzSchedToDayJsInsance, tzSchedToUnix, utcDateToTzDayInstance } from '@/utils/helper';
+import {
+  getExtraHeads,
+  getExtraHeadsTotal,
+  getPromo,
+  tzSchedToDayJsInsance,
+  tzSchedToUnix,
+  utcDateToTzDayInstance,
+} from '@/utils/helper';
 import { BookingRepository, IBookingDates } from '@/repo/booking.repo';
 import { ProductRepository } from '@/repo/product.repo';
 import { RoomRepository } from '@/repo/room.repo';
@@ -365,10 +372,12 @@ export const resetBookingEmailConfirmation = async (bookingId: string) => {
     const { guestSetting } = product;
     const { guests } = booking;
     const emailAddonsTable: { name: string; price: string; qty: string; summary: string }[] = [];
+    const promo = getPromo(bookedDate.format('YYYY-MM-DD'), product);
+    const minOverNightGuestPax = promo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
 
     const extraOverNightGuestsTotal = getExtraHeadsTotal(
       guests.overNightGuests,
-      guestSetting.minOverNightGuestPax,
+      minOverNightGuestPax,
       guestSetting.overNightGuestFee,
     );
     const extraNonOverNightGuestsTotal = getExtraHeadsTotal(
@@ -382,7 +391,7 @@ export const resetBookingEmailConfirmation = async (bookingId: string) => {
       emailAddonsTable.push({
         name: 'Additional Overnight Guests',
         price: PHpeso.format(guestSetting.overNightGuestFee),
-        qty: `${getExtraHeads(guests.overNightGuests, guestSetting.minOverNightGuestPax)}`,
+        qty: `${getExtraHeads(guests.overNightGuests, minOverNightGuestPax)}`,
         summary: PHpeso.format(extraOverNightGuestsTotal),
       });
 
@@ -518,8 +527,10 @@ export const adminCreateBooking = async (
     } as IBooking;
 
     const { guestSetting } = product;
+    const promo = getPromo(input.bookingDate, product);
+    const minOverNightGuestPax = promo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
     const [extraOverNightGuestsTotal, extraNonOverNightGuestsTotal] = await Promise.all([
-      getExtraHeadsTotal(input.guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee),
+      getExtraHeadsTotal(input.guests.overNightGuests, minOverNightGuestPax, guestSetting.overNightGuestFee),
       getExtraHeadsTotal(
         input.guests.nonOverNightGuests,
         guestSetting.minNonOverNightGuestPax,

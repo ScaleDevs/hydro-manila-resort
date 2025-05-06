@@ -19,7 +19,7 @@ import { getPaymentIntentSession, getRefundDetails } from '@/repo/payment.repo';
 import { BookingRefundRepository } from '@/repo/bookingrefund.repo';
 import { createReservation, cancelReservation, updateReservation } from '@/repo/hostaway.repo';
 import { BookingService } from '@/svc/booking.service';
-import { PHpeso, getExtraHeads, getExtraHeadsTotal } from '@/utils/helper';
+import { PHpeso, getExtraHeads, getExtraHeadsTotal, getPromo } from '@/utils/helper';
 import { constants } from '@/server/constants';
 import { BookingStatusDisplay } from '@/utils/types';
 import { ProcessType, TransactionLog } from '@prisma/client';
@@ -139,8 +139,10 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     dayjs.utc(parsed.data.endSession),
   ]);
   const { guestSetting } = product;
+  const promo = getPromo(bookedDate.format('YYYY-MM-DD'), product);
+  const minOverNightGuestPax = promo?.paxInclusion ?? guestSetting.minOverNightGuestPax;
   const [extraOverNightGuestsTotal, extraNonOverNightGuestsTotal] = await Promise.all([
-    getExtraHeadsTotal(guests.overNightGuests, guestSetting.minOverNightGuestPax, guestSetting.overNightGuestFee),
+    getExtraHeadsTotal(guests.overNightGuests, minOverNightGuestPax, guestSetting.overNightGuestFee),
     getExtraHeadsTotal(guests.nonOverNightGuests, guestSetting.minNonOverNightGuestPax, guestSetting.nonOverNightGuestFee),
   ]);
   let addonsTotal = extraOverNightGuestsTotal + extraNonOverNightGuestsTotal;
@@ -151,7 +153,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     emailAddonsTable.push({
       name: 'Additional Overnight Guests',
       price: PHpeso.format(guestSetting.overNightGuestFee),
-      qty: `${getExtraHeads(guests.overNightGuests, guestSetting.minOverNightGuestPax)}`,
+      qty: `${getExtraHeads(guests.overNightGuests, minOverNightGuestPax)}`,
       summary: PHpeso.format(extraOverNightGuestsTotal),
     });
 
