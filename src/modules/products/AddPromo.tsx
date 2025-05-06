@@ -235,7 +235,7 @@ export function AddPromo({ productId, isIn }: IAddPromoProps) {
   const submitUpdate = async (data: FormSchemaType) => {
     const { promoType, ...rest } = data;
 
-    if (data.promoType === 'FLAT_RATE') {
+    if (promoType === 'FLAT_RATE') {
       data.dayRates = [];
     } else {
       data.price = undefined;
@@ -248,8 +248,8 @@ export function AddPromo({ productId, isIn }: IAddPromoProps) {
         id: productId,
         promo: {
           ...rest,
-          dayRates: data.promoType === 'FLAT_RATE' ? [] : data.dayRates ?? [], // validation is on the form
-          price: data.promoType === 'FLAT_RATE' ? data.price : undefined,
+          dayRates: promoType === 'FLAT_RATE' ? [] : data.dayRates ?? [], // validation is on the form
+          price: promoType === 'FLAT_RATE' ? data.price : undefined,
         },
       },
       {
