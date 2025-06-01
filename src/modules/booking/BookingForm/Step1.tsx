@@ -67,6 +67,7 @@ export function Step1({ onNext }: Step1Props) {
           isGettingRooms={isLoading}
         />
       </ScaleFade>
+
       <Stack direction='row' justifyContent='flex-end'>
         <Box w='400px'>
           <CostView
