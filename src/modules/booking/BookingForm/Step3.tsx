@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Stack, Box, Button } from '@chakra-ui/react';
+import { Stack, Box, Button, Input, Text } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import useBookingStoreTrack from '@/store/booking.store';
@@ -13,6 +13,9 @@ const schema = z.object({
   lastName: z.string().min(1, 'Required'),
   phoneNumber: z.string().min(1, 'Required'),
   email: z.string().email(),
+  idImage: z.custom<File>((val) => val instanceof File && val.size > 0, {
+    message: 'File is required and must not be empty',
+  }),
 });
 
 type FormSchemaType = z.infer<typeof schema>;
@@ -27,6 +30,7 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormSchemaType>({
@@ -40,6 +44,8 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
   });
 
   const proceed = (data: FormSchemaType) => {
+    console.log('data', data);
+
     setBookingStateData({
       ...data,
     });
@@ -64,6 +70,7 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
             label='Last Name:'
             errMsg={errors.lastName?.message}
           />
+
           <TextField
             register={register}
             property='phoneNumber'
@@ -72,6 +79,33 @@ export function Step3({ onPrev, onNext }: IStep3Props) {
             errMsg={errors.phoneNumber?.message}
           />
           <TextField register={register} property='email' placeholder='*Email' label='Email:' errMsg={errors.email?.message} />
+
+          <Box>
+            <Text fontSize='md'>
+              ID upload
+              <Text as='span' color='red' pl='1'>
+                *
+              </Text>
+            </Text>
+
+            <Controller
+              name='idImage'
+              control={control}
+              render={({ field }) => (
+                <Input
+                  type='file'
+                  accept='image/*'
+                  borderColor='blackAlpha.500'
+                  borderRadius='sm'
+                  _hover={{ borderColor: 'teal.400' }}
+                  focusBorderColor='teal.400'
+                  py={1.5}
+                  onChange={(e) => field.onChange(e.target.files?.[0])}
+                />
+              )}
+            />
+            {errors.idImage?.message ? <Text color='red'>{errors.idImage.message}!</Text> : ''}
+          </Box>
         </Stack>
 
         <Stack direction='row' justifyContent='flex-end'>
