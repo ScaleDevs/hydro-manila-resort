@@ -20,6 +20,7 @@ export type BookingPayload = {
   guests: Guests;
   roomIds: string[];
   productId: string;
+  idImage: File | null;
 };
 
 export type BookingState = {
@@ -48,6 +49,7 @@ const initState: BookingState = {
     email: '',
     phoneNumber: '',
     bookingDate: '',
+    idImage: null,
     guests: {
       nonOverNightGuests: 0,
       overNightGuests: 0,
