@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "3.194.0",
+    "@aws-sdk/client-s3": "^3.821.0",
     "@aws-sdk/client-scheduler": "^3.490.0",
+    "@aws-sdk/s3-request-presigner": "^3.821.0",
     "@chakra-ui/react": "2.6.0",
     "@emotion/react": "11.10.5",
     "@emotion/styled": "11.10.5",
