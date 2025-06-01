@@ -10,6 +10,7 @@ export const constants = {
   SecretAccessKey: process.env.AWS_CONFIG_SECRET_KEY,
   appClientId: process.env.AWS_CONFIG_CLIENT_APP_CLIENT_ID,
   appClientSecret: process.env.AWS_CONFIG_CLIENT_APP_SECRET,
+  bucket: process.env.S3_BUCKET,
 
   general: {
     appName: process.env.GENERAL_APP_NAME,
