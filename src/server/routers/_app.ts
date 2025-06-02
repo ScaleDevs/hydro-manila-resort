@@ -6,6 +6,7 @@ import { bookingRouter } from './booking.router';
 import { paymentRouter } from './payment.router';
 import { bookingSettingRouter } from './booksetting.router';
 import { scheduledEventRouter } from './scheduledevent.router';
+import { s3Router } from './s3.router';
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -32,6 +33,7 @@ export const appRouter = router({
   payment: paymentRouter,
   bookingSetting: bookingSettingRouter,
   scheduledevent: scheduledEventRouter,
+  s3: s3Router,
 });
 
 export type AppRouter = typeof appRouter;
