@@ -17,6 +17,7 @@ export const paymentRouter = router({
         }),
         roomIds: z.array(z.string().min(1)),
         productId: z.string(),
+        idS3Key: z.string(),
       }),
     )
     .mutation(async ({ input }) => {

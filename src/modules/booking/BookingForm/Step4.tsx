@@ -60,31 +60,65 @@ export function Step4({ onPrev, onNext, fromAdmin }: IStep4Props) {
     isError: isErrorInserting,
     error: errorInserting,
   } = trpc.booking.adminCreateBooking.useMutation();
+  const { mutate: generateUploadS3SignedUrl, isLoading: generatedSignedUrl } = trpc.s3.generateSignedUploadUrl.useMutation();
 
   const proceedToPayment = () => {
     console.log('data', data);
 
     const { firstName, lastName, ...rest } = data;
 
-    const payload = {
-      ...rest,
-      name: capsFirstLetter(firstName) + ' ' + capsFirstLetter(lastName),
-    };
+    if (!rest.idImage) return;
 
-    mutate(payload, {
-      onSuccess(data) {
-        const paymentIntentResource = data.paymentIntentResource;
+    const s3Key = `customer_ids/${firstName}_${lastName}_${rest.phoneNumber}_id`;
 
-        setPaymentStates({
-          clientKey: paymentIntentResource.data.attributes.client_key,
-          paymentIntentId: paymentIntentResource.data.id,
-        });
-
-        onNext();
+    generateUploadS3SignedUrl(
+      {
+        key: s3Key,
+        contentType: rest.idImage.type,
       },
-    });
+      {
+        async onSuccess(signedUrl) {
+          if (!rest.idImage) return;
 
-    onClose();
+          const response = await fetch(signedUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': rest.idImage.type,
+            },
+            body: rest.idImage,
+          });
+
+          if (!response.ok) {
+            throw new Error('Upload failed');
+          }
+
+          console.log('Upload successful!');
+
+          const payload = {
+            ...rest,
+            name: capsFirstLetter(firstName) + ' ' + capsFirstLetter(lastName),
+            idS3Key: s3Key,
+          };
+
+          mutate(payload, {
+            onSuccess(data) {
+              const paymentIntentResource = data.paymentIntentResource;
+
+              setPaymentStates({
+                clientKey: paymentIntentResource.data.attributes.client_key,
+                paymentIntentId: paymentIntentResource.data.id,
+              });
+
+              onNext();
+            },
+          });
+
+          onClose();
+        },
+      },
+    );
+
+    return;
   };
 
   const insertBooking = (paymentId: string | null) => {

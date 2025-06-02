@@ -163,6 +163,7 @@ model Booking {
   hostawayId      Int?
   createdAt       DateTime           @default(now())
   createdBy       String?
+  idS3Key         String?
 
   @@index([startSession, endSession])
   @@index([startSession, endSession, status])

@@ -33,6 +33,7 @@ export const initiatePaymentSessionForBooking = async (input: {
   roomIds: string[];
   productId: string;
   bookingDate: string;
+  idS3Key: string;
 }) => {
   try {
     const product = await ProductRepository.findProductById(input.productId);
@@ -68,6 +69,7 @@ export const initiatePaymentSessionForBooking = async (input: {
       startSession: startSessionDayInstance.toISOString(),
       endSession: endSessionDayInstance.toISOString(),
       receipt,
+      idS3Key: input.idS3Key,
     } as IBooking;
 
     const refNo = createReferenceNumber();
