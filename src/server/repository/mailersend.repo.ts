@@ -50,6 +50,25 @@ export const sendTemplateEmail = async ({ templateId, recipientEmail, variables,
   }
 };
 
+export const sendNotificationRegardingIdCardComparison = async ({
+  customer_name,
+  ref_no,
+}: {
+  customer_name: string;
+  ref_no: string;
+}) => {
+  await sendTemplateEmail({
+    templateId: GetVars.CalendarTemplates.reuseableId,
+    recipientEmail: constants.mailerSend.supportEmail,
+    variables: {
+      title_of_message: 'Booking ID Check',
+      greetings: 'Hi Support Team,',
+      message_body: `Please verify the uploaded ID against the card payment details for the booking under the name ${customer_name} with reference number ${ref_no}. As part of our post-booking process, ensure that the name on the ID matches the name on the card used for payment.`,
+    },
+    subject: constants.general.companyName + ' ' + 'Booking ID Check',
+  });
+};
+
 type SendBookingEmailInput = {
   recipientEmail: string[];
   reference_number: string;

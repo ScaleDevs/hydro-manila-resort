@@ -11,6 +11,7 @@ import {
   notifyAdminFailedBookingButPaid,
   notifyFailedHostawayDeletion,
   sendBookingSuccessEmail,
+  sendNotificationRegardingIdCardComparison,
   sendRefundEmailConflictBooking,
   sendRefundEmailSuccess,
   updateBookingConfirmation,
@@ -106,6 +107,7 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
 
   const bookingData: FormSchemaType = JSON.parse(paymentIntentRecord.attributes.metadata.bookingRecord);
   const parsed = bookingDataSchema.safeParse(bookingData);
+  const paymentType = paymentIntentRecord.attributes.payments[0].attributes.source.type;
 
   if (!parsed.success) {
     logger('handlePaymentPaidEvent', 'Invalid Booking Data!');
@@ -276,6 +278,12 @@ export const handlePaymentPaidEvent = async (paymentIntentId: string) => {
     elements: emailAddonsTable,
     total_payment: PHpeso.format(parsed.data.receipt.total),
   });
+
+  if (paymentType !== 'gcash')
+    await sendNotificationRegardingIdCardComparison({
+      customer_name: parsed.data.name,
+      ref_no: parsed.data.ref_no,
+    });
 
   logger('handlePaymentPaidEvent', 'Email successfuly sent');
   logger('handlePaymentPaidEvent', 'Operation done');
