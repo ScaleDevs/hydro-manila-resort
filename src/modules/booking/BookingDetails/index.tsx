@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { UseTRPCQueryResult } from '@trpc/react-query/shared';
 import { inferRouterOutputs } from '@trpc/server';
@@ -22,6 +22,7 @@ import {
 import { MdEmail } from 'react-icons/md';
 import { RiRefund2Fill } from 'react-icons/ri';
 import { FcExpired } from 'react-icons/fc';
+import Image from 'next/image';
 
 import { tableFormatTimeDisplay } from '@/modules/utils/helper';
 import { PHpeso } from '@/utils/helper';
@@ -64,7 +65,10 @@ export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) 
   const { isOpen: isOpenRefundModal, onOpen: onOpenRefundModal, onClose: closeRefundModal } = useDisclosure();
   const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
   const { mutate: failBooking, isLoading: isUpdatingBookingStatus } = trpc.booking.adminForceFailBooking.useMutation();
+  const { mutate: generateUrl, isLoading: fetchUrl } = trpc.s3.generateSignedDownloadUrl.useMutation();
   const ctx = trpc.useContext();
+
+  const [imageUrl, setImageUrl] = useState('');
 
   const getConvenienceFee = () => {
     if (!data?.receipt) return 0;
@@ -126,6 +130,32 @@ export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) 
     if (!data?.refundId) return;
     onOpenRefundModal();
   };
+
+  const fetchIdImage = async (key: string) => {
+    generateUrl(
+      { key },
+      {
+        async onSuccess(signedUrl) {
+          try {
+            const response = await fetch(signedUrl);
+            if (!response.ok) throw new Error('Failed to fetch image');
+
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+
+            // Store the imageUrl in a state so you can use it in your JSX
+            setImageUrl(imageUrl);
+          } catch (error) {
+            console.error('Error fetching image:', error);
+          }
+        },
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (data?.idS3Key) fetchIdImage(data.idS3Key);
+  }, [data?.idS3Key]);
 
   return (
     <SlideFade in={isIn} offsetY='20px'>
@@ -230,7 +260,7 @@ export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) 
                 </Stack>
               </Stack>
 
-              <Box bg='gray.400' w='0.5px' />
+              <Box bg='gray.400' w='1px' />
 
               <VStack align='flex-start'>
                 <Heading size='md'>Extra Details</Heading>
@@ -239,6 +269,24 @@ export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) 
                 <InfoField label='Created By' value={data?.createdBy || 'SYSTEM'} />
                 <InfoField label='Created At' value={!!data?.createdAt ? tableFormatTimeDisplay(data.createdAt) : 'N/A'} />
               </VStack>
+            </Stack>
+
+            <Stack w='full' justifyItems='center'>
+              {imageUrl ? (
+                <Box>
+                  <Text color='gray.500' fontSize='sm'>
+                    ID image:
+                  </Text>
+                  <Box pos='relative' w='350px' h='350px'>
+                    <Image
+                      src={imageUrl}
+                      alt='ID Image'
+                      fill
+                      unoptimized // needed for blob: URLs or unsigned remote URLs
+                    />
+                  </Box>
+                </Box>
+              ) : null}
             </Stack>
           </>
         )}
