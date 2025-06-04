@@ -13,4 +13,13 @@ export const s3Router = router({
     .mutation(({ input }) => {
       return S3Service.generateUploadSignedUrl(input.key, input.contentType, 300);
     }),
+  generateSignedDownloadUrl: procedure
+    .input(
+      z.object({
+        key: z.string(),
+      }),
+    )
+    .mutation(({ input }) => {
+      return S3Service.generateDownloadSignedUrl(input.key, 300);
+    }),
 });
