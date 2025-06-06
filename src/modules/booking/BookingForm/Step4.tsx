@@ -60,7 +60,7 @@ export function Step4({ onPrev, onNext, fromAdmin }: IStep4Props) {
     isError: isErrorInserting,
     error: errorInserting,
   } = trpc.booking.adminCreateBooking.useMutation();
-  const { mutate: generateUploadS3SignedUrl, isLoading: generatedSignedUrl } = trpc.s3.generateSignedUploadUrl.useMutation();
+  const { mutate: generateUploadS3SignedUrl } = trpc.s3.generateSignedUploadUrl.useMutation();
 
   const proceedToPayment = () => {
     console.log('data', data);

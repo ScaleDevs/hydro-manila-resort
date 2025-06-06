@@ -65,7 +65,7 @@ export function Details({ bookingRefNo, isLoading, isIn, data }: IDetailsProps) 
   const { isOpen: isOpenRefundModal, onOpen: onOpenRefundModal, onClose: closeRefundModal } = useDisclosure();
   const { mutate, isLoading: isResendingEmail } = trpc.booking.resendBookingInfo.useMutation();
   const { mutate: failBooking, isLoading: isUpdatingBookingStatus } = trpc.booking.adminForceFailBooking.useMutation();
-  const { mutate: generateUrl, isLoading: fetchUrl } = trpc.s3.generateSignedDownloadUrl.useMutation();
+  const { mutate: generateUrl } = trpc.s3.generateSignedDownloadUrl.useMutation();
   const ctx = trpc.useContext();
 
   const [imageUrl, setImageUrl] = useState('');
