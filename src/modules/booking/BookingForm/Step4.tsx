@@ -155,7 +155,7 @@ export function Step4({ onPrev, onNext, fromAdmin }: IStep4Props) {
       {isError || isErrorInserting ? (
         <Alert status='error' borderRadius='sm' my='10px' fontFamily='primary' color='red.600'>
           <AlertIcon />
-          {error?.message || errorInserting?.message}
+          {error?.message.includes('custom') ? JSON.parse(error?.message)[0].message : error?.message || errorInserting?.message}
         </Alert>
       ) : (
         ''

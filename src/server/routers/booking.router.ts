@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import dayjs from 'dayjs';
 import { protectedProcedure, procedure, router } from '@/server/trpc';
 import { BookingHandler } from '@/server/handlers/booking.handler';
 import { BookingRepository } from '@/repo/booking.repo';
@@ -33,21 +34,37 @@ export const bookingRouter = router({
   }),
   updateBooking: protectedProcedure
     .input(
-      z.object({
-        bookingId: z.string(),
-        username: z.string().min(1),
-        data: z.object({
-          bookingDate: z.string().optional(),
-          guests: z
-            .object({
-              overNightGuests: z.number(),
-              nonOverNightGuests: z.number(),
-            })
-            .optional(),
-          rooms: z.array(z.string()).optional(),
-          productId: z.string().optional(),
-        }),
-      }),
+      z
+        .object({
+          bookingId: z.string(),
+          username: z.string().min(1),
+          data: z.object({
+            bookingDate: z.string().optional(),
+            guests: z
+              .object({
+                overNightGuests: z.number(),
+                nonOverNightGuests: z.number(),
+              })
+              .optional(),
+            rooms: z.array(z.string()).optional(),
+            productId: z.string().optional(),
+          }),
+        })
+        .refine(
+          (input) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora' && input.data.bookingDate) {
+              const bookingDate = dayjs(input.data.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['data', 'bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       return BookingHandler.updateBookingHandler(input.bookingId, input.username, input.data);
@@ -88,27 +105,43 @@ export const bookingRouter = router({
   }),
   customerUpdateRequest: procedure
     .input(
-      z.object({
-        bookingRefNo: z.string(),
-        bookingRequestUpdate: z.object({
-          guests: z
+      z
+        .object({
+          bookingRefNo: z.string(),
+          bookingRequestUpdate: z.object({
+            guests: z
+              .object({
+                overNightGuests: z.number(),
+                nonOverNightGuests: z.number(),
+              })
+              .optional(),
+            bookingDate: z.string().optional(),
+            productId: z.string().optional(),
+            rooms: z.array(z.string().min(1)).optional(),
+          }),
+          customerInfo: z
             .object({
-              overNightGuests: z.number(),
-              nonOverNightGuests: z.number(),
+              bankType: z.string(),
+              accountNo: z.string(),
+              accountName: z.string(),
             })
             .optional(),
-          bookingDate: z.string().optional(),
-          productId: z.string().optional(),
-          rooms: z.array(z.string().min(1)).optional(),
-        }),
-        customerInfo: z
-          .object({
-            bankType: z.string(),
-            accountNo: z.string(),
-            accountName: z.string(),
-          })
-          .optional(),
-      }),
+        })
+        .refine(
+          (data) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora' && data.bookingRequestUpdate.bookingDate) {
+              const bookingDate = dayjs(data.bookingRequestUpdate.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['bookingRequestUpdate', 'bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       return BookingHandler.customerUpdateRequestHandler(input);
@@ -128,32 +161,64 @@ export const bookingRouter = router({
   }),
   checkBookingAvailability: procedure
     .input(
-      z.object({
-        bookingDate: z.string(),
-        productId: z.string(),
-      }),
+      z
+        .object({
+          bookingDate: z.string(),
+          productId: z.string(),
+        })
+        .refine(
+          (data) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
+              const bookingDate = dayjs(data.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       return BookingHandler.checkBookingAvailability(input);
     }),
   adminCreateBooking: protectedProcedure
     .input(
-      z.object({
-        payload: z.object({
-          name: z.string(),
-          email: z.string().email(),
-          phoneNumber: z.string(),
-          bookingDate: z.string(),
-          guests: z.object({
-            overNightGuests: z.number(),
-            nonOverNightGuests: z.number(),
+      z
+        .object({
+          payload: z.object({
+            name: z.string(),
+            email: z.string().email(),
+            phoneNumber: z.string(),
+            bookingDate: z.string(),
+            guests: z.object({
+              overNightGuests: z.number(),
+              nonOverNightGuests: z.number(),
+            }),
+            roomIds: z.array(z.string().min(1)),
+            productId: z.string(),
+            paymentId: z.string().nullable(),
           }),
-          roomIds: z.array(z.string().min(1)),
-          productId: z.string(),
-          paymentId: z.string().nullable(),
-        }),
-        username: z.string(),
-      }),
+          username: z.string(),
+        })
+        .refine(
+          (data) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
+              const bookingDate = dayjs(data.payload.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['payload', 'bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       return BookingHandler.adminCreateBooking(input.username, input.payload);

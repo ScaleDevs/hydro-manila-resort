@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import dayjs from 'dayjs';
 import { procedure, router } from '@/server/trpc';
 import { PaymentHandler } from '@/server/handlers/payment.handler';
 import { getPaymentIntentSession } from '@/repo/payment.repo';
@@ -6,19 +7,35 @@ import { getPaymentIntentSession } from '@/repo/payment.repo';
 export const paymentRouter = router({
   initiatePaymentSessionForBooking: procedure
     .input(
-      z.object({
-        name: z.string(),
-        email: z.string().email(),
-        phoneNumber: z.string(),
-        bookingDate: z.string(),
-        guests: z.object({
-          overNightGuests: z.number(),
-          nonOverNightGuests: z.number(),
-        }),
-        roomIds: z.array(z.string().min(1)),
-        productId: z.string(),
-        idS3Key: z.string(),
-      }),
+      z
+        .object({
+          name: z.string(),
+          email: z.string().email(),
+          phoneNumber: z.string(),
+          bookingDate: z.string(),
+          guests: z.object({
+            overNightGuests: z.number(),
+            nonOverNightGuests: z.number(),
+          }),
+          roomIds: z.array(z.string().min(1)),
+          productId: z.string(),
+          idS3Key: z.string(),
+        })
+        .refine(
+          (data) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora') {
+              const bookingDate = dayjs(data.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       const { paymentIntentResource, bookingState } = await PaymentHandler.initiatePaymentSessionForBooking(input);
@@ -29,20 +46,36 @@ export const paymentRouter = router({
     }),
   initiatePaymentSessionForUpdateBooking: procedure
     .input(
-      z.object({
-        bookingRefNo: z.string(),
-        bookingUpdates: z.object({
-          guests: z
-            .object({
-              overNightGuests: z.number(),
-              nonOverNightGuests: z.number(),
-            })
-            .optional(),
-          bookingDate: z.string().optional(),
-          productId: z.string().optional(),
-          rooms: z.array(z.string().min(1)).optional(),
-        }),
-      }),
+      z
+        .object({
+          bookingRefNo: z.string(),
+          bookingUpdates: z.object({
+            guests: z
+              .object({
+                overNightGuests: z.number(),
+                nonOverNightGuests: z.number(),
+              })
+              .optional(),
+            bookingDate: z.string().optional(),
+            productId: z.string().optional(),
+            rooms: z.array(z.string().min(1)).optional(),
+          }),
+        })
+        .refine(
+          (data) => {
+            // Only validate for VillaLeonora
+            if (process.env.NEXT_PUBLIC_APP === 'VillaLeonora' && data.bookingUpdates.bookingDate) {
+              const bookingDate = dayjs(data.bookingUpdates.bookingDate);
+              const maxDate = dayjs('2025-12-31');
+              return !bookingDate.isAfter(maxDate, 'day');
+            }
+            return true;
+          },
+          {
+            message: 'Booking dates after 2025 are not allowed for VillaLeonora',
+            path: ['bookingUpdates', 'bookingDate'],
+          },
+        ),
     )
     .mutation(async ({ input }) => {
       const result = await PaymentHandler.initiatePaymentSessionForUpdateBooking(input.bookingRefNo, input.bookingUpdates);
