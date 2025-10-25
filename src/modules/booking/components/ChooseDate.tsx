@@ -15,6 +15,10 @@ export interface IChooseDateProps {
 }
 
 export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: IChooseDateProps) {
+  // Only apply date restriction for VillaLeonora
+  const isVillaLeonora = process.env.NEXT_PUBLIC_APP === 'VillaLeonora';
+  const maxDate = isVillaLeonora ? dayjs('2025-12-31') : null;
+
   const [dayState, setDayState] = useState(
     (() => {
       if (!!chosenDate) {
@@ -30,6 +34,11 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
     if (arrow === 'NEXT') setDayState(dayState.add(7, 'day'));
     else setDayState(dayState.subtract(7, 'day'));
   };
+
+  // Check if any date in the next week would be within the allowed range
+  const hasValidNextWeek = maxDate
+    ? dayState.add(7, 'day').isBefore(maxDate) || dayState.add(7, 'day').isSame(maxDate, 'day')
+    : true;
 
   return (
     <Box w='100%' mx='auto'>
@@ -64,6 +73,7 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
           .map((item, i) => {
             const dateDisplay = dayState.add(i, 'day');
             const isActive = chosenDate === dateDisplay.format('YYYY-MM-DD');
+            const isDisabled = maxDate ? dateDisplay.isAfter(maxDate) : false;
 
             return (
               <Box
@@ -76,12 +86,15 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
                 minW={{ base: '80px', lg: '100px' }}
                 h='105px'
                 p={5}
-                cursor='pointer'
-                _hover={isActive ? {} : { bg: 'gray.100' }}
+                cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                opacity={isDisabled ? 0.4 : 1}
+                _hover={isActive || isDisabled ? {} : { bg: 'gray.100' }}
                 transition='background-color 0.25s'
                 onClick={() => {
-                  setChosenDate(dateDisplay.format('YYYY-MM-DD'));
-                  setChosenSchedule(undefined);
+                  if (!isDisabled) {
+                    setChosenDate(dateDisplay.format('YYYY-MM-DD'));
+                    setChosenSchedule(undefined);
+                  }
                 }}
               >
                 <Text textAlign='center' color={isActive ? 'white' : 'gray.400'} fontSize={{ base: 'sm', lg: 'md' }}>
@@ -97,17 +110,19 @@ export function ChooseDate({ chosenDate, setChosenDate, setChosenSchedule }: ICh
             );
           })}
 
-        <Box>
-          <IconButton
-            aria-label='Right Arrow'
-            bg='none'
-            size='xs'
-            borderRadius='29px'
-            _hover={{ bg: 'gray.100' }}
-            icon={<RightArrowIcon _hover={{ cursor: 'pointer' }} color='gray.500' w='15px' h='15px' />}
-            onClick={() => handleArrows('NEXT')}
-          />
-        </Box>
+        {hasValidNextWeek && (
+          <Box>
+            <IconButton
+              aria-label='Right Arrow'
+              bg='none'
+              size='xs'
+              borderRadius='29px'
+              _hover={{ bg: 'gray.100' }}
+              icon={<RightArrowIcon _hover={{ cursor: 'pointer' }} color='gray.500' w='15px' h='15px' />}
+              onClick={() => handleArrows('NEXT')}
+            />
+          </Box>
+        )}
       </Stack>
     </Box>
   );
