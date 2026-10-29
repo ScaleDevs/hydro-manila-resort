@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import dayjs from 'dayjs';
 import Link from 'next/link';
 import { Box, Button, Stack, Heading, Alert, AlertIcon, SlideFade, useToast } from '@chakra-ui/react';
 import { BsArrowLeft } from 'react-icons/bs';
@@ -16,15 +17,33 @@ import { DateTimeField } from '@/components/DateTimeField';
 import { NumberFieldV2 } from '@/components/NumberFieldV2';
 import { SelectNumberField } from '@/components/SelectNumberField';
 
-const schema = z.object({
-  guestName: z.string().min(1),
-  guests: z.preprocess((v) => Number(v), z.number()),
-  description: z.string().min(1, 'Required'),
-  startSession: z.string().min(1, 'Required'),
-  endSession: z.string().min(1, 'Required'),
-  checkInTime: z.number(),
-  checkOutTime: z.number(),
-});
+const schema = z
+  .object({
+    guestName: z.string().min(1),
+    guests: z.preprocess((v) => Number(v), z.number()),
+    description: z.string().min(1, 'Required'),
+    startSession: z.string().min(1, 'Required'),
+    endSession: z.string().min(1, 'Required'),
+    checkInTime: z.number(),
+    checkOutTime: z.number(),
+  })
+  .refine(
+    (data) => {
+      const start =
+        GetVars.appName === 'VillaLeonora'
+          ? `${data.startSession}T${String(data.checkInTime).padStart(2, '0')}:00`
+          : data.startSession;
+      const end =
+        GetVars.appName === 'VillaLeonora'
+          ? `${data.endSession}T${String(data.checkOutTime).padStart(2, '0')}:00`
+          : data.endSession;
+      return dayjs(start).isValid() && dayjs(end).isValid() && dayjs(end).isAfter(dayjs(start));
+    },
+    {
+      message: 'End must be after start.',
+      path: ['endSession'],
+    },
+  );
 
 type FormSchemaType = z.infer<typeof schema>;
 

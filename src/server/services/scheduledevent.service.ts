@@ -12,8 +12,17 @@ class Service {
     data: Omit<IScheduledEvent, 'scheduledEventId' | 'createdAt' | 'calendarEventId' | 'hostawayId'>,
   ) {
     try {
-      const startSession = dayjs.tz(data.startSession, constants.general.timezone);
-      const endSession = dayjs.tz(data.endSession, constants.general.timezone);
+      let startSession: dayjs.Dayjs;
+      let endSession: dayjs.Dayjs;
+      try {
+        startSession = dayjs.tz(data.startSession, constants.general.timezone);
+        endSession = dayjs.tz(data.endSession, constants.general.timezone);
+      } catch {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Enter valid start and end dates.' });
+      }
+      if (!startSession.isValid() || !endSession.isValid())
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Enter valid start and end dates.' });
+      if (!endSession.isAfter(startSession)) throw new TRPCError({ code: 'BAD_REQUEST', message: 'End must be after start.' });
       const startISOString = startSession.toISOString();
       const endISOString = endSession.toISOString();
 
@@ -84,6 +93,7 @@ class Service {
           code: 'BAD_REQUEST',
           message: 'Schedule Already Filled',
         });
+      if (err instanceof TRPCError && err.code === 'BAD_REQUEST') throw err;
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Something went wrong' });
     }
   }
